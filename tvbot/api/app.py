@@ -85,6 +85,7 @@ def summary():
                    (s.sid,))[0]["n"]
         out.append({"strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,
                     "side": "long" if s.side > 0 else "short", "exit_mode": s.exit_mode,
+                    "exit_desc": s.exit_desc, "indicators": s.indicators,
                     "role": s.role, "open_now": n_open, **{k: r.get(k) for k in
                     ("n_trades", "wins", "pnl_total", "avg_ret_lev", "avg_ret_nolev")}})
     return out
@@ -94,6 +95,7 @@ def summary():
 def strategies():
     return [{"strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,
              "side": "long" if s.side > 0 else "short", "exit_mode": s.exit_mode,
+             "exit_desc": s.exit_desc, "indicators": s.indicators,
              "role": s.role} for s in STRATEGIES]
 
 

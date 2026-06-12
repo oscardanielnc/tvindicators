@@ -91,4 +91,15 @@ t = closed(tid3)
 assert t["status"] == "closed" and t["exit_reason"] == "SL" and t["exit_px"] == 110.0, t
 print("TEST 4 OK  - SL de short en vela intermedia")
 
+# --- TEST 5: S2 (flip + SL seguridad): precio sube (TM nunca alinea rojo),
+#     pero una vela intermedia toca el stop de seguridad -> debe salir por SL
+tid4 = open_trade("S2", "long", 100.0, 85.0, bars_ago=10, tf_s=TF)
+prices = {i: (100 + i * 0.5, 101 + i * 0.5, 99 + i * 0.5, 100.5 + i * 0.5) for i in range(30)}
+prices[25] = (112, 113, 80.0, 112)            # mecha profunda toca stop=85
+df5, _ = mk_df(30, TF, prices)
+eng._manage_exits({("TRX/USDT:USDT", "1h"): (df5, 113.0)}, ["1h"])
+t = closed(tid4)
+assert t["status"] == "closed" and t["exit_reason"] == "SL" and t["exit_px"] == 85.0, t
+print("TEST 5 OK  - SL de seguridad en modo flip (upgrade S2)")
+
 print("\nTODOS LOS TESTS PASARON")

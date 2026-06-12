@@ -88,15 +88,16 @@ class PaperEngine:
             exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
 
+            stop = tr["stop_px"]            # atrstop siempre; flip solo si safety_atr
             for k in range(i0, len(df)):
-                if strat.exit_mode == "atrstop":
-                    stop = tr["stop_px"]
+                if stop:
                     hit = lo[k] <= stop if side > 0 else hi[k] >= stop
                     if hit:
                         exit_px = min(op[k], stop) if side > 0 else max(op[k], stop)
                         reason, cost_out = "SL", config.TAKER_FEE + config.SLIPPAGE
                         t_exit = df.index[k]
                         break
+                if strat.exit_mode == "atrstop":
                     if k - i0 + 1 >= to_bars:
                         exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
                             else (live_open, None)
@@ -166,8 +167,9 @@ class PaperEngine:
         notional = margin * config.LEVERAGE                  # 5x
         qty = notional / entry_px
         atr = float(atr14(df).iloc[-1])
-        stop_px = entry_px - (1 if s.side > 0 else -1) * config.ATR_MULT * atr \
-            if s.exit_mode == "atrstop" else None
+        atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
+        stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
+            if atr_mult else None
         timeout_at = _iso(_now() + timedelta(hours=config.TIMEOUT_HOURS)) \
             if s.exit_mode == "atrstop" else None
         tid = db.insert_trade(
