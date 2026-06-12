@@ -1,0 +1,16 @@
+[Unit]
+Description=tvbot API (dashboard, puerto 8090)
+After=network-online.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/opt/tvbot
+ExecStart=/opt/tvbot/.venv/bin/python -m tvbot.api
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=America/Lima
+
+[Install]
+WantedBy=multi-user.target

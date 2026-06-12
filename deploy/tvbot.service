@@ -1,0 +1,17 @@
+[Unit]
+Description=tvbot - paper trading bot (9 estrategias validadas)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/opt/tvbot
+ExecStart=/opt/tvbot/.venv/bin/python -m tvbot
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=America/Lima
+
+[Install]
+WantedBy=multi-user.target

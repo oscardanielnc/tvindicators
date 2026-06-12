@@ -1,0 +1,115 @@
+"""Las 9 estrategias validadas (CONSOLIDADO.md). Cada una expone:
+- entry(df) -> bool en la ULTIMA vela cerrada
+- exit_mode: 'atrstop' (SL 2xATR + timeout 48h) o 'flip' (Supertrend contrario)
+- flip_exit(df) -> bool (solo para exit_mode='flip')
+"""
+import numpy as np
+from . import indicators as I
+
+
+def _last(arr):
+    return bool(arr[-1])
+
+
+class Strategy:
+    def __init__(self, sid, name, coin, tf, side, exit_mode, entry_fn, flip_exit_fn=None, role=1.0):
+        self.sid = sid
+        self.name = name
+        self.coin = coin
+        self.symbol = f"{coin}/USDT:USDT"
+        self.tf = tf
+        self.side = side                # +1 long / -1 short
+        self.exit_mode = exit_mode      # 'atrstop' | 'flip'
+        self._entry = entry_fn
+        self._flip_exit = flip_exit_fn
+        self.role = role                # 1.0 titular / 0.5 suplente (informativo por ahora)
+
+    def entry_signal(self, df):
+        return self._entry(df)
+
+    def exit_signal(self, df):
+        if self.exit_mode != "flip":
+            return False
+        return self._flip_exit(df)
+
+
+# --- entradas ---
+
+def s1_entry(df):       # TRX 1h L: circulo verde B-X con T3<0
+    gl, _, _, _ = I.bx_parts(df["close"])
+    return _last(gl)
+
+def s2_entry(df):       # TRX 1h L: Trend Meter alinea verde
+    return _last(I.tm_align_edge(df["close"]))
+
+def s3_entry(df):       # TRX 15m L: ST flip up + HACOLT=1 + Ribbon>=8
+    up, _, _ = I.st_flips(df)
+    if not _last(up): return False
+    hc = I.hacolt(df["open"], df["high"], df["low"], df["close"])
+    if hc[-1] != 1: return False
+    sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
+    return sl[-1] >= 8
+
+def s4_entry(df):       # SUI 1h S: circulo rojo B-X T3>0 + regimen<0
+    _, rs, _, regdn = I.bx_parts(df["close"])
+    return _last(rs) and _last(regdn)
+
+def s5_entry(df):       # LTC 1h S: ST flip down + Donchian=-1
+    _, dn, _ = I.st_flips(df)
+    if not _last(dn): return False
+    don = I.dch_trend(df["close"], df["high"], df["low"], 20)
+    return don[-1] == -1
+
+def s6_entry(df):       # XRP 1h L: ST flip up + HACOLT=1
+    up, _, _ = I.st_flips(df)
+    if not _last(up): return False
+    hc = I.hacolt(df["open"], df["high"], df["low"], df["close"])
+    return hc[-1] == 1
+
+def s7_entry(df):       # AVAX 15m L: ST flip up + Donchian=1 + HACOLT=1
+    up, _, _ = I.st_flips(df)
+    if not _last(up): return False
+    don = I.dch_trend(df["close"], df["high"], df["low"], 20)
+    if don[-1] != 1: return False
+    hc = I.hacolt(df["open"], df["high"], df["low"], df["close"])
+    return hc[-1] == 1
+
+def s8_entry(df):       # ETH 1h S: circulo rojo B-X T3>0 + Donchian=-1
+    _, rs, _, _ = I.bx_parts(df["close"])
+    if not _last(rs): return False
+    don = I.dch_trend(df["close"], df["high"], df["low"], 20)
+    return don[-1] == -1
+
+def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
+    sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
+    full = sl == 10
+    if not (full[-1] and not full[-2]): return False
+    _, _, regup, _ = I.bx_parts(df["close"])
+    if not _last(regup): return False
+    _, _, sd = I.st_flips(df)
+    return sd[-1] == 1
+
+# --- salidas flip ---
+
+def flip_dn_exit(df):
+    _, dn, _ = I.st_flips(df)
+    return _last(dn)
+
+def flip_up_exit(df):
+    up, _, _ = I.st_flips(df)
+    return _last(up)
+
+
+STRATEGIES = [
+    Strategy("S1", "TRX-L B-Xtrender 1h",        "TRX",  "1h",  +1, "atrstop", s1_entry),
+    Strategy("S2", "TRX-L TrendMeter 1h",        "TRX",  "1h",  +1, "atrstop", s2_entry),
+    Strategy("S3", "TRX-L ST+HAC+RIB 15m",       "TRX",  "15m", +1, "flip",    s3_entry, flip_dn_exit),
+    Strategy("S4", "SUI-S BX+regimen 1h",        "SUI",  "1h",  -1, "atrstop", s4_entry),
+    Strategy("S5", "LTC-S ST+Donchian 1h",       "LTC",  "1h",  -1, "atrstop", s5_entry),
+    Strategy("S6", "XRP-L ST+HACOLT 1h",         "XRP",  "1h",  +1, "flip",    s6_entry, flip_dn_exit),
+    Strategy("S7", "AVAX-L ST+Don+HACOLT 15m",   "AVAX", "15m", +1, "flip",    s7_entry, flip_dn_exit),
+    Strategy("S8", "ETH-S BX+Donchian 1h",       "ETH",  "1h",  -1, "atrstop", s8_entry, role=0.5),
+    Strategy("S9", "BTC-L RIB+BXreg+ST 1h",      "BTC",  "1h",  +1, "atrstop", s9_entry, role=0.5),
+]
+
+BY_ID = {s.sid: s for s in STRATEGIES}
