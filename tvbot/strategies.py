@@ -27,9 +27,10 @@ class Strategy:
     def entry_signal(self, df):
         return self._entry(df)
 
-    def exit_signal(self, df):
+    def exit_array(self, df):
+        """Array booleano de senal de salida por vela (solo exit_mode='flip')."""
         if self.exit_mode != "flip":
-            return False
+            return None
         return self._flip_exit(df)
 
 
@@ -89,15 +90,15 @@ def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + S
     _, _, sd = I.st_flips(df)
     return sd[-1] == 1
 
-# --- salidas flip ---
+# --- salidas flip (devuelven el ARRAY completo; el motor evalua cualquier vela) ---
 
 def flip_dn_exit(df):
     _, dn, _ = I.st_flips(df)
-    return _last(dn)
+    return dn
 
 def flip_up_exit(df):
     up, _, _ = I.st_flips(df)
-    return _last(up)
+    return up
 
 
 STRATEGIES = [

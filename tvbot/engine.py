@@ -11,6 +11,8 @@ Paridad con el backtest validado:
 import json
 from datetime import datetime, timedelta
 
+import pandas as pd
+
 import config
 from . import data, db
 from .indicators import atr14
@@ -43,8 +45,17 @@ class PaperEngine:
 
         market = {}
         for (symbol, tf) in needed:
-            df, live_open = data.retry(lambda s=symbol, t=tf: data.fetch_bars(s, t))
-            market[(symbol, tf)] = (df, live_open)
+            try:
+                df, live_open = data.retry(lambda s=symbol, t=tf: data.fetch_bars(s, t))
+                market[(symbol, tf)] = (df, live_open)
+            except Exception as e:
+                # un simbolo con datos malos NO tumba el ciclo de los demas;
+                # sus stops se re-evaluan en el proximo ciclo (el motor revisa
+                # TODAS las velas desde la entrada, nada se pierde)
+                db.log_event("warn", "data",
+                             f"sin datos frescos {symbol} {tf} — saltado este ciclo: {e}")
+        if needed and not market:
+            raise RuntimeError("sin datos de mercado para ningun simbolo (¿red caida?)")
 
         self._manage_exits(market, due_tfs)
         self._manage_entries(market, due_tfs)
@@ -52,50 +63,75 @@ class PaperEngine:
 
     # ---------- salidas ----------
     def _manage_exits(self, market, due_tfs):
+        """Recorre TODAS las velas cerradas desde la entrada (no solo la ultima).
+        Asi, si el bot estuvo caido o salto ciclos, ningun SL/flip/timeout se pierde:
+        se detecta en la primera vela donde debio dispararse (paridad con backtest)."""
         for tr in db.open_trades():
             if tr["tf"] not in due_tfs or (tr["symbol"], tr["tf"]) not in market:
                 continue
             df, live_open = market[(tr["symbol"], tr["tf"])]
-            last = df.iloc[-1]
-            entry_t = datetime.fromisoformat(tr["t_entry"])
-            if df.index[-1].to_pydatetime() <= entry_t:
-                continue            # la vela de entrada aun no cierra
-            side = 1 if tr["side"] == "long" else -1
             strat = BY_ID[tr["strategy_id"]]
-            exit_px = reason = None
+            side = 1 if tr["side"] == "long" else -1
+            tf_s = 900 if tr["tf"] == "15m" else 3600
+            entry_t = datetime.fromisoformat(tr["t_entry"])
+            # vela de entrada = la que contiene t_entry (alineada al timeframe)
+            entry_bar_start = int(entry_t.timestamp() // tf_s) * tf_s
+            # epoch en segundos, robusto ante la unidad interna del indice (ns/ms)
+            starts = ((df.index - pd.Timestamp("1970-01-01", tz="UTC"))
+                      // pd.Timedelta("1s")).to_numpy()
+            i0 = int(starts.searchsorted(entry_bar_start))
+            if i0 >= len(df):
+                continue                      # la vela de entrada aun no cierra
+            op, hi, lo = df["open"].values, df["high"].values, df["low"].values
+            to_bars = config.TIMEOUT_HOURS * 3600 // tf_s
+            flip = strat.exit_array(df) if strat.exit_mode == "flip" else None
+            exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
 
-            if strat.exit_mode == "atrstop":
-                stop = tr["stop_px"]
-                hit = last["low"] <= stop if side > 0 else last["high"] >= stop
-                if hit:
-                    exit_px = min(last["open"], stop) if side > 0 else max(last["open"], stop)
-                    reason = "SL"
-                    cost_out = config.TAKER_FEE + config.SLIPPAGE
-                elif _now() >= datetime.fromisoformat(tr["timeout_at"]):
-                    exit_px, reason = live_open, "timeout"
-            else:                                       # flip
-                if strat.exit_signal(df):
-                    exit_px, reason = live_open, "flip"
+            for k in range(i0, len(df)):
+                if strat.exit_mode == "atrstop":
+                    stop = tr["stop_px"]
+                    hit = lo[k] <= stop if side > 0 else hi[k] >= stop
+                    if hit:
+                        exit_px = min(op[k], stop) if side > 0 else max(op[k], stop)
+                        reason, cost_out = "SL", config.TAKER_FEE + config.SLIPPAGE
+                        t_exit = df.index[k]
+                        break
+                    if k - i0 + 1 >= to_bars:
+                        exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
+                            else (live_open, None)
+                        reason = "timeout"
+                        break
+                elif flip[k]:
+                    exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
+                        else (live_open, None)
+                    reason = "flip"
+                    break
+            # fallback: trade mas viejo que la ventana de datos -> timeout por reloj
+            if exit_px is None and tr["timeout_at"] \
+                    and _now() >= datetime.fromisoformat(tr["timeout_at"]) \
+                    and entry_bar_start < starts[0]:
+                exit_px, reason = live_open, "timeout"
 
             if exit_px is not None:
-                self._close(tr, float(exit_px), reason, cost_out, df)
+                self._close(tr, float(exit_px), reason, cost_out, t_exit)
 
-    def _close(self, tr, exit_px, reason, cost_out, df):
+    def _close(self, tr, exit_px, reason, cost_out, t_exit=None):
         side = 1 if tr["side"] == "long" else -1
         notional, margin = tr["notional"], tr["base_amount"]
+        entry_t = datetime.fromisoformat(tr["t_entry"])
+        exit_dt = t_exit.to_pydatetime().astimezone(config.LIMA_TZ) if t_exit is not None else _now()
         gross_pct = side * (exit_px / tr["entry_px"] - 1)
         fees_usd = (config.MAKER_FEE + cost_out) * notional
-        entry_ms = datetime.fromisoformat(tr["t_entry"]).timestamp() * 1000
-        fund_sum = data.funding_since(tr["symbol"], entry_ms, _now().timestamp() * 1000)
+        fund_sum = data.funding_since(tr["symbol"], entry_t.timestamp() * 1000,
+                                      exit_dt.timestamp() * 1000)
         funding_usd = -side * fund_sum * notional        # long paga si funding>0; short cobra
         pnl = gross_pct * notional - fees_usd + funding_usd
         ret_nolev = pnl / notional
         ret_lev = pnl / margin
-        bars_held = int((df.index[-1].to_pydatetime()
-                         - datetime.fromisoformat(tr["t_entry"])).total_seconds()
+        bars_held = int((exit_dt - entry_t).total_seconds()
                         // (900 if tr["tf"] == "15m" else 3600))
-        db.close_trade(tr["id"], t_exit=db.utcnow(), exit_px=exit_px, exit_reason=reason,
+        db.close_trade(tr["id"], t_exit=_iso(exit_dt), exit_px=exit_px, exit_reason=reason,
                        pnl_usd=round(pnl, 4), fees_usd=round(fees_usd, 4),
                        funding_usd=round(funding_usd, 4),
                        ret_pct_lev=round(ret_lev * 100, 4),

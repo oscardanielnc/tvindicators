@@ -34,6 +34,13 @@ def fetch_bars(symbol, tf, limit=None):
     live = df[df["ts"] == cur_start]
     live_open = float(live["open"].iloc[0]) if len(live) else float(df["close"].iloc[-1])
     df = df[df["ts"] < cur_start]                     # solo cerradas
+    # guard de frescura: la ultima vela cerrada debe ser exactamente la anterior
+    # a la vela en curso; si Binance devuelve datos viejos, mejor fallar y reintentar
+    expected_last = cur_start - TF_MS[tf]
+    if int(df["ts"].iloc[-1]) != expected_last:
+        raise RuntimeError(
+            f"datos no frescos {symbol} {tf}: ultima vela {int(df['ts'].iloc[-1])}, "
+            f"esperada {expected_last}")
     df["dt"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
     return df.set_index("dt"), live_open
 

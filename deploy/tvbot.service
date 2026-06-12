@@ -2,6 +2,7 @@
 Description=tvbot - paper trading bot (9 estrategias validadas)
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple

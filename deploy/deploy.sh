@@ -12,7 +12,9 @@ echo "[2/4] dependencias..."
 "$PY" -m pip install --quiet -r requirements.txt || true
 echo "[3/4] verificacion de imports..."
 "$PY" -c "import config; from tvbot import engine, orchestrator; from tvbot.api import app" || { echo "IMPORT FALLO - no se reinicia"; exit 1; }
-echo "[4/4] reiniciando servicios..."
+echo "[4/4] actualizando units systemd + reiniciando servicios..."
+sudo cp "$APP_DIR/deploy/tvbot.service" "$APP_DIR/deploy/tvbot-api.service" /etc/systemd/system/
+sudo systemctl daemon-reload
 sudo systemctl restart tvbot tvbot-api
 sleep 2
 sudo systemctl --no-pager status tvbot | head -3
