@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tvbot — Paper Trading</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;
+--green:#3fb950;--red:#f85149;--blue:#58a6ff;--yellow:#d29922}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
+header{display:flex;align-items:center;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border);
+background:var(--card);position:sticky;top:0;z-index:10;flex-wrap:wrap}
+header h1{font-size:18px;font-weight:600}
+header .pill{background:#1f6feb22;color:var(--blue);border:1px solid #1f6feb55;border-radius:20px;
+padding:3px 12px;font-size:12px}
+nav{margin-left:auto;display:flex;gap:8px}
+nav button{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 18px;
+border-radius:8px;cursor:pointer;font-size:14px}
+nav button.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
+main{padding:20px;max-width:1300px;margin:0 auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.card .lbl{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.card .val{font-size:24px;font-weight:700;margin-top:6px}
+.card .sub{color:var(--muted);font-size:12px;margin-top:4px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:20px}
+.panel h2{font-size:15px;margin-bottom:14px;color:var(--muted);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.pos{color:var(--green)}.neg{color:var(--red)}.mut{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);
+font-weight:600;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #21262d;white-space:nowrap}
+tr:hover td{background:#1c2128}
+.tbl-wrap{overflow-x:auto}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;
+border-radius:8px;cursor:pointer;font-size:13px}
+.chip.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.chip .tag{font-size:11px;color:var(--muted);display:block}
+.chip.active .tag{color:#c9d8ff}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge.long{background:#3fb95022;color:var(--green)}
+.badge.short{background:#f8514922;color:var(--red)}
+.badge.open{background:#d2992222;color:var(--yellow)}
+input[type=date],input[type=datetime-local]{background:#0d1117;border:1px solid var(--border);
+color:var(--text);padding:7px 10px;border-radius:8px;font-family:inherit}
+.btn{background:#238636;border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px}
+.btn.secondary{background:none;border:1px solid var(--border);color:var(--text)}
+pre{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;
+max-height:400px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+.footer{color:var(--muted);font-size:12px;text-align:center;padding:14px}
+canvas{max-height:330px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🤖 tvbot</h1>
+  <span class="pill">PAPER · $1,000 · 10% × 5x = $500/trade</span>
+  <span class="pill" id="clock">—</span>
+  <nav>
+    <button id="tab-dash" class="active" onclick="show('dash')">Dashboard</button>
+    <button id="tab-strat" onclick="show('strat')">Estrategias</button>
+    <button id="tab-logs" onclick="show('logs')">Logs</button>
+  </nav>
+</header>
+<main>
+
+<!-- ==================== PAGINA 1: DASHBOARD ==================== -->
+<section id="page-dash">
+  <div class="cards">
+    <div class="card"><div class="lbl">Equity</div><div class="val" id="c-equity">—</div>
+      <div class="sub" id="c-equity-sub">—</div></div>
+    <div class="card"><div class="lbl">PnL Total</div><div class="val" id="c-pnl">—</div>
+      <div class="sub" id="c-pnl-sub">realizado</div></div>
+    <div class="card"><div class="lbl">Trades cerrados</div><div class="val" id="c-closed">—</div>
+      <div class="sub" id="c-wl">—</div></div>
+    <div class="card"><div class="lbl">Win Rate</div><div class="val" id="c-wr">—</div>
+      <div class="sub">trades exitosos</div></div>
+    <div class="card"><div class="lbl">Posiciones abiertas</div><div class="val" id="c-open">—</div>
+      <div class="sub" id="c-open-sub">—</div></div>
+  </div>
+
+  <div class="panel"><h2>Curva de equity ($1,000 iniciales · hora Lima)</h2>
+    <canvas id="ch-equity"></canvas></div>
+
+  <div class="grid2">
+    <div class="panel"><h2># Trades por estrategia</h2><canvas id="ch-ntrades"></canvas></div>
+    <div class="panel"><h2>Rentabilidad total por estrategia (USD)</h2><canvas id="ch-pnl"></canvas></div>
+  </div>
+
+  <div class="panel"><h2>Posiciones abiertas ahora</h2>
+    <div class="tbl-wrap"><table id="t-open">
+      <thead><tr><th>Estrategia</th><th>Moneda</th><th>Lado</th><th>Entrada (Lima)</th>
+      <th>Precio entrada</th><th>Stop</th><th>Timeout</th><th>Margen</th><th>Nominal</th></tr></thead>
+      <tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ==================== PAGINA 2: ESTRATEGIAS ==================== -->
+<section id="page-strat" style="display:none">
+  <div class="chips" id="strat-chips"></div>
+  <div class="cards" id="strat-cards"></div>
+  <div class="panel"><h2 id="strat-title">Histórico de trades</h2>
+    <div class="tbl-wrap"><table id="t-hist">
+      <thead><tr>
+        <th>#</th><th>Inicio (Lima)</th><th>Fin (Lima)</th><th>Moneda</th><th>L/S</th>
+        <th>Monto base</th><th>Apal.</th><th>Nominal</th><th>P. entrada</th><th>P. salida</th>
+        <th>PnL $</th><th>% c/apal</th><th>% s/apal</th><th>Salida</th>
+        <th>Fees $</th><th>Funding $</th><th>Velas</th><th>Stop</th>
+      </tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ==================== PAGINA 3: LOGS ==================== -->
+<section id="page-logs" style="display:none">
+  <div class="panel"><h2>Logs del sistema (hora Lima)</h2>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label class="mut">Desde</label><input type="date" id="log-start">
+      <label class="mut">Hasta</label><input type="date" id="log-end">
+      <button class="btn secondary" onclick="viewLogs()">Ver</button>
+      <button class="btn" onclick="downloadLogs()">⬇ Descargar rango</button>
+    </div>
+    <pre id="log-view">(elige un rango y pulsa Ver)</pre>
+  </div>
+  <div class="panel"><h2>Eventos recientes</h2>
+    <div class="tbl-wrap"><table id="t-events">
+      <thead><tr><th>Hora (Lima)</th><th>Nivel</th><th>Categoría</th><th>Mensaje</th></tr></thead>
+      <tbody></tbody></table></div>
+  </div>
+</section>
+
+</main>
+<div class="footer">tvbot · paper trading · auto-refresh 30s · todas las horas en Lima (UTC−5)</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt$ = v => (v>=0?'+$':'-$') + Math.abs(v).toFixed(2);
+const fmtPx = v => v==null ? '—' : (+v).toPrecision(6);
+const fmtTs = s => s ? s.replace('T',' ').slice(0,16) : '—';
+const cls = v => v>0?'pos':v<0?'neg':'mut';
+let charts = {}, currentStrat = null, strategies = [];
+
+function show(p){
+  for (const x of ['dash','strat','logs']){
+    $('page-'+x).style.display = x===p?'':'none';
+    $('tab-'+x).classList.toggle('active', x===p);
+  }
+  if (p==='strat' && !currentStrat && strategies.length) selectStrat(strategies[0].strategy_id);
+  if (p==='logs') loadEvents();
+}
+
+function mkChart(id, cfg){
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart($(id), cfg);
+}
+
+async function j(url){ const r = await fetch(url); return r.json(); }
+
+/* ---------- dashboard ---------- */
+async function loadDash(){
+  const st = await j('/api/status');
+  const eq = st.equity ? st.equity.equity : st.capital_inicial;
+  $('c-equity').textContent = '$' + eq.toFixed(2);
+  $('c-equity').className = 'val ' + cls(eq - st.capital_inicial);
+  $('c-equity-sub').textContent = st.equity ?
+    `realizado ${fmt$(st.equity.realized)} · flotante ${fmt$(st.equity.unrealized)}` : 'sin datos aún';
+  $('c-pnl').textContent = fmt$(st.pnl_total); $('c-pnl').className = 'val ' + cls(st.pnl_total);
+  $('c-closed').textContent = st.closed_total;
+  $('c-wl').innerHTML = `<span class="pos">${st.wins} ✓</span> · <span class="neg">${st.losses} ✗</span>`;
+  $('c-wr').textContent = st.closed_total ? Math.round(100*st.wins/st.closed_total)+'%' : '—';
+  $('c-open').textContent = st.open_positions.length;
+  $('c-open-sub').textContent = st.open_positions.map(t=>t.strategy_id).join(', ') || 'ninguna';
+
+  const tb = $('t-open').querySelector('tbody');
+  tb.innerHTML = st.open_positions.map(t=>`<tr>
+    <td>${t.strategy_id} · ${t.strategy_name}</td><td>${t.symbol.split('/')[0]}</td>
+    <td><span class="badge ${t.side}">${t.side.toUpperCase()}</span></td>
+    <td>${fmtTs(t.t_entry)}</td><td>${fmtPx(t.entry_px)}</td><td>${fmtPx(t.stop_px)}</td>
+    <td>${fmtTs(t.timeout_at)}</td><td>$${t.base_amount.toFixed(0)}</td><td>$${t.notional.toFixed(0)}</td>
+  </tr>`).join('') || '<tr><td colspan="9" class="mut">sin posiciones abiertas</td></tr>';
+
+  const eqs = await j('/api/equity?limit=2000');
+  mkChart('ch-equity', {type:'line', data:{labels:eqs.map(r=>fmtTs(r.ts)),
+    datasets:[{data:eqs.map(r=>r.equity), borderColor:'#58a6ff', borderWidth:2,
+    pointRadius:0, fill:{target:{value:1000}, above:'#3fb95018', below:'#f8514918'}, tension:.25}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{maxTicksLimit:8,color:'#8b949e'},grid:{color:'#21262d'}},
+    y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}, animation:false}});
+
+  const sm = await j('/api/summary');
+  const names = sm.map(s=>s.strategy_id);
+  mkChart('ch-ntrades', {type:'bar', data:{labels:names,
+    datasets:[{label:'cerrados', data:sm.map(s=>s.n_trades), backgroundColor:'#58a6ff'},
+              {label:'ganados', data:sm.map(s=>s.wins), backgroundColor:'#3fb950'}]},
+    options:{plugins:{legend:{labels:{color:'#8b949e'}}},
+    scales:{x:{ticks:{color:'#8b949e'},grid:{display:false}},
+    y:{ticks:{color:'#8b949e',precision:0},grid:{color:'#21262d'}}}, animation:false}});
+  mkChart('ch-pnl', {type:'bar', data:{labels:names,
+    datasets:[{data:sm.map(s=>s.pnl_total), backgroundColor:sm.map(s=>s.pnl_total>=0?'#3fb950':'#f85149')}]},
+    options:{plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'#8b949e'},grid:{display:false}},
+    y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}, animation:false}});
+}
+
+/* ---------- estrategias ---------- */
+async function loadStrats(){
+  strategies = await j('/api/summary');
+  $('strat-chips').innerHTML = strategies.map(s=>`
+    <button class="chip" id="chip-${s.strategy_id}" onclick="selectStrat('${s.strategy_id}')">
+      ${s.strategy_id} · ${s.coin} ${s.side==='long'?'▲':'▼'}
+      <span class="tag">${s.name.split(' ').slice(1).join(' ')} · ${s.tf}</span>
+    </button>`).join('');
+}
+
+async function selectStrat(sid){
+  currentStrat = sid;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.id==='chip-'+sid));
+  const s = strategies.find(x=>x.strategy_id===sid);
+  $('strat-title').textContent = `Histórico — ${s.strategy_id} · ${s.name}`;
+  const wr = s.n_trades ? Math.round(100*s.wins/s.n_trades)+'%' : '—';
+  $('strat-cards').innerHTML = `
+    <div class="card"><div class="lbl">Trades cerrados</div><div class="val">${s.n_trades}</div>
+      <div class="sub">${s.open_now? '1 abierto ahora':'sin posición abierta'}</div></div>
+    <div class="card"><div class="lbl">Win rate</div><div class="val">${wr}</div>
+      <div class="sub">${s.wins} ganados</div></div>
+    <div class="card"><div class="lbl">PnL total</div><div class="val ${cls(s.pnl_total)}">${fmt$(s.pnl_total||0)}</div>
+      <div class="sub">sobre margen $100 × 5x</div></div>
+    <div class="card"><div class="lbl">Ret. medio c/apal</div>
+      <div class="val ${cls(s.avg_ret_lev)}">${s.avg_ret_lev==null?'—':s.avg_ret_lev.toFixed(2)+'%'}</div>
+      <div class="sub">s/apal: ${s.avg_ret_nolev==null?'—':s.avg_ret_nolev.toFixed(3)+'%'}</div></div>
+    <div class="card"><div class="lbl">Config</div><div class="val" style="font-size:15px">${s.tf} · ${s.side}</div>
+      <div class="sub">salida: ${s.exit_mode==='flip'?'flip Supertrend':'SL 2×ATR + timeout 48h'}</div></div>`;
+  const rows = await j('/api/trades?strategy_id='+sid+'&limit=500');
+  $('t-hist').querySelector('tbody').innerHTML = rows.map(t=>`<tr>
+    <td>${t.id}</td><td>${fmtTs(t.t_entry)}</td>
+    <td>${t.status==='open' ? '<span class="badge open">ABIERTO</span>' : fmtTs(t.t_exit)}</td>
+    <td>${t.symbol.split('/')[0]}</td>
+    <td><span class="badge ${t.side}">${t.side==='long'?'LONG':'SHORT'}</span></td>
+    <td>$${t.base_amount.toFixed(0)}</td><td>${t.leverage.toFixed(0)}x</td>
+    <td>$${t.notional.toFixed(0)}</td>
+    <td>${fmtPx(t.entry_px)}</td><td>${fmtPx(t.exit_px)}</td>
+    <td class="${cls(t.pnl_usd)}">${t.pnl_usd==null?'—':fmt$(t.pnl_usd)}</td>
+    <td class="${cls(t.ret_pct_lev)}">${t.ret_pct_lev==null?'—':t.ret_pct_lev.toFixed(2)+'%'}</td>
+    <td class="${cls(t.ret_pct_nolev)}">${t.ret_pct_nolev==null?'—':t.ret_pct_nolev.toFixed(3)+'%'}</td>
+    <td>${t.exit_reason||'—'}</td>
+    <td>${t.fees_usd==null?'—':'$'+t.fees_usd.toFixed(2)}</td>
+    <td class="${cls(t.funding_usd)}">${t.funding_usd==null?'—':fmt$(t.funding_usd)}</td>
+    <td>${t.bars_held??'—'}</td><td>${fmtPx(t.stop_px)}</td>
+  </tr>`).join('') || '<tr><td colspan="18" class="mut">sin trades aún — el bot registrará el primero cuando una señal aparezca</td></tr>';
+}
+
+/* ---------- logs ---------- */
+function logRange(){
+  const s = $('log-start').value, e = $('log-end').value;
+  return `start=${s||'2026-01-01'}&end=${e||'2099-12-31'}`;
+}
+async function viewLogs(){
+  const r = await fetch('/api/logs?'+logRange());
+  $('log-view').textContent = await r.text();
+}
+function downloadLogs(){ window.location = '/api/logs?'+logRange()+'&download=true'; }
+async function loadEvents(){
+  const ev = await j('/api/events?limit=100');
+  $('t-events').querySelector('tbody').innerHTML = ev.map(e=>`<tr>
+    <td>${fmtTs(e.ts)}</td>
+    <td class="${e.level==='error'?'neg':e.level==='warn'?'':'mut'}">${e.level}</td>
+    <td>${e.category}</td><td>${e.message}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="mut">sin eventos</td></tr>';
+}
+
+/* ---------- init ---------- */
+function tick(){
+  $('clock').textContent = new Date().toLocaleString('es-PE',{timeZone:'America/Lima',hour12:false}) + ' Lima';
+}
+async function refresh(){
+  try{
+    await loadDash(); await loadStrats();
+    if (currentStrat) await selectStrat(currentStrat);
+  }catch(e){ console.error(e); }
+}
+tick(); setInterval(tick, 1000);
+const today = new Date().toLocaleDateString('en-CA',{timeZone:'America/Lima'});
+$('log-start').value = today; $('log-end').value = today;
+refresh(); setInterval(refresh, 30000);
+</script>
+</body>
+</html>

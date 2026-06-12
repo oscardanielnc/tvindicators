@@ -3,16 +3,24 @@ Todas las horas en zona de Lima, Peru (UTC-5)."""
 import json
 import re
 import sqlite3
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 
 import config
 from tvbot.strategies import STRATEGIES
 
 app = FastAPI(title="tvbot", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+STATIC = Path(__file__).parent / "static"
+
+
+@app.get("/")
+def dashboard():
+    return FileResponse(STATIC / "dashboard.html")
 
 
 def q(sql, args=()):
