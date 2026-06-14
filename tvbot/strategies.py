@@ -11,6 +11,23 @@ def _last(arr):
     return bool(arr[-1])
 
 
+# --- filtros de conviccion (validados OOS 14/06/2026; ver roster-upgrades-validados) ---
+
+def _trend(df, side):
+    return bool(I.ema_trend_ok(df["close"], side)[-1])
+
+def _vol(df):
+    return bool(I.vol_ok(df)[-1])
+
+def _regime(df, side):
+    _, _, regup, regdn = I.bx_parts(df["close"])
+    return bool(regup[-1] if side > 0 else regdn[-1])
+
+def _sweep(df, side, F=6):
+    sL, sS = I.liquidity_sweeps(df)
+    return bool(I.sweep_recent(sL if side > 0 else sS, F)[-1])
+
+
 class Strategy:
     def __init__(self, sid, name, coin, tf, side, exit_mode, entry_fn, flip_exit_fn=None,
                  role=1.0, safety_atr=None, indicators=(), exit_desc=""):
@@ -40,9 +57,9 @@ class Strategy:
 
 # --- entradas ---
 
-def s1_entry(df):       # TRX 1h L: circulo verde B-X con T3<0
+def s1_entry(df):       # TRX 1h L: B-X verde + barrido<=6 + regimen + tendencia (upgrade OOS)
     gl, _, _, _ = I.bx_parts(df["close"])
-    return _last(gl)
+    return _last(gl) and _sweep(df, +1, 6) and _regime(df, +1) and _trend(df, +1)
 
 def s2_entry(df):       # TRX 1h L: Trend Meter alinea verde
     return _last(I.tm_align_edge(df["close"]))
@@ -65,11 +82,12 @@ def s5_entry(df):       # LTC 1h S: ST flip down + Donchian=-1
     don = I.dch_trend(df["close"], df["high"], df["low"], 20)
     return don[-1] == -1
 
-def s6_entry(df):       # XRP 1h L: ST flip up + HACOLT=1
+def s6_entry(df):       # XRP 1h L: ST flip up + HACOLT=1 + tendencia (upgrade OOS)
     up, _, _ = I.st_flips(df)
     if not _last(up): return False
     hc = I.hacolt(df["open"], df["high"], df["low"], df["close"])
-    return hc[-1] == 1
+    if hc[-1] != 1: return False
+    return _trend(df, +1)
 
 def s7_entry(df):       # AVAX 15m L: ST flip up + Donchian=1 + HACOLT=1
     up, _, _ = I.st_flips(df)
@@ -79,11 +97,40 @@ def s7_entry(df):       # AVAX 15m L: ST flip up + Donchian=1 + HACOLT=1
     hc = I.hacolt(df["open"], df["high"], df["low"], df["close"])
     return hc[-1] == 1
 
-def s8_entry(df):       # ETH 1h S: circulo rojo B-X T3>0 + Donchian=-1
+def s8_entry(df):       # ETH 1h S: B-X rojo + Donchian=-1 + tendencia + vol (upgrade OOS)
     _, rs, _, _ = I.bx_parts(df["close"])
     if not _last(rs): return False
     don = I.dch_trend(df["close"], df["high"], df["low"], 20)
-    return don[-1] == -1
+    if don[-1] != -1: return False
+    return _trend(df, -1) and _vol(df)
+
+# --- suplentes nuevos (validados OOS 14/06/2026, role 0.5, corr ~0 con roster) ---
+
+def s10_entry(df):      # DOT 1h S: B-X rojo + Donchian=-1 + barrido<=6
+    _, rs, _, _ = I.bx_parts(df["close"])
+    if not _last(rs): return False
+    don = I.dch_trend(df["close"], df["high"], df["low"], 20)
+    if don[-1] != -1: return False
+    return _sweep(df, -1, 6)
+
+def s11_entry(df):      # ADA 1h S: B-X rojo + regimen<0 + tendencia + vol
+    _, rs, _, regdn = I.bx_parts(df["close"])
+    if not (_last(rs) and bool(regdn[-1])): return False
+    return _trend(df, -1) and _vol(df)
+
+def s12_entry(df):      # ADA 1h S: B-X rojo + Donchian=-1 + barrido<=6
+    _, rs, _, _ = I.bx_parts(df["close"])
+    if not _last(rs): return False
+    don = I.dch_trend(df["close"], df["high"], df["low"], 20)
+    if don[-1] != -1: return False
+    return _sweep(df, -1, 6)
+
+def s13_entry(df):      # DOT 1h S: ST flip down + Donchian=-1 + tendencia
+    _, dn, _ = I.st_flips(df)
+    if not _last(dn): return False
+    don = I.dch_trend(df["close"], df["high"], df["low"], 20)
+    if don[-1] != -1: return False
+    return _trend(df, -1)
 
 def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
     sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
@@ -147,6 +194,15 @@ STRATEGIES = [
              role=0.5, indicators=[BX, DON], exit_desc=SL_TO),
     Strategy("S9", "BTC-L RIB+BXreg+ST 1h",    "BTC",  "1h",  +1, "atrstop", s9_entry,
              role=0.5, indicators=[RIB, BXREG, ST], exit_desc=SL_TO),
+    # --- suplentes nuevos (validados OOS 14/06/2026, descorrelacionados del roster) ---
+    Strategy("S10", "DOT-S BX+Don+barrido 1h",  "DOT",  "1h",  -1, "atrstop", s10_entry,
+             role=0.5, indicators=[BX, DON], exit_desc=SL_TO + " + barrido liquidez"),
+    Strategy("S11", "ADA-S BX+reg+tend+vol 1h",  "ADA",  "1h",  -1, "atrstop", s11_entry,
+             role=0.5, indicators=[BX, BXREG], exit_desc=SL_TO + " + tendencia/vol"),
+    Strategy("S12", "ADA-S BX+Don+barrido 1h",   "ADA",  "1h",  -1, "atrstop", s12_entry,
+             role=0.5, indicators=[BX, DON], exit_desc=SL_TO + " + barrido liquidez"),
+    Strategy("S13", "DOT-S ST+Don+tendencia 1h", "DOT",  "1h",  -1, "atrstop", s13_entry,
+             role=0.5, indicators=[ST, DON], exit_desc=SL_TO + " + tendencia"),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}

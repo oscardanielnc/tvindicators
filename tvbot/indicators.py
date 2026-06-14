@@ -123,3 +123,43 @@ def st_flips(df, period=10, factor=3.0):
     sd = supertrend_dir(df["high"], df["low"], df["close"], period, factor)
     sdp = np.roll(sd, 1); sdp[0] = sd[0]
     return (sd == 1) & (sdp == -1), (sd == -1) & (sdp == 1), sd
+
+
+# --- filtros de conviccion (validados OOS; paridad con pulir_filtros/validar_combos) ---
+
+def ema_trend_ok(c, side, n=200):
+    """Precio del lado correcto de la EMA(n). Array bool."""
+    ema = pine_ema(c, n).values
+    return (c.values > ema) if side > 0 else (c.values < ema)
+
+
+def vol_ok(df, win=500):
+    """ATR% por encima de su mediana movil (evita chop muerto). Array bool."""
+    atrpct = (atr14(df) / df["close"]).values
+    med = pd.Series(atrpct).rolling(win, min_periods=100).median().values
+    return atrpct >= med
+
+
+def liquidity_sweeps(df, W=5, maxage=200, warm=300):
+    """Barridos de liquidez: (sweep_long, sweep_short). Identico a poc_sweep_filter."""
+    h, l, c = df["high"].values, df["low"].values, df["close"].values
+    n = len(df)
+    ph = (df["high"] == df["high"].rolling(2*W+1, center=True).max()).values
+    pl = (df["low"] == df["low"].rolling(2*W+1, center=True).min()).values
+    sL = np.zeros(n, bool); sS = np.zeros(n, bool)
+    last_sh = last_sl = np.nan; sh_age = sl_age = 10**9; sh_used = sl_used = True
+    for t in range(min(warm, max(W+1, n-1)), n):
+        j = t - W
+        if ph[j]: last_sh, sh_age, sh_used = h[j], 0, False
+        if pl[j]: last_sl, sl_age, sl_used = l[j], 0, False
+        sh_age += 1; sl_age += 1
+        if (not sh_used) and sh_age <= maxage and not np.isnan(last_sh) and h[t] > last_sh and c[t] < last_sh:
+            sS[t] = True; sh_used = True
+        if (not sl_used) and sl_age <= maxage and not np.isnan(last_sl) and l[t] < last_sl and c[t] > last_sl:
+            sL[t] = True; sl_used = True
+    return sL, sS
+
+
+def sweep_recent(sig, F):
+    """True en i si hubo barrido en [i-F+1, i]. Identico a recent() del PoC."""
+    return (pd.Series(sig.astype(int)).rolling(F, min_periods=1).max() > 0).values
