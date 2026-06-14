@@ -28,7 +28,7 @@ def fil_arrays(df, side, sL, sS, ema_len=200, volwin=500, sweepF=6):
 
 
 def load_coin(coin):
-    df = pd.read_parquet(DATA.format(c=coin)); df["dt"] = pd.to_datetime(df["ts"], unit="ms")
+    df = pd.read_parquet(DATA.format(c=coin, tf="1h")); df["dt"] = pd.to_datetime(df["ts"], unit="ms")
     return df.set_index("dt").sort_index()
 
 
@@ -66,7 +66,7 @@ def main():
     rd = []
     for coin in ROSTER_COINS:
         for tf in ("1h", "15m"):
-            df = pd.read_parquet(DATA.format(c=coin).replace("1h", tf)); df["dt"] = pd.to_datetime(df["ts"], unit="ms")
+            df = pd.read_parquet(DATA.format(c=coin, tf=tf)); df["dt"] = pd.to_datetime(df["ts"], unit="ms")
             df = df.set_index("dt").sort_index()
             ents, flips = roster_entries(coin, df); ft, fr = load_fund(coin)
             for sid, (side, em, sa, entry) in ents.items():
@@ -75,22 +75,30 @@ def main():
                 if tr is not None: rd.append(tr.set_index("t_in")["ret"].resample("1D").sum())
     R = pd.concat(rd, axis=1).fillna(0).sum(axis=1)
 
-    # Stage 1: candidatos
+    # Stage 1: candidatos (precomputa arrays pesados 1 vez por moneda)
     cands = []
     for coin in new:
-        df = load_coin(coin); T, _ = templates(coin, df)
-        for tname in T:
-            best = None
+        df = load_coin(coin)
+        global W, MAXAGE
+        W, MAXAGE = 5, 200
+        sL, sS = detect_sweeps(df)
+        T, flips = templates(coin, df); ft, fr = load_fund(coin)
+        fa_side = {+1: fil_arrays(df, +1, sL, sS), -1: fil_arrays(df, -1, sL, sS)}
+        for tname, (side, em, sa, entry) in T.items():
+            fa = fa_side[side]; best = None
             for fs in FILTER_SETS:
-                tr = run_one(coin, tname, fs)
-                m = met(tr)
+                mask = np.ones(len(df), bool)
+                for f in fs:
+                    mask &= fa[f]
+                m = met(run_f(df, side, em, sa, entry & mask, flips, "1h", ft, fr))
                 if not m or m["n"] < 40 or m["exp"] <= 0 or m["pf"] < 1.35 or m["ypos"] < m["ytot"] - 1:
                     continue
                 if best is None or m["exp"] > best[1]["exp"]:
                     best = (fs, m)
             if best:
                 cands.append((coin, tname, best[0]))
-    print(f"Stage 1: {len(cands)} candidatos pasan el gate de calidad.\n")
+        print(f"  {coin}: {sum(1 for c in cands if c[0]==coin)} candidatos", flush=True)
+    print(f"\nStage 1: {len(cands)} candidatos pasan el gate de calidad.\n")
 
     # Stage 2: validación OOS
     print(f"{'coin':6}{'template':12}{'filtros':16}{'full_exp':>9}{'PF':>6}{'test_exp':>9}{'sens':>14}{'corr':>7}  veredicto")
