@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 
 import config
-from tvbot.strategies import STRATEGIES
+from tvbot.strategies import STRATEGIES, BACKTEST_REF
 
 app = FastAPI(title="tvbot", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -89,6 +89,43 @@ def summary():
                     "role": s.role, "open_now": n_open, **{k: r.get(k) for k in
                     ("n_trades", "wins", "pnl_total", "avg_ret_lev", "avg_ret_nolev")}})
     return out
+
+
+@app.get("/api/evaluation")
+def evaluation(gate: int = 30):
+    """Desempeno LIVE por estrategia vs backtest + veredicto (gate por defecto: 30 trades)."""
+    out = []
+    for s in STRATEGIES:
+        rows = q("SELECT ret_pct_nolev, pnl_usd FROM trades WHERE strategy_id=? "
+                 "AND status='closed' AND ret_pct_nolev IS NOT NULL", (s.sid,))
+        rets = [r["ret_pct_nolev"] for r in rows]
+        n = len(rets)
+        wins = [x for x in rets if x > 0]
+        losses = [x for x in rets if x <= 0]
+        pnl = round(sum((r["pnl_usd"] or 0) for r in rows), 2)
+        wr = round(len(wins) / n * 100) if n else None
+        live_exp = round(sum(rets) / n * 100, 1) if n else None      # bps de nominal
+        sl = sum(losses)
+        pf = (round(sum(wins) / abs(sl), 2) if sl < 0 else (99.9 if wins else None))
+        bt_exp, bt_pf = BACKTEST_REF.get(s.sid, (None, None))
+        if n == 0:
+            vc, vl = "none", "Sin datos"
+        elif n < 10:
+            vc, vl = "collect", "Recolectando"
+        elif n < gate:
+            vc, vl = ("ok", "En línea") if live_exp > 0 else ("watch", "Vigilar")
+        else:
+            vc, vl = ("pass", "Confirmada ✓") if live_exp > 0 else ("fail", "Candidata a quitar")
+        out.append({
+            "strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,
+            "side": "long" if s.side > 0 else "short",
+            "role": "titular" if s.role == 1 else "suplente",
+            "n": n, "wr": wr, "live_exp": live_exp, "pf": pf, "pnl": pnl,
+            "bt_exp": bt_exp, "bt_pf": bt_pf,
+            "ratio": (round(live_exp / bt_exp, 2) if (live_exp is not None and bt_exp) else None),
+            "verdict": vc, "verdict_label": vl,
+        })
+    return {"gate": gate, "rows": out}
 
 
 @app.get("/api/strategies")

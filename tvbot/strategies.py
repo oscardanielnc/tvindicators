@@ -276,3 +276,15 @@ STRATEGIES = [
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
+
+# Referencia de backtest por estrategia (expectancy en bps de nominal, profit factor).
+# Para comparar el desempeno LIVE vs lo validado. Titulares S1-S9 (filtros aplicados a
+# S1/S6/S8); suplentes S10-S21 (validados OOS + tuneados). Ver roster-upgrades-validados.
+BACKTEST_REF = {
+    "S1": (142, 3.69), "S2": (44, 1.66), "S3": (19, 1.60), "S4": (69, 1.38),
+    "S5": (45, 1.36), "S6": (199, 2.43), "S7": (26, 1.30), "S8": (63, 1.48),
+    "S9": (48, 1.61), "S10": (79, 1.64), "S11": (66, 1.39), "S12": (53, 1.38),
+    "S13": (49, 1.35), "S14": (304, 2.67), "S15": (209, 1.91), "S16": (150, 1.69),
+    "S17": (145, 1.68), "S18": (121, 1.84), "S19": (100, 1.51), "S20": (97, 1.56),
+    "S21": (94, 1.57),
+}

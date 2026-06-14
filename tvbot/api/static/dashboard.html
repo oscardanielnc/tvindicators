@@ -52,6 +52,16 @@ border-radius:8px;cursor:pointer;font-size:13px}
 .chip .side-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;margin-left:4px}
 .chip .side-tag.long{background:var(--green);color:#04260d}
 .chip .side-tag.short{background:var(--red);color:#2b0503}
+.badge.pass{background:var(--green);color:#04260d}
+.badge.ok{background:#58a6ff22;color:var(--blue);border:1px solid #58a6ff55}
+.badge.collect{background:#8b949e22;color:var(--muted)}
+.badge.watch{background:#d2992222;color:var(--yellow);border:1px solid #d2992255}
+.badge.fail{background:var(--red);color:#2b0503}
+.badge.none{background:#21262d;color:var(--muted)}
+.badge.titular{background:#1f6feb22;color:var(--blue)}
+.badge.suplente{background:#8b949e22;color:var(--muted)}
+.grouphdr{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;
+font-weight:700;margin:16px 0 8px;width:100%;border-top:1px solid var(--border);padding-top:12px}
 .ind-list{list-style:none;display:flex;flex-direction:column;gap:6px}
 .ind-list li{background:#0d1117;border:1px solid var(--border);border-radius:8px;
 padding:8px 12px;font-size:13px}
@@ -73,6 +83,7 @@ canvas{max-height:330px}
   <span class="pill" id="clock">—</span>
   <nav>
     <button id="tab-dash" class="active" onclick="show('dash')">Dashboard</button>
+    <button id="tab-eval" onclick="show('eval')">📊 Evaluación</button>
     <button id="tab-strat" onclick="show('strat')">Estrategias</button>
     <button id="tab-logs" onclick="show('logs')">Logs</button>
   </nav>
@@ -137,10 +148,30 @@ canvas{max-height:330px}
   </div>
 
   <div class="panel">
-    <h2>Referencia: indicadores de las 9 estrategias (nombres completos)</h2>
+    <h2>Referencia: indicadores del roster (nombres completos)</h2>
     <div class="tbl-wrap"><table id="t-ref">
       <thead><tr><th>Estrategia</th><th>Dirección</th><th>Indicadores (nombre completo)</th>
       <th>Salida</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ==================== PAGINA: EVALUACION ==================== -->
+<section id="page-eval" style="display:none">
+  <div class="cards" id="eval-cards"></div>
+  <div class="panel">
+    <h2>Desempeño LIVE vs backtest — gate: ≥30 trades y expectancy &gt; 0</h2>
+    <p class="mut" style="margin:-6px 0 14px;white-space:normal">
+      <b>Exp</b> = expectancy en bps de nominal por trade (ret% × 100). <b>Ratio</b> = live ÷ backtest
+      (1.0 = rinde como lo validado). Veredicto: <span class="badge collect">Recolectando</span> &lt;10 trades ·
+      <span class="badge ok">En línea</span> exp&gt;0 pero &lt;30 · <span class="badge watch">Vigilar</span> exp&lt;0 muestra chica ·
+      <span class="badge pass">Confirmada ✓</span> pasa el gate · <span class="badge fail">Candidata a quitar</span> ≥30 trades con exp&lt;0.
+    </p>
+    <div class="tbl-wrap"><table id="t-eval">
+      <thead><tr>
+        <th>Estrategia</th><th>L/S</th><th>Trades</th><th>WR</th>
+        <th>Exp live</th><th>Exp bt</th><th>Ratio</th><th>PF live</th><th>PF bt</th>
+        <th>PnL $</th><th>Veredicto</th>
+      </tr></thead><tbody></tbody></table></div>
   </div>
 </section>
 
@@ -174,11 +205,12 @@ const cls = v => v>0?'pos':v<0?'neg':'mut';
 let charts = {}, currentStrat = null, strategies = [];
 
 function show(p){
-  for (const x of ['dash','strat','logs']){
+  for (const x of ['dash','eval','strat','logs']){
     $('page-'+x).style.display = x===p?'':'none';
     $('tab-'+x).classList.toggle('active', x===p);
   }
   if (p==='strat' && !currentStrat && strategies.length) selectStrat(strategies[0].strategy_id);
+  if (p==='eval') loadEval();
   if (p==='logs') loadEvents();
 }
 
@@ -234,15 +266,56 @@ async function loadDash(){
     y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}, animation:false}});
 }
 
+/* ---------- evaluación ---------- */
+async function loadEval(){
+  const d = await j('/api/evaluation');
+  const rows = d.rows, cnt = v => rows.filter(r=>r.verdict===v).length;
+  $('eval-cards').innerHTML = `
+    <div class="card"><div class="lbl">Confirmadas</div><div class="val pos">${cnt('pass')}</div><div class="sub">≥30 trades · exp&gt;0</div></div>
+    <div class="card"><div class="lbl">En línea</div><div class="val" style="color:var(--blue)">${cnt('ok')}</div><div class="sub">prometen, faltan datos</div></div>
+    <div class="card"><div class="lbl">A vigilar</div><div class="val" style="color:var(--yellow)">${cnt('watch')}</div><div class="sub">exp&lt;0, muestra chica</div></div>
+    <div class="card"><div class="lbl">Candidatas a quitar</div><div class="val neg">${cnt('fail')}</div><div class="sub">≥30 trades · exp&lt;0</div></div>
+    <div class="card"><div class="lbl">Recolectando</div><div class="val mut">${cnt('collect')+cnt('none')}</div><div class="sub">&lt;10 trades</div></div>`;
+  let html='';
+  for (const [role,label] of [['titular','★ Titulares'],['suplente','½ Suplentes']]){
+    const g = rows.filter(r=>r.role===role)
+      .sort((a,b)=> b.n-a.n || ((b.live_exp??-999)-(a.live_exp??-999)));
+    if (!g.length) continue;
+    html += `<tr><td colspan="11" style="color:var(--muted);font-weight:700;font-size:12px;
+      letter-spacing:.6px;padding-top:14px;border-bottom:1px solid var(--border)">${label} (${g.length})</td></tr>`;
+    html += g.map(r=>`<tr>
+      <td><b>${r.strategy_id}</b> · ${r.coin} <span class="mut">${r.tf}</span></td>
+      <td><span class="badge ${r.side}">${r.side==='long'?'LONG':'SHORT'}</span></td>
+      <td>${r.n}</td><td>${r.wr==null?'—':r.wr+'%'}</td>
+      <td class="${cls(r.live_exp)}">${r.live_exp==null?'—':r.live_exp}</td>
+      <td class="mut">${r.bt_exp==null?'—':r.bt_exp}</td>
+      <td>${r.ratio==null?'—':r.ratio+'×'}</td>
+      <td>${r.pf==null?'—':r.pf}</td><td class="mut">${r.bt_pf==null?'—':r.bt_pf}</td>
+      <td class="${cls(r.pnl)}">${fmt$(r.pnl||0)}</td>
+      <td><span class="badge ${r.verdict}">${r.verdict_label}</span></td>
+    </tr>`).join('');
+  }
+  $('t-eval').querySelector('tbody').innerHTML = html;
+}
+
 /* ---------- estrategias ---------- */
-async function loadStrats(){
-  strategies = await j('/api/summary');
-  $('strat-chips').innerHTML = strategies.map(s=>`
-    <button class="chip" id="chip-${s.strategy_id}" onclick="selectStrat('${s.strategy_id}')">
+function chipHtml(s){
+  return `<button class="chip" id="chip-${s.strategy_id}" onclick="selectStrat('${s.strategy_id}')">
       ${s.strategy_id} · ${s.coin}
       <span class="side-tag ${s.side}">${s.side==='long'?'LONG':'SHORT'}</span>
       <span class="tag">${s.name.split(' ').slice(1).join(' ')} · ${s.tf}</span>
-    </button>`).join('');
+    </button>`;
+}
+async function loadStrats(){
+  strategies = await j('/api/summary');
+  let html='';
+  for (const [role,label] of [[1,'★ Titulares'],[0.5,'½ Suplentes']]){
+    const g = strategies.filter(s=>s.role===role)
+      .sort((a,b)=> a.side===b.side ? 0 : a.side==='long'?-1:1);
+    if (!g.length) continue;
+    html += `<div class="grouphdr">${label}</div>` + g.map(chipHtml).join('');
+  }
+  $('strat-chips').innerHTML = html;
   $('t-ref').querySelector('tbody').innerHTML = strategies.map(s=>`<tr>
     <td>${s.strategy_id} · ${s.name}</td>
     <td><span class="badge ${s.side}">${s.side.toUpperCase()}</span></td>
@@ -318,7 +391,7 @@ function tick(){
 }
 async function refresh(){
   try{
-    await loadDash(); await loadStrats();
+    await loadDash(); await loadStrats(); await loadEval();
     if (currentStrat) await selectStrat(currentStrat);
   }catch(e){ console.error(e); }
 }
