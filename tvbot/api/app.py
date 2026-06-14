@@ -128,6 +128,21 @@ def evaluation(gate: int = 30):
     return {"gate": gate, "rows": out}
 
 
+@app.get("/api/evaluation.csv", response_class=PlainTextResponse)
+def evaluation_csv(gate: int = 30, download: bool = True):
+    """Resumen de evaluacion en CSV (descargable) para analisis offline."""
+    rows = evaluation(gate)["rows"]
+    cols = ["strategy_id", "role", "coin", "side", "tf", "n", "wr", "live_exp",
+            "bt_exp", "ratio", "pf", "bt_pf", "pnl", "verdict_label"]
+    lines = [",".join(cols)]
+    for r in rows:
+        lines.append(",".join("" if r.get(c) is None else str(r.get(c)) for c in cols))
+    headers = {}
+    if download:
+        headers["Content-Disposition"] = 'attachment; filename="tvbot_evaluacion.csv"'
+    return PlainTextResponse("\n".join(lines), headers=headers)
+
+
 @app.get("/api/strategies")
 def strategies():
     return [{"strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,

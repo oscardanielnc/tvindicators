@@ -159,7 +159,8 @@ canvas{max-height:330px}
 <section id="page-eval" style="display:none">
   <div class="cards" id="eval-cards"></div>
   <div class="panel">
-    <h2>Desempeño LIVE vs backtest — gate: ≥30 trades y expectancy &gt; 0</h2>
+    <h2 style="display:flex;align-items:center;gap:12px">Desempeño LIVE vs backtest — gate: ≥30 trades y expectancy &gt; 0
+      <button class="btn" style="margin-left:auto" onclick="window.location='/api/evaluation.csv'">⬇ Descargar resumen</button></h2>
     <p class="mut" style="margin:-6px 0 14px;white-space:normal">
       <b>Exp</b> = expectancy en bps de nominal por trade (ret% × 100). <b>Ratio</b> = live ÷ backtest
       (1.0 = rinde como lo validado). Veredicto: <span class="badge collect">Recolectando</span> &lt;10 trades ·
