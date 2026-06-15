@@ -70,6 +70,12 @@ Modos de salida: `atrstop` (SL 2×ATR + timeout 48h), `flip` (ST/TM contrario + 
 - Un trade abierto de una estrategia que ya no existe en el código (renombrada/quitada en un pull) **NO
   tumba el ciclo ni se pierde**: se mantiene abierto y se avisa para revisión manual (verificado en test).
 - `deploy.sh` aborta el reinicio si fallan los imports (nunca reinicia con código roto).
+- **Backup automático** de la DB 2×/día (`tvbot.backup`, systemd timer) con rotación — el track record
+  no se pierde si la VM muere. **Watchdog** cada 10 min (`tvbot.watchdog`, timer): alerta si el bot no
+  late (sin ciclo >40 min) o si saltó el circuit breaker. Alertas por **ntfy/Telegram** (`tvbot.notify`,
+  configurables en `/opt/tvbot/.env`: `TVBOT_NTFY_URL`, `TVBOT_TG_TOKEN`/`TVBOT_TG_CHAT`).
+- **Reconciliación señal viva vs backtest** (`reconcile.py`): verifica que `sN_entry` (vivo) dispara en
+  las mismas velas que el backtest. Última corrida: **0 mismatches en las 56** → la comparación es justa.
 
 ## Desplegar en la VM
 ```bash
@@ -89,14 +95,20 @@ estrategias entre ambos (familias de indicadores disjuntas); sí solape de moned
 mientras ninguno opere capital real. Objetivo actual: **producir candidatos validados rápido**.
 
 ## Próximos pasos
-1. **Pushear y desplegar** en la VM (`git push` + `deploy.sh`) — todo listo y verificado.
+1. **Desplegar la tanda operativa** (`git push` + `deploy.sh`): instala backup/watchdog timers; crear
+   `/opt/tvbot/.env` con `TVBOT_NTFY_URL` (o Telegram) para recibir alertas.
 2. **Acumular trades vivos** (~2-3 meses) y vigilar la pestaña 🚀 Producción hasta que la cartera confirme.
-3. **Lote 1 a producción** con capital chico (1×) cuando se cumpla el gate de cartera; graduación rodante por
-   estrategia (las de alta frecuencia S2/S3/S7 primero).
+3. **Lote 1 a producción** con capital chico (1×) cuando se cumpla el gate de cartera; graduación rodante
+   (alta frecuencia S2/S3/S7 primero).
 4. Usar **MAE/MFE en vivo** para afinar stops/objetivos de las que confirmen; retirar las que el vivo condene.
 5. Vigilar S22/S24 (ENA/WIF, historia corta), S37/S38 (ORDI, maxDD alto) y la redundancia S1/S2 (marcada).
-6. Opcional: más indicadores (criterio correlación/contribución marginal); tracker live-vs-backtest de la
-   curva de equity agregada; integración con Oscilion hacia el proyecto unificado.
+6. **Metodología (P2):** Deflated Sharpe + holdout limpio para estimación insesgada antes de capital real.
+7. **Unificado (P3):** schema de trade estándar con Oscilion + correlación cruzada entre proyectos.
+8. Correr `reconcile.py` periódicamente (o tras cada cambio de indicadores) para garantizar que el vivo
+   sigue reproduciendo el backtest.
+
+> **Hecho hoy:** tracker de cartera + gates + captura enriquecida + backup/watchdog/alertas + reconciliación.
+> El cuello de botella ahora es TIEMPO de acumular trades — NO añadir más estrategias (diluiría).
 
 > **Importante:** los nombres de las estrategias son irrelevantes — el roster vivo se decide por resultados
 > (gates objetivos). Cada trade guarda datos ricos (contexto + MAE/MFE) para esas decisiones.

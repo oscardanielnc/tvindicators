@@ -1,0 +1,11 @@
+[Unit]
+Description=tvbot - watchdog (alerta si no late o salta el circuit breaker)
+
+[Service]
+Type=oneshot
+User=opc
+WorkingDirectory=/opt/tvbot
+Environment=PYTHONUNBUFFERED=1
+Environment=TZ=America/Lima
+EnvironmentFile=-/opt/tvbot/.env
+ExecStart=/opt/tvbot/.venv/bin/python -m tvbot.watchdog

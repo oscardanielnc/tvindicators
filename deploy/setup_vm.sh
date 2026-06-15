@@ -19,10 +19,15 @@ echo "[2/5] verificacion de imports..."
 cd "$APP_DIR"
 "$VENV/bin/python" -c "import config; from tvbot import engine, orchestrator; from tvbot.api import app; from tvbot.strategies import STRATEGIES; print(f'  OK - {len(STRATEGIES)} estrategias')"
 
-echo "[3/5] servicios systemd..."
-cp "$APP_DIR/deploy/tvbot.service" "$APP_DIR/deploy/tvbot-api.service" /etc/systemd/system/
+echo "[3/5] servicios systemd (bot, api, backup, watchdog)..."
+cp "$APP_DIR"/deploy/tvbot.service "$APP_DIR"/deploy/tvbot-api.service \
+   "$APP_DIR"/deploy/tvbot-backup.service "$APP_DIR"/deploy/tvbot-backup.timer \
+   "$APP_DIR"/deploy/tvbot-watchdog.service "$APP_DIR"/deploy/tvbot-watchdog.timer /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable tvbot tvbot-api
+systemctl enable --now tvbot-backup.timer tvbot-watchdog.timer
+echo "  (alertas opcionales: crea /opt/tvbot/.env con TVBOT_NTFY_URL=https://ntfy.sh/<topico>"
+echo "   y/o TVBOT_TG_TOKEN=... TVBOT_TG_CHAT=... para recibir avisos del watchdog)"
 
 echo "[4/5] abriendo puerto 8090 (dashboard)..."
 if command -v firewall-cmd &>/dev/null; then

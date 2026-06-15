@@ -1,0 +1,9 @@
+[Unit]
+Description=tvbot backup de la DB (2x al día)
+
+[Timer]
+OnCalendar=*-*-* 03,15:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
