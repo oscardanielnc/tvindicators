@@ -163,3 +163,97 @@ def liquidity_sweeps(df, W=5, maxage=200, warm=300):
 def sweep_recent(sig, F):
     """True en i si hubo barrido en [i-F+1, i]. Identico a recent() del PoC."""
     return (pd.Series(sig.astype(int)).rolling(F, min_periods=1).max() > 0).values
+
+
+# --- indicadores nuevos batch 1 (validados OOS 15/06/2026; ver indicadores_nuevos_VEREDICTO.md) ---
+
+def _true_range(df):
+    h, l, pc = df["high"], df["low"], df["close"].shift(1)
+    return pd.concat([h - l, (h - pc).abs(), (l - pc).abs()], axis=1).max(axis=1)
+
+
+def _linreg_end(y, n):
+    """Extremo (offset 0) de la regresion lineal sobre las ultimas n barras = Pine linreg(y,n,0).
+    Vectorizado con sumas rolling (k=0..n-1 dentro de la ventana)."""
+    y = pd.Series(np.asarray(y, dtype=float)).reset_index(drop=True)
+    t = np.arange(len(y), dtype=float)
+    Sy = y.rolling(n).sum()
+    Spy = (pd.Series(t) * y).rolling(n).sum()
+    Sky = Spy - (t - (n - 1)) * Sy
+    Sk = n * (n - 1) / 2.0
+    Skk = (n - 1) * n * (2 * n - 1) / 6.0
+    slope = (n * Sky - Sk * Sy) / (n * Skk - Sk * Sk)
+    intercept = (Sy - slope * Sk) / n
+    return (intercept + slope * (n - 1)).values
+
+
+def squeeze_momentum(df, bb_len=20, bb_mult=2.0, kc_len=20, kc_mult=1.5):
+    """Squeeze Momentum (LazyBear): (long_event, short_event).
+    Senal = RELEASE del squeeze (BB-dentro-de-KC termina ESTA barra) en la direccion del
+    momentum val=linreg(close - avg(avg(hh,ll), sma(close))). std poblacional (ddof=0)."""
+    c, h, l = df["close"], df["high"], df["low"]
+    basis = c.rolling(bb_len).mean(); dev = bb_mult * c.rolling(bb_len).std(ddof=0)
+    upBB, loBB = basis + dev, basis - dev
+    ma = c.rolling(kc_len).mean(); rangema = _true_range(df).rolling(kc_len).mean()
+    upKC, loKC = ma + rangema * kc_mult, ma - rangema * kc_mult
+    sqz_on = (loBB > loKC) & (upBB < upKC)
+    hh = h.rolling(kc_len).max(); ll = l.rolling(kc_len).min()
+    src = c - (((hh + ll) / 2.0) + c.rolling(kc_len).mean()) / 2.0
+    val = _linreg_end(src, kc_len)
+    release = sqz_on.shift(1).fillna(False).values & (~sqz_on.values)
+    return release & (val > 0), release & (val < 0)
+
+
+def vortex(df, n=14):
+    """Vortex (VI+/VI-): (long_event, short_event) = cruce de VI+ sobre/bajo VI-."""
+    h, l, c = df["high"], df["low"], df["close"]
+    tr = _true_range(df).rolling(n).sum()
+    vip = ((h - l.shift(1)).abs().rolling(n).sum() / tr).values
+    vim = ((l - h.shift(1)).abs().rolling(n).sum() / tr).values
+    pvip, pvim = np.roll(vip, 1), np.roll(vim, 1)
+    up = (vip > vim) & (pvip <= pvim); dn = (vip < vim) & (pvip >= pvim)
+    up[0] = dn[0] = False
+    return up, dn
+
+
+# --- reversion a la media (batch 2; motor de salida meanrev). std poblacional (ddof=0) ---
+
+def bb_extreme_event(c, side, n=20, k=2.0):
+    """Evento: close cruza FUERA de la banda de Bollinger (long=inferior, short=superior)."""
+    basis = c.rolling(n).mean(); dev = k * c.rolling(n).std(ddof=0)
+    cond = (c < (basis - dev)) if side > 0 else (c > (basis + dev))
+    return (cond & ~cond.shift(1).fillna(False)).values
+
+
+def sma_revert(c, side, n=20):
+    """Salida de reversion: close vuelve a la media SMA(n) (long: close>=SMA; short: close<=SMA)."""
+    s = c.rolling(n).mean()
+    return (c >= s).values if side > 0 else (c <= s).values
+
+
+def sma_trend_ok(c, side, n=200):
+    """Filtro de tendencia por SMA(n) (paridad con el sweep de reversion). Array bool."""
+    s = c.rolling(n).mean().values
+    return (c.values > s) if side > 0 else (c.values < s)
+
+
+# --- batch 3 (validado OOS 15/06/2026; ver batch3_VEREDICTO.md) ---
+
+def adx_dmi(df, n=14, thr=25):
+    """ADX/DMI (Wilder). (long_event, short_event) = cruce DI+/DI- con ADX>umbral."""
+    h, l, c = df["high"], df["low"], df["close"]
+    up = h.diff(); dn = -l.diff()
+    plus_dm = np.where((up > dn) & (up > 0), up, 0.0)
+    minus_dm = np.where((dn > up) & (dn > 0), dn, 0.0)
+    tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
+    atr = pine_rma(tr, n)
+    pdi = 100 * pine_rma(pd.Series(plus_dm, index=c.index), n) / atr
+    mdi = 100 * pine_rma(pd.Series(minus_dm, index=c.index), n) / atr
+    dx = 100 * (pdi - mdi).abs() / (pdi + mdi).replace(0, np.nan)
+    adx = pine_rma(dx.fillna(0), n).values
+    p, m = pdi.values, mdi.values
+    pc, mc = np.roll(p, 1), np.roll(m, 1)
+    longe = (p > m) & (pc <= mc) & (adx > thr)
+    shorte = (m > p) & (mc <= pc) & (adx > thr)
+    longe[0] = shorte[0] = False
+    return longe, shorte

@@ -83,12 +83,15 @@ class PaperEngine:
             if i0 >= len(df):
                 continue                      # la vela de entrada aun no cierra
             op, hi, lo = df["open"].values, df["high"].values, df["low"].values
-            to_bars = config.TIMEOUT_HOURS * 3600 // tf_s
-            flip = strat.exit_array(df) if strat.exit_mode == "flip" else None
+            timeout_h = strat.timeout_h or config.TIMEOUT_HOURS
+            to_bars = timeout_h * 3600 // tf_s
+            # 'flip' y 'meanrev' usan array de salida; 'atrstop' y 'meanrev' tienen timeout
+            flip = strat.exit_array(df) if strat.exit_mode in ("flip", "meanrev") else None
+            has_timeout = strat.exit_mode in ("atrstop", "meanrev")
             exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
 
-            stop = tr["stop_px"]            # atrstop siempre; flip solo si safety_atr
+            stop = tr["stop_px"]            # atrstop siempre; flip/meanrev solo si safety_atr
             for k in range(i0, len(df)):
                 if stop:
                     hit = lo[k] <= stop if side > 0 else hi[k] >= stop
@@ -97,16 +100,16 @@ class PaperEngine:
                         reason, cost_out = "SL", config.TAKER_FEE + config.SLIPPAGE
                         t_exit = df.index[k]
                         break
-                if strat.exit_mode == "atrstop":
-                    if k - i0 + 1 >= to_bars:
-                        exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
-                            else (live_open, None)
-                        reason = "timeout"
-                        break
-                elif flip[k]:
+                # salida por senal (flip ST contrario / reversion a la media): prioritaria al timeout
+                if flip is not None and flip[k]:
                     exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
                         else (live_open, None)
-                    reason = "flip"
+                    reason = "revert" if strat.exit_mode == "meanrev" else "flip"
+                    break
+                if has_timeout and k - i0 + 1 >= to_bars:
+                    exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
+                        else (live_open, None)
+                    reason = "timeout"
                     break
             # fallback: trade mas viejo que la ventana de datos -> timeout por reloj
             if exit_px is None and tr["timeout_at"] \
@@ -170,8 +173,8 @@ class PaperEngine:
         atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
         stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
             if atr_mult else None
-        timeout_at = _iso(_now() + timedelta(hours=config.TIMEOUT_HOURS)) \
-            if s.exit_mode == "atrstop" else None
+        timeout_at = _iso(_now() + timedelta(hours=(s.timeout_h or config.TIMEOUT_HOURS))) \
+            if s.exit_mode in ("atrstop", "meanrev") else None
         tid = db.insert_trade(
             strategy_id=s.sid, strategy_name=s.name, symbol=s.symbol, tf=s.tf,
             side="long" if s.side > 0 else "short", status="open",
