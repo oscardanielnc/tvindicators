@@ -11,7 +11,7 @@ from tvbot import strategies as STRAT
 
 TOP8_SID = {f"S{22+i}": spec for i, spec in enumerate(TOP8)}  # S22..S29 -> (coin,sig,side,fs)
 SIGFN = {"adx": I.adx_dmi, "sqz": I.squeeze_momentum, "cmf": I.cmf, "fi": I.force_index,
-         "kst": I.kst, "ao": I.awesome_osc, "tsi": I.tsi}
+         "kst": I.kst, "ao": I.awesome_osc, "tsi": I.tsi, "zl": I.zero_lag_entry}
 LATE = {  # S31-S44: (coin, sigfn, side, filtros)
     "S31": ("ARB", "adx", -1, ["trend", "vol"]), "S32": ("EGLD", "sqz", -1, ["sweep6"]),
     "S33": ("DOT", "adx", -1, ["sweep6"]), "S34": ("HBAR", "adx", -1, ["sweep6"]),
@@ -20,6 +20,8 @@ LATE = {  # S31-S44: (coin, sigfn, side, filtros)
     "S39": ("LINK", "kst", +1, ["sweep6"]), "S40": ("NEO", "ao", +1, ["sweep6", "trend"]),
     "S41": ("ICP", "kst", -1, ["regime"]), "S42": ("NEAR", "ao", -1, ["sweep6"]),
     "S43": ("ALGO", "tsi", -1, ["sweep6", "trend"]), "S44": ("TAO", "ao", -1, ["trend", "vol"]),
+    "S45": ("FIL", "zl", +1, ["sweep6"]), "S46": ("NEO", "zl", -1, ["sweep6", "trend"]),
+    "S47": ("STX", "zl", -1, ["sweep6"]), "S48": ("CRV", "zl", -1, ["sweep6", "trend"]),
 }
 _DF = {}
 def getdf(coin, tf="1h"):
