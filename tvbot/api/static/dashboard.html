@@ -168,6 +168,8 @@ canvas{max-height:330px}
         <th>#</th><th>Inicio (Lima)</th><th>Fin (Lima)</th><th>Moneda</th><th>L/S</th>
         <th>Monto base</th><th>Apal.</th><th>Nominal</th><th>P. entrada</th><th>P. salida</th>
         <th>PnL $</th><th>% c/apal</th><th>% s/apal</th><th>Salida</th>
+        <th title="máx. excursión adversa en R (vs stop)">MAE(R)</th>
+        <th title="máx. excursión favorable en R — ¿se cortó al ganador?">MFE(R)</th>
         <th>Fees $</th><th>Funding $</th><th>Velas</th><th>Stop</th>
       </tr></thead><tbody></tbody></table></div>
   </div>
@@ -416,10 +418,12 @@ async function selectStrat(sid){
     <td class="${cls(t.ret_pct_lev)}">${t.ret_pct_lev==null?'—':t.ret_pct_lev.toFixed(2)+'%'}</td>
     <td class="${cls(t.ret_pct_nolev)}">${t.ret_pct_nolev==null?'—':t.ret_pct_nolev.toFixed(3)+'%'}</td>
     <td>${t.exit_reason||'—'}</td>
+    <td class="${t.mae_r<-1?'neg':'mut'}">${t.mae_r==null?'—':t.mae_r}</td>
+    <td class="${t.mfe_r>=1?'pos':'mut'}">${t.mfe_r==null?'—':t.mfe_r}</td>
     <td>${t.fees_usd==null?'—':'$'+t.fees_usd.toFixed(2)}</td>
     <td class="${cls(t.funding_usd)}">${t.funding_usd==null?'—':fmt$(t.funding_usd)}</td>
     <td>${t.bars_held??'—'}</td><td>${fmtPx(t.stop_px)}</td>
-  </tr>`).join('') || '<tr><td colspan="18" class="mut">sin trades aún — el bot registrará el primero cuando una señal aparezca</td></tr>';
+  </tr>`).join('') || '<tr><td colspan="20" class="mut">sin trades aún — el bot registrará el primero cuando una señal aparezca</td></tr>';
 }
 
 /* ---------- logs ---------- */

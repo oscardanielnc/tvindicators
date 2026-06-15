@@ -67,6 +67,9 @@ rápidas). Roster maduro (incl. las de 1 trade/mes) **6-18 meses**. Las muy lent
 significancia individual → se quedan/van por su aporte al portafolio, no por su t-stat solo.
 
 ## Próximos pasos sugeridos
-- Enriquecer la captura de datos por trade (MAE/MFE + contexto) — alto valor para el unificado.
+- ✅ **Captura de datos por trade enriquecida (15/06/2026):** contexto de entrada (ATR%, dist. SMA200,
+  hora, régimen vol, régimen B-X, funding) + MAE/MFE en % y R + slippage de salida. En `db.py`/`engine.py`,
+  visible en el dashboard (columnas MAE(R)/MFE(R) en el histórico).
 - Tracker de confirmación a nivel cartera (live agregado vs backtest) además del gate por estrategia.
+- Definir/documentar los gates de producción (nº trades, exp live, ratio, DD máx) por estrategia y cartera.
 - Mantener el universo descargando data y vigilar survivorship al añadir monedas.

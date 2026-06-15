@@ -57,8 +57,12 @@ python -m tvbot.api        # API en :8090
 - GET /api/events             — log operativo
 
 Campos por trade: fechas señal/entrada/salida, moneda, long/short, monto base, leverage,
-notional, entry/exit px, stop, timeout, razón de salida (SL/timeout/flip), PnL USD, fees,
+notional, entry/exit px, stop, timeout, razón de salida (SL/timeout/flip/revert), PnL USD, fees,
 funding, %ret con y sin apalancamiento, ATR de entrada, barras en posición.
+**Enriquecimiento (para el proyecto unificado):** contexto de entrada (ATR%, distancia a SMA200,
+hora Lima, régimen de vol, régimen B-X, funding al entrar) y excursiones MAE/MFE en % y en R
+(múltiplos del stop) + slippage de salida. Sirven para decidir si una estrategia se queda o se va
+(¿stop bien puesto?, ¿se cortan ganadores?, ¿en qué régimen funciona?).
 
 ## Riesgo conocido a 5×
 Stop de 2×ATR en 1h ≈ movimientos de 2-5% → pérdida típica por SL ≈ 10-25% del margen

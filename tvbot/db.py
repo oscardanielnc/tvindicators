@@ -82,9 +82,30 @@ def conn():
     return c
 
 
+# Columnas de enriquecimiento (datos valiosos por trade para el proyecto unificado).
+# Se agregan idempotentemente (ALTER ADD COLUMN) para no romper DBs ya en producción.
+_EXTRA_COLS = [
+    ("entry_atr_pct", "REAL"),      # volatilidad al entrar (ATR/precio)
+    ("entry_trend_dist", "REAL"),   # close/SMA200-1 (contexto de tendencia de la moneda)
+    ("entry_hour", "INTEGER"),      # hora Lima de la entrada (sesión)
+    ("entry_vol_regime", "INTEGER"),  # 1 si ATR% >= su mediana (vol_ok) al entrar
+    ("entry_regime_ok", "INTEGER"),   # 1 si el régimen B-X favorecía el lado al entrar
+    ("entry_funding", "REAL"),      # funding rate vigente al entrar
+    ("mae_pct", "REAL"),            # máxima excursión ADVERSA (% sobre entrada, negativa)
+    ("mfe_pct", "REAL"),            # máxima excursión FAVORABLE (%)
+    ("mae_r", "REAL"),              # MAE en múltiplos de la distancia al stop
+    ("mfe_r", "REAL"),              # MFE en R (¿se cortó al ganador?)
+    ("exit_slippage_bps", "REAL"),  # slippage modelado en la salida (bps)
+]
+
+
 def init():
     with _lock, conn() as c:
         c.executescript(SCHEMA)
+        existing = {r[1] for r in c.execute("PRAGMA table_info(trades)")}
+        for col, typ in _EXTRA_COLS:
+            if col not in existing:
+                c.execute(f"ALTER TABLE trades ADD COLUMN {col} {typ}")
 
 
 def insert_trade(**kw):

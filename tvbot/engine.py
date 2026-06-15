@@ -15,6 +15,7 @@ import pandas as pd
 
 import config
 from . import data, db
+from . import indicators as I
 from .indicators import atr14
 from .strategies import STRATEGIES, BY_ID
 
@@ -90,6 +91,7 @@ class PaperEngine:
             has_timeout = strat.exit_mode in ("atrstop", "meanrev")
             exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
+            exit_k = None
 
             stop = tr["stop_px"]            # atrstop siempre; flip/meanrev solo si safety_atr
             for k in range(i0, len(df)):
@@ -98,18 +100,19 @@ class PaperEngine:
                     if hit:
                         exit_px = min(op[k], stop) if side > 0 else max(op[k], stop)
                         reason, cost_out = "SL", config.TAKER_FEE + config.SLIPPAGE
-                        t_exit = df.index[k]
+                        t_exit = df.index[k]; exit_k = k
                         break
                 # salida por senal (flip ST contrario / reversion a la media): prioritaria al timeout
                 if flip is not None and flip[k]:
                     exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
                         else (live_open, None)
                     reason = "revert" if strat.exit_mode == "meanrev" else "flip"
+                    exit_k = k
                     break
                 if has_timeout and k - i0 + 1 >= to_bars:
                     exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
                         else (live_open, None)
-                    reason = "timeout"
+                    reason = "timeout"; exit_k = k
                     break
             # fallback: trade mas viejo que la ventana de datos -> timeout por reloj
             if exit_px is None and tr["timeout_at"] \
@@ -118,9 +121,22 @@ class PaperEngine:
                 exit_px, reason = live_open, "timeout"
 
             if exit_px is not None:
-                self._close(tr, float(exit_px), reason, cost_out, t_exit)
+                extra = {}
+                if exit_k is not None:
+                    seg_hi = float(hi[i0:exit_k + 1].max()); seg_lo = float(lo[i0:exit_k + 1].min())
+                    ep = tr["entry_px"]
+                    if side > 0:
+                        mfe, mae = seg_hi / ep - 1, seg_lo / ep - 1
+                    else:
+                        mfe, mae = ep / seg_lo - 1, ep / seg_hi - 1
+                    sd = abs(ep - tr["stop_px"]) / ep if tr.get("stop_px") else None
+                    extra = {"mae_pct": round(mae * 100, 4), "mfe_pct": round(mfe * 100, 4),
+                             "mae_r": round(mae / sd, 3) if sd else None,
+                             "mfe_r": round(mfe / sd, 3) if sd else None,
+                             "exit_slippage_bps": round(config.SLIPPAGE * 1e4, 1) if reason == "SL" else 0.0}
+                self._close(tr, float(exit_px), reason, cost_out, t_exit, extra)
 
-    def _close(self, tr, exit_px, reason, cost_out, t_exit=None):
+    def _close(self, tr, exit_px, reason, cost_out, t_exit=None, extra=None):
         side = 1 if tr["side"] == "long" else -1
         notional, margin = tr["notional"], tr["base_amount"]
         entry_t = datetime.fromisoformat(tr["t_entry"])
@@ -139,7 +155,8 @@ class PaperEngine:
                        pnl_usd=round(pnl, 4), fees_usd=round(fees_usd, 4),
                        funding_usd=round(funding_usd, 4),
                        ret_pct_lev=round(ret_lev * 100, 4),
-                       ret_pct_nolev=round(ret_nolev * 100, 4), bars_held=bars_held)
+                       ret_pct_nolev=round(ret_nolev * 100, 4), bars_held=bars_held,
+                       **(extra or {}))
         db.log_signal(tr["strategy_id"], tr["symbol"], "exit",
                       {"reason": reason, "px": exit_px, "pnl": round(pnl, 2)})
         db.log_event("info", "trade",
@@ -165,10 +182,32 @@ class PaperEngine:
                 continue
             self._open(s, df, float(live_open))
 
+    def _entry_context(self, s, df):
+        """Datos de contexto al entrar — valiosos para decidir si la estrategia se queda o se va."""
+        ctx = {}
+        try:
+            c = df["close"]; price = float(c.iloc[-1])
+            ctx["entry_atr_pct"] = round(float(atr14(df).iloc[-1]) / price * 100, 4) if price else None
+            sma200 = c.rolling(200).mean().iloc[-1]
+            ctx["entry_trend_dist"] = round(price / float(sma200) - 1, 5) if sma200 == sma200 else None
+            ctx["entry_hour"] = _now().hour
+            ctx["entry_vol_regime"] = int(bool(I.vol_ok(df)[-1]))
+            _, _, regup, regdn = I.bx_parts(c)
+            ctx["entry_regime_ok"] = int(bool(regup[-1] if s.side > 0 else regdn[-1]))
+        except Exception as e:
+            db.log_event("warn", "context", f"{s.sid} contexto de entrada parcial: {e}")
+        try:
+            now_ms = datetime.now(config.LIMA_TZ).timestamp() * 1000
+            ctx["entry_funding"] = round(data.funding_since(s.symbol, now_ms - 9 * 3600 * 1000, now_ms), 6)
+        except Exception:
+            pass
+        return ctx
+
     def _open(self, s, df, entry_px):
         margin = self.capital0 * config.MARGIN_PCT          # 10% fijo de $1000
         notional = margin * config.LEVERAGE                  # 5x
         qty = notional / entry_px
+        ctx = self._entry_context(s, df)
         atr = float(atr14(df).iloc[-1])
         atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
         stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
@@ -182,7 +221,7 @@ class PaperEngine:
             t_entry=db.utcnow(),
             entry_px=entry_px, base_amount=margin, leverage=config.LEVERAGE,
             notional=notional, qty=qty, stop_px=stop_px, timeout_at=timeout_at,
-            atr_entry=atr, signal_meta=json.dumps({"exit_mode": s.exit_mode}))
+            atr_entry=atr, signal_meta=json.dumps({"exit_mode": s.exit_mode}), **ctx)
         db.log_signal(s.sid, s.symbol, "entry", {"px": entry_px, "trade_id": tid})
         db.log_event("info", "trade",
                      f"{s.sid} abre {'long' if s.side > 0 else 'short'} {s.symbol} @ {entry_px} "
