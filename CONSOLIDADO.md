@@ -3,7 +3,7 @@
 
 > Métricas **recalculadas sobre el store actual** (más historia que el baseline 2023-06 original). Por eso exp/PF pueden diferir levemente del `BACKTEST_REF` de `tvbot/strategies.py` (ese se fijó en la validación original y es el que usa el frontend para comparar live vs backtest). El método y el motor de salida son idénticos al bot (`run_f`, paridad `engine.py`).
 
-## Roster (36 estrategias · 7 titulares + 29 suplentes · 14 long / 22 short)
+## Roster (38 estrategias · 7 titulares + 31 suplentes · 16 long / 22 short)
 
 | # | Estrategia | TF | Lado | Rol | Tr/mes | WR | exp(bps) | PF | CAGR 1× | MaxDD 1× | Años+ | Indicador clave |
 |---|------------|----|------|-----|--------|----|----------|----|---------|----------|-------|-----------------|
@@ -43,11 +43,14 @@
 | **S34** | **HBAR-S ADX+barrido** | 1h | S | ½ | 1.0 | 52% | 160 | 2.31 | +19% | −10% | 5/5 | **ADX/DMI** |
 | **S35** | **FLOW-S Squeeze+barrido** | 1h | S | ½ | 0.9 | 45% | 126 | 1.72 | +13% | −19% | 4/5 | **Squeeze Momentum (short)** |
 | **S36** | **AVAX-S ADX+barrido** | 1h | S | ½ | 1.3 | 56% | 224 | 2.87 | +38% | −15% | 3/4 | **ADX/DMI** (corr 0.39 con S28) |
+| **S37** | **ORDI-L CMF+tend+vol** | 1h | L | ½ | 3.9 | 25% | 151 | 1.46 | +10% | −71% ⚠️ | 3/4 | **Chaikin Money Flow (vol)** |
+| **S38** | **ORDI-L Force Index+régimen** | 1h | L | ½ | 7.6 | 33% | 115 | 1.47 | +37% | −64% ⚠️ | 3/4 | **Force Index (vol)** |
 
 \* CAGR/MaxDD 1× = curva de equity de esa estrategia sola con capital dedicado (compone cada trade). No hay TP fijo: perdedores salen por SL (2×ATR; S2/S14 por 3×ATR), ganadores corren hasta flip del Supertrend / TM-opuesto o timeout 48h (atrstop).
 **WR bajo (32-47%) es por diseño:** trend-following con *runners* — el edge es la asimetría (ganador medio ≫ perdedor medio), no el win-rate. Filosofía: pocas y buenas, baja frecuencia + ganancias asimétricas.
 **Excepción S30** (única reversión a la media): perfil inverso — WR alto (69%), aciertos chicos, edge fino. Representante de la clase, peso bajo, en observación (ver `meanrev_VEREDICTO.md`).
 **Batch 3 (S31-S36):** ADX/DMI shorts + Squeeze shorts — edge GRUESO (126-224 bps), baja frecuencia (~1/mes), validados OOS + sensibilidad + corr directa vs el short del mismo par (ver `batch3_VEREDICTO.md`).
+**Batch 4 (S37-S38):** volumen (CMF, Force Index) en LONG sobre ORDI (moneda nueva, balance long/short). ⚠️ MaxDD 1× alto (ORDI muy volátil) — el peso ½/vol-parity lo diluye, pero vigilar. El volumen en SHORT resultó redundante con el momentum (no promovido; ver `batch4_VEREDICTO.md`).
 
 ## Portafolio combinado (núcleo de 29 trend/momentum, pesos vol-parity 1/σ)
 

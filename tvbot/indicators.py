@@ -257,3 +257,27 @@ def adx_dmi(df, n=14, thr=25):
     shorte = (m > p) & (mc <= pc) & (adx > thr)
     longe[0] = shorte[0] = False
     return longe, shorte
+
+
+# --- batch 4 (volumen/flujo; validado OOS 15/06/2026, ver batch4_VEREDICTO.md) ---
+
+def cmf(df, n=20):
+    """Chaikin Money Flow. (long_event, short_event) = cruce de cero (acum/distribución)."""
+    h, l, c, v = df["high"], df["low"], df["close"], df["volume"]
+    rng = (h - l).replace(0, np.nan)
+    mfv = (((c - l) - (h - c)) / rng).fillna(0) * v
+    val = (mfv.rolling(n).sum() / v.rolling(n).sum().replace(0, np.nan)).values
+    pos = val > 0
+    lo = pos & ~np.roll(pos, 1); sh = (~pos) & np.roll(pos, 1)
+    lo[0] = sh[0] = False
+    return lo, sh
+
+
+def force_index(df, n=13):
+    """Force Index (Elder) suavizado con EMA. (long_event, short_event) = cruce de cero."""
+    c, v = df["close"], df["volume"]
+    fi = ((c - c.shift(1)) * v).ewm(span=n, adjust=False).mean().values
+    pos = fi > 0
+    l = pos & ~np.roll(pos, 1); s = (~pos) & np.roll(pos, 1)
+    l[0] = s[0] = False
+    return l, s

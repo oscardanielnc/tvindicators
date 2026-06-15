@@ -259,6 +259,16 @@ def s36_entry(df):      # AVAX 1h S: ADX/DMI bajista + barrido<=6
     _, se = I.adx_dmi(df)
     return _last(se) and _sweep(df, -1, 6)
 
+# --- batch 4: volumen/flujo en LONG sobre moneda nueva (ORDI), validados OOS 15/06/2026, role 0.5 ---
+
+def s37_entry(df):      # ORDI 1h L: Chaikin Money Flow cruza a positivo + tendencia + vol
+    le, _ = I.cmf(df)
+    return _last(le) and _trend(df, +1) and _vol(df)
+
+def s38_entry(df):      # ORDI 1h L: Force Index cruza a positivo + régimen
+    le, _ = I.force_index(df)
+    return _last(le) and _regime(df, +1)
+
 def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
     sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
     full = sl == 10
@@ -301,6 +311,8 @@ SQZM = "Squeeze Momentum (LazyBear)"
 VTX = "Vortex Indicator (VI+/VI−)"
 BBR = "Bollinger Bands %b (reversión a la media)"
 ADX = "ADX / DMI (Wilder, DI+/DI−, ADX>25)"
+CMF = "Chaikin Money Flow (volumen)"
+FI = "Force Index (Elder, volumen)"
 
 SL_TO = "SL 2×ATR + timeout 48h"
 FLIP = "flip contrario del Supertrend"
@@ -385,6 +397,11 @@ STRATEGIES = [
              role=0.5, indicators=[SQZM], exit_desc=SL_TO + " + barrido"),
     Strategy("S36", "AVAX-S ADX+barrido 1h",      "AVAX", "1h",  -1, "atrstop", s36_entry,
              role=0.5, indicators=[ADX], exit_desc=SL_TO + " + barrido (corr 0.39 con S28)"),
+    # --- batch 4: volumen en LONG sobre moneda nueva ORDI (balance long/short) ---
+    Strategy("S37", "ORDI-L CMF+tend+vol 1h",     "ORDI", "1h",  +1, "atrstop", s37_entry,
+             role=0.5, indicators=[CMF], exit_desc=SL_TO + " + tendencia/vol"),
+    Strategy("S38", "ORDI-L ForceIndex+régimen 1h","ORDI", "1h",  +1, "atrstop", s38_entry,
+             role=0.5, indicators=[FI], exit_desc=SL_TO + " + régimen"),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
@@ -404,4 +421,5 @@ BACKTEST_REF = {
     "S30": (54, 1.50),
     "S31": (197, 2.13), "S32": (155, 1.93), "S33": (130, 1.97), "S34": (160, 2.31),
     "S35": (126, 1.72), "S36": (224, 2.87),
+    "S37": (151, 1.46), "S38": (115, 1.47),
 }
