@@ -22,7 +22,7 @@ import pandas as pd
 
 # --- traer librería de indicadores (pine_*, t3, dch_trend, supertrend_dir, hacolt, tema,
 #     st_flips, bx_trig, tm_trig, rib_str, bxreg) sin correr backtests de cripto ---
-ROOT = r"C:\Users\LENOVO\tvindicators"
+ROOT = r"D:\OSCAR\Documents\Trading Proyects\tvindicators"
 src = open(os.path.join(ROOT, "portafolio.py"), encoding="utf-8").read()
 exec(src.split("daily, stats =")[0])
 

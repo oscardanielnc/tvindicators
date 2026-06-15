@@ -80,7 +80,7 @@ def hacolt(o, h, l, c, length=55, ema_len=60, csf=1.1):
     return np.where(buySig, 1, np.where(neutral, 0, -1))
 
 def prep(coin, tf):
-    df = pd.read_parquet(rf"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
+    df = pd.read_parquet(rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
     df["dt"] = pd.to_datetime(df["ts"], unit="ms"); df = df.set_index("dt").sort_index()
     c, h, l, o = df["close"], df["high"], df["low"], df["open"]
     # B-Xtrender
@@ -197,7 +197,7 @@ for coin in COINS:
     print(coin, "ok", flush=True)
 
 res = pd.DataFrame(rows)
-res.to_csv(r"C:\Users\LENOVO\tvindicators\results_sweep3.csv", index=False)
+res.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\results_sweep3.csv", index=False)
 print(f"\nTotal: {len(res)} backtests -> results_sweep3.csv")
 
 print("\n=== Por GATILLO (mediana) ===")

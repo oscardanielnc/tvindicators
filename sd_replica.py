@@ -17,7 +17,7 @@ import pandas as pd
 
 from tvbot import indicators as I   # pine_ema, atr14 (replicas Pine ya validadas)
 
-OHLCV = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
+OHLCV = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
 
 
 # ---------------------------------------------------------------- datos

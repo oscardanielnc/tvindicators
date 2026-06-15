@@ -1,7 +1,7 @@
 import os, databento as db
 import pandas as pd
 KEY = "db-qpawebQq654FynQE6JK6YuKjv3LmC"
-OUT = r"C:\Users\LENOVO\tvindicators\tradfi\data_db"
+OUT = r"D:\OSCAR\Documents\Trading Proyects\tvindicators\tradfi\data_db"
 os.makedirs(OUT, exist_ok=True)
 SYMS = ["AMD","MU","LITE","TSLA","AAPL","NVDA"]
 c = db.Historical(KEY)

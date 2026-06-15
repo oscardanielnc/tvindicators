@@ -17,7 +17,7 @@ import itertools
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\poc_sweep_filter.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_sweep_filter.py", encoding="utf-8").read()
 exec(src.split("TFMAP =")[0])   # detect_sweeps, recent, roster_entries, run, I, DATA, WARM, etc.
 
 TFMAP = {"S3-TRX-L": "15m", "S7-AVAX-L": "15m"}

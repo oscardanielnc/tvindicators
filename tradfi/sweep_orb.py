@@ -17,7 +17,7 @@ import os
 import numpy as np
 import pandas as pd
 
-DATA = r"C:\Users\LENOVO\tvindicators\tradfi\data_db"
+DATA = r"D:\OSCAR\Documents\Trading Proyects\tvindicators\tradfi\data_db"
 TICKERS = ["AMD", "MU", "LITE", "TSLA", "AAPL", "NVDA"]
 TAKER, SLIP = 0.0005, 0.0004              # costos por lado (futuro de acciones, conservador)
 SESSION_OPEN = pd.Timestamp("09:30").time()
@@ -155,7 +155,7 @@ def main():
     t = run(sym_data, 15, None)
     for sym in sym_data:
         show(sym, t[t.sym == sym])
-    t.to_csv(r"C:\Users\LENOVO\tvindicators\tradfi\results_orb.csv", index=False)
+    t.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\tradfi\results_orb.csv", index=False)
 
     # ── REFINACION: filtro de volatilidad (solo rangos de apertura amplios) ──
     print("\n===== REFINACION: filtro por amplitud del OR (OR=30min, salida cierre) =====")

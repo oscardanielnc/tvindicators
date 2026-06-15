@@ -21,8 +21,8 @@ def donch_main(c, h, l, n=20):
     return pd.Series(raw, index=c.index).ffill().fillna(0.0)
 
 FUNDING = {
-    "TRX": (r"C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/TRX_USDT_USDT.parquet", "ts"),
-    "ETH": (r"C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/ETH_USDT_USDT.parquet", "ts"),
+    "TRX": (r"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/TRX_USDT_USDT.parquet", "ts"),
+    "ETH": (r"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/ETH_USDT_USDT.parquet", "ts"),
     "SUI": (r"C:/Users/LENOVO/kepler/data/funding/SUIUSDT.parquet", "funding_time"),
 }
 def load_funding(coin):
@@ -34,7 +34,7 @@ def load_funding(coin):
 CONFIGS = [("TRX", 1, "BX-min"), ("SUI", -1, "BX-reg"), ("ETH", -1, "BX+Don")]
 
 def prep(coin):
-    df = pd.read_parquet(rf"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/1h.parquet")
+    df = pd.read_parquet(rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/1h.parquet")
     df["dt"] = pd.to_datetime(df["ts"], unit="ms"); df = df.set_index("dt").sort_index()
     c, h, l = df["close"], df["high"], df["low"]
     osc = pine_rsi(pine_ema(c, 5) - pine_ema(c, 20), 15) - 50

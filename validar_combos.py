@@ -13,10 +13,10 @@ Uso: python validar_combos.py
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\poc_sweep_filter.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_sweep_filter.py", encoding="utf-8").read()
 exec(src.split("TFMAP =")[0])   # detect_sweeps, recent, roster_entries, run, I, DATA, MAKER, TAKER, SLIP, WARM
 
-FUND = "C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"
+FUND = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"
 
 
 def load_fund(coin):

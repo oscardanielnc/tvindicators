@@ -28,7 +28,7 @@ def donch_main(c, h, l, n=20):
     return pd.Series(raw, index=c.index).ffill().fillna(0.0)
 
 def load(coin, tf):
-    p = rf"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet"
+    p = rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet"
     if not os.path.exists(p): return None
     df = pd.read_parquet(p)
     df["dt"] = pd.to_datetime(df["ts"], unit="ms")
@@ -119,7 +119,7 @@ for coin in COINS:
     print(f"{coin} ok", flush=True)
 
 res = pd.DataFrame(rows)
-res.to_csv(r"C:\Users\LENOVO\tvindicators\results_sweep1.csv", index=False)
+res.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\results_sweep1.csv", index=False)
 print(f"\nTotal filas: {len(res)}  (guardado en results_sweep1.csv)")
 
 piv = res.pivot_table(index=["entry", "exit", "side", "tf"], columns="period",

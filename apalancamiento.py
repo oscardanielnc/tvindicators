@@ -5,7 +5,7 @@ import pandas as pd
 
 buf = io.StringIO()
 old = sys.stdout; sys.stdout = buf
-exec(open(r"C:\Users\LENOVO\tvindicators\portafolio.py", encoding="utf-8").read())
+exec(open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\portafolio.py", encoding="utf-8").read())
 sys.stdout = old
 # disponibles: D (retornos diarios por estrategia), w (pesos), port (retorno diario portafolio), stats
 

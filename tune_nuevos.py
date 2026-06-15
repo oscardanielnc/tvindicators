@@ -7,7 +7,7 @@ Uso: python tune_nuevos.py
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\pipeline_universo.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\pipeline_universo.py", encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # load_coin, run_f, templates, fil_arrays, met, split_met, detect_sweeps, load_fund
 
 SETUPS = [("XLM", "TM-L"), ("RUNE", "STdonhac-L"), ("IMX", "STdonhac-L"), ("FLOW", "SThac-L"),

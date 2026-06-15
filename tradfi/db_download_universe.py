@@ -12,7 +12,7 @@ SECTOR = {'NVDA':'semis','AMD':'semis','MU':'semis','AAPL':'megatech','MSFT':'me
  'LLY':'health','CVX':'energy','COST':'consumer','WMT':'consumer','DIS':'consumer','UBER':'indust','LITE':'optical'}
 
 # archivar los 6 XNAS de 8 años ya bajados (no re-pagar)
-old = r"C:\Users\LENOVO\tvindicators\tradfi\data_db"
+old = r"D:\OSCAR\Documents\Trading Proyects\tvindicators\tradfi\data_db"
 if os.path.isdir(old):
     for f in os.listdir(old):
         if f.endswith(".parquet"):

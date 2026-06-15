@@ -32,7 +32,7 @@ def supertrend_dir(h, l, c, period, factor):
         d[i] = (-1 if cl[i] < fd[i] else 1) if d[i-1] == 1 else (1 if cl[i] > fu[i] else -1)
     return d
 
-FUND = {c: (rf"C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet", "ts")
+FUND = {c: (rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet", "ts")
         for c in ["TRX", "ETH", "BTC", "LTC", "DOT"]}
 def load_fund(coin):
     p, tcol = FUND[coin]
@@ -40,7 +40,7 @@ def load_fund(coin):
     return pd.to_datetime(f[tcol], unit="ms").values.astype("datetime64[ns]"), f["funding_rate"].astype(float).values
 
 def load_df(coin, tf):
-    df = pd.read_parquet(rf"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
+    df = pd.read_parquet(rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
     df["dt"] = pd.to_datetime(df["ts"], unit="ms")
     return df.set_index("dt").sort_index()
 

@@ -9,7 +9,7 @@ import os, glob
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\expandir_universo.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\expandir_universo.py", encoding="utf-8").read()
 exec(src.split("def main(")[0])   # templates, run_f, load_fund, detect_sweeps, recent, met, I, DATA, ROSTER_COINS
 
 ALREADY = {"TRX", "XRP", "AVAX", "BTC", "SUI", "LTC", "ETH",   # roster
@@ -55,9 +55,9 @@ def run_one(coin, tname, filters, ema_len=200, W_=5, MAXAGE_=200, volwin=500, sw
 
 def main():
     coins = sorted(os.path.basename(os.path.dirname(p)).replace("_USDT_USDT", "")
-                   for p in glob.glob("C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/*/1h.parquet"))
+                   for p in glob.glob("D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/*/1h.parquet"))
     new = [c for c in coins if c not in ALREADY and os.path.exists(
-        "C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{}_USDT_USDT.parquet".format(c))]
+        "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{}_USDT_USDT.parquet".format(c))]
     print(f"Monedas NUEVAS a evaluar: {len(new)} -> {new}\n")
     if not new:
         print("(aún no hay monedas nuevas descargadas)"); return

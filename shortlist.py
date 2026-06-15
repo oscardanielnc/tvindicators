@@ -10,7 +10,7 @@ import os, glob
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\pipeline_universo.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\pipeline_universo.py", encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # load_coin, run_f, templates, fil_arrays, met, split_met, detect_sweeps, ALREADY, FILTER_SETS
 
 HIST_MIN, TRAIN_MIN, TEST_MIN, PF_MIN, N_MIN, CAP = 3.4, 40, 40, 1.5, 50, 2
@@ -18,9 +18,9 @@ HIST_MIN, TRAIN_MIN, TEST_MIN, PF_MIN, N_MIN, CAP = 3.4, 40, 40, 1.5, 50, 2
 
 def main():
     coins = sorted(os.path.basename(os.path.dirname(p)).replace("_USDT_USDT", "")
-                   for p in glob.glob("C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/*/1h.parquet"))
+                   for p in glob.glob("D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/*/1h.parquet"))
     new = [c for c in coins if c not in ALREADY and os.path.exists(
-        "C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{}_USDT_USDT.parquet".format(c))]
+        "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{}_USDT_USDT.parquet".format(c))]
 
     rows = []
     for coin in new:

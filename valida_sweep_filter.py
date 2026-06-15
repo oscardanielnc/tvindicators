@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 from tvbot import indicators as I
 
-OHLCV = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/1h.parquet"
-FUND = "C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"
+OHLCV = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/1h.parquet"
+FUND = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"
 MAKER, TAKER, SLIP = 0.0002, 0.00045, 0.0002
 WARM = 300
 TO_BARS = 48  # 48h en 1h

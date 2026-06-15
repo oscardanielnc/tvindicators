@@ -33,7 +33,7 @@ CONFIGS = [
 rows = []
 for coin, tf, side, ename, exname in CONFIGS:
     bpd = 96 if tf == "15m" else 24
-    df = pd.read_parquet(rf"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
+    df = pd.read_parquet(rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
     df["dt"] = pd.to_datetime(df["ts"], unit="ms"); df = df.set_index("dt").sort_index()
     c, h, l = df["close"], df["high"], df["low"]
     osc = pine_rsi(pine_ema(c, 5) - pine_ema(c, 20), 15) - 50

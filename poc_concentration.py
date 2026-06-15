@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 # --- traer el motor y helpers de portafolio.py (sin correr su analisis) ---
-src = open(r"C:\Users\LENOVO\tvindicators\portafolio.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\portafolio.py", encoding="utf-8").read()
 exec(src.split("daily, stats =")[0])   # load_df, load_fund, atr14, engine, tm_trig, st_flips, rib_str, build, hacolt...
 
 NOTIONAL = 500.0        # $100 margen x 5

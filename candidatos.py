@@ -2,10 +2,10 @@
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\sweep2.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\sweep2.py", encoding="utf-8").read()
 exec(src.split("SKIP_BX")[0])          # solo defs: pine_*, t3, donch, supertrend_dir, prep, run
 
-FUND = {c: (rf"C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet", "ts")
+FUND = {c: (rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet", "ts")
         for c in ["TRX", "ETH", "BTC", "LTC", "DOT"]}
 FUND["SUI"] = (r"C:/Users/LENOVO/kepler/data/funding/SUIUSDT.parquet", "funding_time")
 

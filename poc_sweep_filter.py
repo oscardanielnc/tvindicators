@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from tvbot import indicators as I
 
-DATA = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
+DATA = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
 MAKER, TAKER, SLIP = 0.0002, 0.00045, 0.0002
 WARM = 300
 FILTERS = [3, 6, 12, 24]      # barrido dentro de las ultimas F velas antes de la entrada

@@ -9,7 +9,7 @@ Uso: python validar_nuevos.py
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\expandir_universo.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\expandir_universo.py", encoding="utf-8").read()
 exec(src.split("def main(")[0])   # templates, run_f, load_fund, detect_sweeps, recent, I, DATA, met, WARM
 
 

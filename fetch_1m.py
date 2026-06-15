@@ -11,7 +11,7 @@ import sys
 import ccxt
 import pandas as pd
 
-OHLCV = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
+OHLCV = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
 TF_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
 
 TF = sys.argv[1] if len(sys.argv) > 1 else "1m"

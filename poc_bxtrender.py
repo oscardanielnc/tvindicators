@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-DATA = r"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/BTC_USDT_USDT/15m.parquet"
+DATA = r"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/BTC_USDT_USDT/15m.parquet"
 FEE_SIDE = 0.00045      # taker Binance futures
 SLIP_SIDE = 0.0002      # 2 bps slippage por lado
 COST_RT = 2 * (FEE_SIDE + SLIP_SIDE)   # ida y vuelta = 0.13%

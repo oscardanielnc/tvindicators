@@ -30,7 +30,7 @@ MAKER_FEE = 0.0002
 TAKER_FEE = 0.00045
 SLIPPAGE  = 0.0002
 
-STORE = "C:/Users/LENOVO/Oscilion/data"
+STORE = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data"
 UTC = timezone.utc
 
 # ---- parametros del setup (defaults afinados del proyecto original) ----

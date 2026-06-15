@@ -2,8 +2,8 @@
 Para expandir el universo cripto del pipeline de alta convicción."""
 import os, time, ccxt
 import pandas as pd
-OHLCV = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/1h.parquet"
-FUND  = "C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"
+OHLCV = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/1h.parquet"
+FUND  = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"
 HAVE = {"ADA","AVAX","BNB","BTC","DOGE","DOT","ETH","LINK","LTC","SOL","SUI","TRX","XRP"}
 CAND = ["APT","ARB","OP","NEAR","ATOM","INJ","SEI","TIA","RUNE","AAVE","UNI","MKR","LDO",
         "FIL","ICP","IMX","RENDER","GRT","FET","TAO","HBAR","ALGO","ETC","BCH","XLM","VET",

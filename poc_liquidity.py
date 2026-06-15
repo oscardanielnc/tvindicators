@@ -11,7 +11,7 @@ import pandas as pd
 
 COINS = ["TRX", "SUI", "LTC", "XRP", "AVAX", "ETH", "BTC"]
 TF = "1h"
-DATA = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
+DATA = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
 
 W = 5                 # ancho del pivote (swing high/low = max/min de [i-W, i+W])
 MAXAGE = 200          # solo pools formados en las ultimas 200 velas

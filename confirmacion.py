@@ -2,18 +2,18 @@
 import numpy as np
 import pandas as pd
 
-src = open(r"C:\Users\LENOVO\tvindicators\sweep3.py", encoding="utf-8").read()
+src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\sweep3.py", encoding="utf-8").read()
 exec(src.split("def prep(")[0])   # helpers: pine_*, t3, tema, dch_trend, supertrend_dir, hacolt
 
 MAKER, TAKER, SLIP, WARMUP = 0.0002, 0.00045, 0.0002, 300
 
 def load_df(coin, tf):
-    df = pd.read_parquet(rf"C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
+    df = pd.read_parquet(rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{coin}_USDT_USDT/{tf}.parquet")
     df["dt"] = pd.to_datetime(df["ts"], unit="ms")
     return df.set_index("dt").sort_index()
 
 def load_fund(coin):
-    f = pd.read_parquet(rf"C:/Users/LENOVO/Oscilion/data/funding/binanceusdm/{coin}_USDT_USDT.parquet")
+    f = pd.read_parquet(rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{coin}_USDT_USDT.parquet")
     return pd.to_datetime(f["ts"], unit="ms").values.astype("datetime64[ns]"), f["funding_rate"].astype(float).values
 
 def atr14(df):

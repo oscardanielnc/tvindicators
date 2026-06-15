@@ -18,7 +18,7 @@ import os
 import numpy as np
 import pandas as pd
 
-ROOT = r"C:\Users\LENOVO\tvindicators"
+ROOT = r"D:\OSCAR\Documents\Trading Proyects\tvindicators"
 exec(open(os.path.join(ROOT, "portafolio.py"), encoding="utf-8").read().split("daily, stats =")[0])
 
 WARMUP = 250

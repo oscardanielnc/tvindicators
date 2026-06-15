@@ -13,7 +13,7 @@ import pandas as pd
 
 COINS = ["TRX", "SUI", "LTC", "XRP", "AVAX", "ETH", "BTC"]
 TF = "1h"
-DATA = "C:/Users/LENOVO/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
+DATA = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/ohlcv/binanceusdm/{c}_USDT_USDT/{tf}.parquet"
 
 LOOKBACK = 240        # 10 dias en 1h
 NBINS = 80
