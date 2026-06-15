@@ -2,10 +2,10 @@
 **Actualizado:** 2026-06-15 · Fase: **paper trading (listo para desplegar en VM)**
 
 ## Resumen en una línea
-Bot de paper trading con **44 estrategias validadas OOS** sobre Binance perps (TF 1h/15m), motor con
+Bot de paper trading con **48 estrategias validadas OOS** sobre Binance perps (TF 1h/15m), motor con
 paridad exacta al backtest, API + dashboard web, y track record vivo que decidirá el capital real.
 
-## Roster: 44 estrategias (7 titulares + 37 suplentes · 18 long / 26 short)
+## Roster: 48 estrategias (7 titulares + 41 suplentes · 19 long / 29 short)
 Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + sensibilidad + correlación):
 
 | Batch | Indicadores | Estrategias | Clase |
@@ -16,17 +16,18 @@ Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + s
 | 3 | **ADX/DMI, Squeeze-short** | S31-S36 | momentum direccional (edge grueso) |
 | 4 | **Chaikin Money Flow, Force Index** | S37-S38 | volumen/flujo (ORDI long) |
 | 5 | **KST, Awesome Oscillator, TSI** | S39-S44 | momentum-systems (monedas nuevas) |
+| 6 | **Zero Lag Trend Signals** (AlgoAlpha) | S45-S48 | trend-pullback (monedas nuevas) |
 
 Spec exacto y métricas: `CONSOLIDADO.md`. Veredictos de research: `indicadores_nuevos_/meanrev_/batch3_/batch4_/batch5_VEREDICTO.md`.
 
 ## Desempeño esperado (backtest, portafolio vol-parity 1/σ — `gen_summary.py`)
 | Leverage | Mensual medio | MaxDD | Sharpe | Meses+ |
 |----------|---------------|-------|--------|--------|
-| 1× | +2.0% | −3.1% | 3.64 | 86% |
-| 2× (arranque) | +4.1% | −6% | | |
+| 1× | +2.0% | −3.1% | 3.73 | 90% |
+| 2× (arranque) | +4.0% | −6% | | |
 | 3× | +6.1% | −9% | | |
 
-~195 trades/mes · exp neto medio 106 bps/trade (neto de ganancias y pérdidas) · WR 42%.
+~202 trades/mes · exp neto medio 110 bps/trade (neto de ganancias y pérdidas) · WR 42%.
 **Caveat:** son números de backtest = techo. En vivo se conserva ~30-50% del edge y el DD vivo ~2× →
 **expectativa realista: ~1-3% mensual a 2×**. Por eso esta fase de paper trading acumula evidencia antes del capital real.
 

@@ -315,3 +315,29 @@ def awesome_osc(df):
     hl2 = (df["high"] + df["low"]) / 2
     a = (hl2.rolling(5).mean() - hl2.rolling(34).mean()).values
     return _cross_events(a, np.zeros(len(a)))
+
+
+# --- batch 6: Zero Lag Trend Signals (AlgoAlpha; validado OOS 15/06/2026, ver batch6_VEREDICTO.md) ---
+
+def zero_lag_entry(df, length=70, mult=1.2):
+    """Zero Lag Trend Signals (AlgoAlpha), variante ENTRY: close re-cruza la ZLEMA en la
+    dirección de la tendencia establecida (pullback). (long_event, short_event).
+    ZLEMA = ema(close+(close-close[lag]), length); banda = highest(ATR(length), length*3)*mult."""
+    c = df["close"]; lag = (length - 1) // 2
+    zlema = pine_ema(c + (c - c.shift(lag)), length).values
+    tr = pd.concat([df["high"] - df["low"], (df["high"] - c.shift()).abs(),
+                    (df["low"] - c.shift()).abs()], axis=1).max(axis=1)
+    vol = (pine_rma(tr, length).rolling(length * 3).max() * mult).values
+    cv = c.values; up = zlema + vol; dn = zlema - vol
+    n = len(cv); trend = np.zeros(n); cur = 0
+    for i in range(1, n):
+        if cv[i] > up[i] and cv[i - 1] <= up[i - 1]:
+            cur = 1
+        elif cv[i] < dn[i] and cv[i - 1] >= dn[i - 1]:
+            cur = -1
+        trend[i] = cur
+    tp = np.roll(trend, 1); above = cv > zlema
+    cu = above & ~np.roll(above, 1); cd = (~above) & np.roll(above, 1)
+    lo = cu & (trend == 1) & (tp == 1); sh = cd & (trend == -1) & (tp == -1)
+    lo[0] = sh[0] = False
+    return lo, sh

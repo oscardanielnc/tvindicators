@@ -295,6 +295,24 @@ def s44_entry(df):      # TAO 1h S: Awesome Osc cruza cero abajo + tendencia + v
     _, se = I.awesome_osc(df)
     return _last(se) and _trend(df, -1) and _vol(df)
 
+# --- batch 6: Zero Lag Trend Signals (variante ENTRY), monedas nuevas, validados OOS 15/06/2026, role 0.5 ---
+
+def s45_entry(df):      # FIL 1h L: Zero Lag entry alcista + barrido<=6
+    le, _ = I.zero_lag_entry(df)
+    return _last(le) and _sweep(df, +1, 6)
+
+def s46_entry(df):      # NEO 1h S: Zero Lag entry bajista + barrido<=6 + tendencia
+    _, se = I.zero_lag_entry(df)
+    return _last(se) and _sweep(df, -1, 6) and _trend(df, -1)
+
+def s47_entry(df):      # STX 1h S: Zero Lag entry bajista + barrido<=6
+    _, se = I.zero_lag_entry(df)
+    return _last(se) and _sweep(df, -1, 6)
+
+def s48_entry(df):      # CRV 1h S: Zero Lag entry bajista + barrido<=6 + tendencia
+    _, se = I.zero_lag_entry(df)
+    return _last(se) and _sweep(df, -1, 6) and _trend(df, -1)
+
 def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
     sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
     full = sl == 10
@@ -342,6 +360,7 @@ FI = "Force Index (Elder, volumen)"
 KST = "Know Sure Thing (Pring)"
 AO = "Awesome Oscillator (Williams)"
 TSI = "True Strength Index"
+ZL = "Zero Lag Trend Signals (AlgoAlpha)"
 
 SL_TO = "SL 2×ATR + timeout 48h"
 FLIP = "flip contrario del Supertrend"
@@ -444,6 +463,15 @@ STRATEGIES = [
              role=0.5, indicators=[TSI], exit_desc=SL_TO + " + barrido/tendencia"),
     Strategy("S44", "TAO-S AwesomeOsc+tend+vol 1h","TAO",  "1h",  -1, "atrstop", s44_entry,
              role=0.5, indicators=[AO], exit_desc=SL_TO + " + tendencia/vol"),
+    # --- batch 6: Zero Lag Trend Signals (variante ENTRY) sobre monedas nuevas ---
+    Strategy("S45", "FIL-L ZeroLag+barrido 1h",   "FIL",  "1h",  +1, "atrstop", s45_entry,
+             role=0.5, indicators=[ZL], exit_desc=SL_TO + " + barrido"),
+    Strategy("S46", "NEO-S ZeroLag+barr+tend 1h",  "NEO",  "1h",  -1, "atrstop", s46_entry,
+             role=0.5, indicators=[ZL], exit_desc=SL_TO + " + barrido/tendencia"),
+    Strategy("S47", "STX-S ZeroLag+barrido 1h",   "STX",  "1h",  -1, "atrstop", s47_entry,
+             role=0.5, indicators=[ZL], exit_desc=SL_TO + " + barrido"),
+    Strategy("S48", "CRV-S ZeroLag+barr+tend 1h",  "CRV",  "1h",  -1, "atrstop", s48_entry,
+             role=0.5, indicators=[ZL], exit_desc=SL_TO + " + barrido/tendencia"),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
@@ -466,4 +494,5 @@ BACKTEST_REF = {
     "S37": (151, 1.46), "S38": (115, 1.47),
     "S39": (89, 1.54), "S40": (78, 1.53), "S41": (74, 1.46), "S42": (116, 1.80),
     "S43": (77, 1.54), "S44": (103, 1.45),
+    "S45": (190, 2.17), "S46": (225, 3.19), "S47": (98, 1.52), "S48": (106, 1.51),
 }
