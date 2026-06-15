@@ -2,10 +2,10 @@
 **Actualizado:** 2026-06-15 · Fase: **paper trading (listo para desplegar en VM)**
 
 ## Resumen en una línea
-Bot de paper trading con **51 estrategias validadas OOS** sobre Binance perps (TF 1h/15m), motor con
+Bot de paper trading con **56 estrategias validadas OOS** sobre Binance perps (TF 1h/15m), motor con
 paridad exacta al backtest, API + dashboard web, y track record vivo que decidirá el capital real.
 
-## Roster: 51 estrategias (7 titulares + 44 suplentes · 22 long / 29 short)
+## Roster: 56 estrategias (7 titulares + 49 suplentes · 26 long / 30 short)
 Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + sensibilidad + correlación):
 
 | Batch | Indicadores | Estrategias | Clase |
@@ -18,6 +18,7 @@ Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + s
 | 5 | **KST, Awesome Oscillator, TSI** | S39-S44 | momentum-systems (monedas nuevas) |
 | 6 | **Zero Lag Trend Signals** (AlgoAlpha) | S45-S48 | trend-pullback (monedas nuevas) |
 | opt | challengers del optimizador (Squeeze/AO longs) | S49-S51 | corrige sesgo de antigüedad |
+| 7 | **S/R High Volume Boxes** (ChartPrime) | S52-S56 | ruptura S/R + volumen (KVO y Turtle Soup descartados) |
 
 **Selección de roster (`roster_optimizer.py` + `metodologia-seleccion-roster`):** la redundancia y la
 elección de estrategias se deciden por **correlación de PnL + contribución marginal al Sharpe**, NO por
@@ -29,11 +30,11 @@ Spec exacto y métricas: `CONSOLIDADO.md`. Veredictos de research: `indicadores_
 ## Desempeño esperado (backtest, portafolio vol-parity 1/σ — `gen_summary.py`)
 | Leverage | Mensual medio | MaxDD | Sharpe | Meses+ |
 |----------|---------------|-------|--------|--------|
-| 1× | +2.0% | −2.7% | 3.86 | 88% |
-| 2× (arranque) | +4.0% | −5% | | |
-| 3× | +6.0% | −8% | | |
+| 1× | +2.1% | −2.2% | 4.07 | 86% |
+| 2× (arranque) | +4.1% | −4% | | |
+| 3× | +6.2% | −7% | | |
 
-~209 trades/mes · exp neto medio 111 bps/trade (neto de ganancias y pérdidas) · WR 42%.
+~222 trades/mes · exp neto medio 114 bps/trade (neto de ganancias y pérdidas) · WR 42%.
 **Caveat:** son números de backtest = techo. En vivo se conserva ~30-50% del edge y el DD vivo ~2× →
 **expectativa realista: ~1-3% mensual a 2×**. Por eso esta fase de paper trading acumula evidencia antes del capital real.
 

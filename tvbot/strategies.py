@@ -328,6 +328,28 @@ def s51_entry(df):      # JUP 1h L: Awesome Osc cruza cero + tendencia + vol
     le, _ = I.awesome_osc(df)
     return _last(le) and _trend(df, +1) and _vol(df)
 
+# --- batch 7: S/R High Volume Boxes (ruptura de S/R confirmada por volumen), validados OOS 15/06/2026, role 0.5 ---
+
+def s52_entry(df):      # DOGE 1h L: ruptura de resistencia (volumen) + tendencia
+    le, _ = I.sr_volume_break(df)
+    return _last(le) and _trend(df, +1)
+
+def s53_entry(df):      # FET 1h L: ruptura de resistencia (volumen) + vol
+    le, _ = I.sr_volume_break(df)
+    return _last(le) and _vol(df)
+
+def s54_entry(df):      # ARB 1h S: ruptura de soporte (volumen) + régimen
+    _, se = I.sr_volume_break(df)
+    return _last(se) and _regime(df, -1)
+
+def s55_entry(df):      # ALGO 1h L: ruptura de resistencia (volumen) + tendencia + vol
+    le, _ = I.sr_volume_break(df)
+    return _last(le) and _trend(df, +1) and _vol(df)
+
+def s56_entry(df):      # INJ 1h L: ruptura de resistencia (volumen) + vol
+    le, _ = I.sr_volume_break(df)
+    return _last(le) and _vol(df)
+
 def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
     sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
     full = sl == 10
@@ -376,6 +398,7 @@ KST = "Know Sure Thing (Pring)"
 AO = "Awesome Oscillator (Williams)"
 TSI = "True Strength Index"
 ZL = "Zero Lag Trend Signals (AlgoAlpha)"
+SRB = "S/R High Volume Boxes (ChartPrime)"
 
 SL_TO = "SL 2×ATR + timeout 48h"
 FLIP = "flip contrario del Supertrend"
@@ -495,6 +518,17 @@ STRATEGIES = [
              role=0.5, indicators=[SQZM], exit_desc=SL_TO + " + tendencia/vol"),
     Strategy("S51", "JUP-L AwesomeOsc+tend+vol 1h","JUP",  "1h",  +1, "atrstop", s51_entry,
              role=0.5, indicators=[AO], exit_desc=SL_TO + " + tendencia/vol"),
+    # --- batch 7: S/R High Volume Boxes (ruptura S/R + volumen) ---
+    Strategy("S52", "DOGE-L SRBreak+tend 1h",     "DOGE", "1h",  +1, "atrstop", s52_entry,
+             role=0.5, indicators=[SRB], exit_desc=SL_TO + " + tendencia"),
+    Strategy("S53", "FET-L SRBreak+vol 1h",       "FET",  "1h",  +1, "atrstop", s53_entry,
+             role=0.5, indicators=[SRB], exit_desc=SL_TO + " + vol"),
+    Strategy("S54", "ARB-S SRBreak+régimen 1h",   "ARB",  "1h",  -1, "atrstop", s54_entry,
+             role=0.5, indicators=[SRB], exit_desc=SL_TO + " + régimen"),
+    Strategy("S55", "ALGO-L SRBreak+tend+vol 1h", "ALGO", "1h",  +1, "atrstop", s55_entry,
+             role=0.5, indicators=[SRB], exit_desc=SL_TO + " + tendencia/vol"),
+    Strategy("S56", "INJ-L SRBreak+vol 1h",       "INJ",  "1h",  +1, "atrstop", s56_entry,
+             role=0.5, indicators=[SRB], exit_desc=SL_TO + " + vol"),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
@@ -519,4 +553,5 @@ BACKTEST_REF = {
     "S43": (77, 1.54), "S44": (103, 1.45),
     "S45": (190, 2.17), "S46": (225, 3.19), "S47": (98, 1.52), "S48": (106, 1.51),
     "S49": (106, 1.46), "S50": (121, 1.44), "S51": (137, 1.52),
+    "S52": (171, 1.98), "S53": (219, 1.85), "S54": (160, 1.96), "S55": (109, 1.59), "S56": (99, 1.43),
 }

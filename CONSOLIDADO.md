@@ -3,7 +3,7 @@
 
 > Métricas **recalculadas sobre el store actual** (más historia que el baseline 2023-06 original). Por eso exp/PF pueden diferir levemente del `BACKTEST_REF` de `tvbot/strategies.py` (ese se fijó en la validación original y es el que usa el frontend para comparar live vs backtest). El método y el motor de salida son idénticos al bot (`run_f`, paridad `engine.py`).
 
-## Roster (51 estrategias · 7 titulares + 44 suplentes · 22 long / 29 short)
+## Roster (56 estrategias · 7 titulares + 49 suplentes · 26 long / 30 short)
 
 | # | Estrategia | TF | Lado | Rol | Tr/mes | WR | exp(bps) | PF | CAGR 1× | MaxDD 1× | Años+ | Indicador clave |
 |---|------------|----|------|-----|--------|----|----------|----|---------|----------|-------|-----------------|
@@ -58,6 +58,11 @@
 | **S49** | **TAO-L Squeeze+tend+vol** | 1h | L | ½ | 2.2 | 44% | 106 | 1.46 | +24% | −42% | 3/3 | Squeeze Momentum |
 | **S50** | **FET-L Squeeze+tend+vol** | 1h | L | ½ | 2.5 | 36% | 121 | 1.44 | +29% | −56% ⚠️ | 3/4 | Squeeze Momentum |
 | **S51** | **JUP-L AwesomeOsc+tend+vol** | 1h | L | ½ | 2.7 | 37% | 137 | 1.52 | +39% | −28% | 3/3 | Awesome Oscillator |
+| **S52** | **DOGE-L SRBreak+tend** | 1h | L | ½ | 2.9 | 38% | 171 | 1.98 | +62% | −24% | 4/4 | **S/R Vol Boxes (ChartPrime)** |
+| **S53** | **FET-L SRBreak+vol** | 1h | L | ½ | 1.9 | 40% | 219 | 1.85 | +47% | −40% | 4/4 | **S/R Vol Boxes (ChartPrime)** |
+| **S54** | **ARB-S SRBreak+régimen** | 1h | S | ½ | 3.1 | 46% | 160 | 1.96 | +69% | −29% | 4/4 | **S/R Vol Boxes (ChartPrime)** |
+| **S55** | **ALGO-L SRBreak+tend+vol** | 1h | L | ½ | 1.7 | 39% | 109 | 1.59 | +20% | −30% | 4/5 | **S/R Vol Boxes (ChartPrime)** |
+| **S56** | **INJ-L SRBreak+vol** | 1h | L | ½ | 2.5 | 45% | 99 | 1.43 | +27% | −30% | 5/5 | **S/R Vol Boxes (ChartPrime)** |
 
 \* CAGR/MaxDD 1× = curva de equity de esa estrategia sola con capital dedicado (compone cada trade). No hay TP fijo: perdedores salen por SL (2×ATR; S2/S14 por 3×ATR), ganadores corren hasta flip del Supertrend / TM-opuesto o timeout 48h (atrstop).
 **WR bajo (32-47%) es por diseño:** trend-following con *runners* — el edge es la asimetría (ganador medio ≫ perdedor medio), no el win-rate. Filosofía: pocas y buenas, baja frecuencia + ganancias asimétricas.
@@ -67,18 +72,19 @@
 **Batch 5 (S39-S44):** momentum-systems (KST, Awesome Osc, TSI) sobre monedas NUEVAS (LINK, NEO, ICP, NEAR, ALGO, TAO). Corr ~0 vs roster y entre sí (5.8/6 apuestas efectivas). En monedas ya cubiertas eran redundantes (ver `batch5_VEREDICTO.md`).
 **Batch 6 (S45-S48):** Zero Lag Trend Signals (AlgoAlpha), variante ENTRY sobre monedas nuevas (FIL, NEO, STX, CRV). Robusto a length/mult; la variante FLIP era frágil (no promovida). Ver `batch6_VEREDICTO.md`.
 **Optimizador (S49-S51):** `roster_optimizer.py` halló 137 challengers OOS-robustos no promovidos (sesgo de antigüedad corregido). Promovidos los 3 con IS/OOS balanceado y corr ~0: TAO-L, FET-L, JUP-L (longs, mejoran el balance). Detectó 1 redundancia: **S2 ↔ S1 (corr 0.83)** → S2 marcada (observación). Selección por contribución marginal + correlación, no por antigüedad. Ver `roster_optimizer_REPORT.md`.
+**Batch 7 (S52-S56):** S/R High Volume Boxes (ChartPrime) — ruptura de S/R confirmada por volumen, monedas nuevas + balanceadas (DOGE, FET, ARB, ALGO, INJ), corr ~0. **KVO descartado** (oscilador de volumen redundante); **ICT Turtle Soup descartado** (edge bruto −10.7 bps, sin edge, 1/51 monedas = ruido). Ver `batch7_VEREDICTO.md`.
 
-## Portafolio combinado (51 estrategias, pesos vol-parity 1/σ, `gen_summary.py`)
+## Portafolio combinado (56 estrategias, pesos vol-parity 1/σ, `gen_summary.py`)
 
 | Leverage | Mensual medio | MaxDD | CAGR | Sharpe | Meses+ |
 |----------|---------------|-------|------|--------|--------|
-| **1×** | **+2.0%** (~$20/$1k) | −2.7% | +28% | 3.86 | 88% |
-| 2× (arranque prudente) | +4.0% (~$40) | −5% | — | | |
-| 3× | +6.0% (~$60) | −8% | — | | |
+| **1×** | **+2.1%** (~$21/$1k) | −2.2% | +29% | 4.07 | 86% |
+| 2× (arranque prudente) | +4.1% (~$41) | −4% | — | | |
+| 3× | +6.2% (~$62) | −7% | — | | |
 
-Trades/mes total ≈ **209** · exp neto medio **111 bps/trade** (neto de ganancias y pérdidas) · WR medio 42%.
-Por año (1×): 2022 +7% · 2023 +9% · 2024 +39% · 2025 +28% · 2026 +16% (a junio).
-La expansión 9→51 mejora el perfil de riesgo: vs el roster viejo de 9 (Sharpe 2.47, DD−7.3% a 1×), ahora **Sharpe 3.86 y DD−2.7%** — mucha más diversificación por unidad de DD.
+Trades/mes total ≈ **222** · exp neto medio **114 bps/trade** (neto de ganancias y pérdidas) · WR medio 42%.
+Por año (1×): 2022 +7% · 2023 +10% · 2024 +40% · 2025 +28% · 2026 +16% (a junio).
+La expansión 9→56 mejora el perfil de riesgo: vs el roster viejo de 9 (Sharpe 2.47, DD−7.3% a 1×), ahora **Sharpe 4.07 y DD−2.2%** — mucha más diversificación por unidad de DD.
 
 ## Batch 1 de indicadores nuevos (S22-S29, promovidas 15/06/2026)
 Squeeze Momentum (LazyBear) en longs + Vortex (VI+/VI−) en shorts — clases **ortogonales** al resto (que es MA-trend). Validadas: sweep 52 monedas → gate → OOS (IS<2025/OOS≥2025) → sensibilidad → corr ≤0.22 vs roster → impacto de portafolio (Sharpe 2.94→3.27). Corr media 0.06 entre ellas (7.1/8 apuestas efectivas). Ver `indicadores_nuevos_VEREDICTO.md`.

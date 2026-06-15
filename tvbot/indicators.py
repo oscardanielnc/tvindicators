@@ -341,3 +341,41 @@ def zero_lag_entry(df, length=70, mult=1.2):
     lo = cu & (trend == 1) & (tp == 1); sh = cd & (trend == -1) & (tp == -1)
     lo[0] = sh[0] = False
     return lo, sh
+
+
+# --- batch 7: S/R High Volume Boxes (ChartPrime; validado OOS 15/06/2026, ver batch7_VEREDICTO.md) ---
+
+def _pivots_conf(arr, L, R):
+    n = len(arr); ph = np.full(n, np.nan); pl = np.full(n, np.nan)
+    for t in range(L + R, n):
+        c = t - R; win = arr[t - L - R:t + 1]
+        if arr[c] == win.max():
+            ph[t] = arr[c]
+        if arr[c] == win.min():
+            pl[t] = arr[c]
+    return ph, pl
+
+
+def sr_volume_break(df, lookback=20, vol_len=2, box_w=1.0):
+    """S/R High Volume Boxes (ChartPrime): (long, short). Pivotes confirmados por delta-volumen
+    definen soporte/resistencia; long = ruptura de resistencia, short = ruptura de soporte."""
+    c, o, h, l, v = df["close"], df["open"], df["high"], df["low"], df["volume"]
+    sv = pd.Series(np.where(c > o, v, np.where(c < o, -v, 0.0)), index=df.index)
+    vol_hi = (sv / 2.5).rolling(vol_len).max().values
+    vol_lo = (sv / 2.5).rolling(vol_len).min().values
+    svv = sv.values
+    ph, pl = _pivots_conf(c.values, lookback, lookback)
+    tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
+    width = pine_rma(tr, 200).values * box_w
+    n = len(c); lo, hi = l.values, h.values
+    res1 = sup1 = np.nan; brk_res = np.zeros(n, bool); brk_sup = np.zeros(n, bool)
+    for t in range(1, n):
+        if not np.isnan(pl[t]) and svv[t] > vol_hi[t]:
+            sup1 = pl[t] - width[t]
+        if not np.isnan(ph[t]) and svv[t] < vol_lo[t]:
+            res1 = ph[t] + width[t]
+        if not np.isnan(res1) and lo[t] > res1 and lo[t - 1] <= res1:
+            brk_res[t] = True
+        if not np.isnan(sup1) and hi[t] < sup1 and hi[t - 1] >= sup1:
+            brk_sup[t] = True
+    return brk_res, brk_sup
