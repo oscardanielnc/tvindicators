@@ -48,8 +48,9 @@ python -m tvbot.api        # API en :8090
 - GET /api/status             — equity actual, posiciones abiertas, W/L, PnL total
 - GET /api/equity?limit=      — curva de equity (snapshots cada ciclo)
 - GET /api/summary            — por estrategia: #trades, wins, PnL total (gráfico de barras)
-- GET /api/strategies         — catálogo de las 44
-- GET /api/evaluation         — desempeño LIVE vs backtest + veredicto por estrategia
+- GET /api/strategies         — catálogo de las 56
+- GET /api/portfolio          — tracker de confirmación a nivel cartera (go-live lote 1) + gates
+- GET /api/evaluation         — desempeño LIVE vs backtest + veredicto + gate de producción por estrategia
 - GET /api/evaluation.csv     — el resumen de evaluación, descargable
 - GET /api/logs               — logs del sistema filtrados por rango (hora Lima)
 - GET /api/trades?strategy_id=&status=&limit= — histórico completo por estrategia

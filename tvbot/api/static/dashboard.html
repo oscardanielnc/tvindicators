@@ -97,6 +97,7 @@ canvas{max-height:330px}
   <span class="pill" id="clock">—</span>
   <nav>
     <button id="tab-dash" class="active" onclick="show('dash')">Dashboard</button>
+    <button id="tab-prod" onclick="show('prod')">🚀 Producción</button>
     <button id="tab-eval" onclick="show('eval')">📊 Evaluación</button>
     <button id="tab-strat" onclick="show('strat')">Estrategias</button>
     <button id="tab-logs" onclick="show('logs')">Logs</button>
@@ -182,6 +183,22 @@ canvas{max-height:330px}
   </div>
 </section>
 
+<!-- ==================== PAGINA: PRODUCCION ==================== -->
+<section id="page-prod" style="display:none">
+  <div id="prod-verdict" class="panel" style="text-align:center"></div>
+  <div class="cards" id="prod-cards"></div>
+  <div class="panel"><h2>¿Cómo se decide salir a producción? (gates objetivos)</h2>
+    <p class="mut" id="prod-gates" style="white-space:normal;line-height:1.7">—</p>
+    <p class="mut" style="white-space:normal;margin-top:8px">Ruta: las 56 corren en <b>sombra</b> acumulando trades vivos →
+      cuando la cartera confirma el backtest, sale un <b>primer lote con capital chico (1×)</b> → graduación rodante
+      por estrategia → escalar a 2× tras meses consistentes. Detalle en <code>VALIDACION_Y_PRODUCCION.md</code>.</p>
+  </div>
+  <div class="panel"><h2>Estrategias confirmadas (pasan el gate, listas para capital real)</h2>
+    <div id="prod-confirmed">—</div></div>
+  <div class="panel"><h2>Salud de stops / objetivos (MAE/MFE en R, agregado)</h2>
+    <p class="mut" id="prod-maemfe" style="white-space:normal;line-height:1.7">—</p></div>
+</section>
+
 <!-- ==================== PAGINA: EVALUACION ==================== -->
 <section id="page-eval" style="display:none">
   <div class="cards" id="eval-cards"></div>
@@ -198,6 +215,7 @@ canvas{max-height:330px}
       <thead><tr>
         <th>Estrategia</th><th>L/S</th><th>Trades</th><th>WR</th>
         <th>Exp live</th><th>Exp bt</th><th>Ratio</th><th>PF live</th><th>PF bt</th>
+        <th title="MAE medio en R (vs stop)">MAE(R)</th><th title="MFE medio en R">MFE(R)</th>
         <th>PnL $</th><th>Veredicto</th>
       </tr></thead><tbody></tbody></table></div>
   </div>
@@ -234,11 +252,12 @@ let charts = {}, currentStrat = null, strategies = [];
 let stratFilter = {side:'all', q:'', withTrades:false};
 
 function show(p){
-  for (const x of ['dash','eval','strat','logs']){
+  for (const x of ['dash','prod','eval','strat','logs']){
     $('page-'+x).style.display = x===p?'':'none';
     $('tab-'+x).classList.toggle('active', x===p);
   }
   if (p==='strat' && !currentStrat && strategies.length) selectStrat(strategies[0].strategy_id);
+  if (p==='prod') loadPortfolio();
   if (p==='eval') loadEval();
   if (p==='logs') loadEvents();
 }
@@ -295,6 +314,35 @@ async function loadDash(){
     y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}, animation:false}});
 }
 
+/* ---------- producción (tracker de cartera) ---------- */
+async function loadPortfolio(){
+  const p = await j('/api/portfolio');
+  const vmap = {pass:'pos', ok:'', collect:'mut', fail:'neg'};
+  $('prod-verdict').innerHTML = `<div class="lbl">Estado de la cartera — señal de go-live del lote 1</div>
+    <div style="font-size:26px;font-weight:800;margin-top:8px" class="${vmap[p.verdict]||''}">${p.verdict_label}</div>`;
+  $('prod-cards').innerHTML = `
+    <div class="card"><div class="lbl">Trades vivos</div><div class="val">${p.n_trades}</div>
+      <div class="sub">meta cartera: ${p.gate.trades}</div></div>
+    <div class="card"><div class="lbl">Exp live vs backtest</div>
+      <div class="val ${cls(p.live_exp)}">${p.live_exp==null?'—':p.live_exp+' bps'}</div>
+      <div class="sub">bt ${p.bt_exp_avg==null?'—':p.bt_exp_avg+' bps'} · ratio ${p.ratio==null?'—':p.ratio+'×'}</div></div>
+    <div class="card"><div class="lbl">Win rate vivo</div><div class="val">${p.wr==null?'—':p.wr+'%'}</div>
+      <div class="sub">${p.strategies_traded} estrategias con trades</div></div>
+    <div class="card"><div class="lbl">MaxDD vivo</div>
+      <div class="val ${p.live_maxdd_pct<0?'neg':'mut'}">${p.live_maxdd_pct}%</div><div class="sub">curva de equity</div></div>
+    <div class="card"><div class="lbl">Confirmadas</div><div class="val pos">${p.strategies_confirmed}</div>
+      <div class="sub">meta lote 1: ${p.gate.confirmed}</div></div>`;
+  $('prod-gates').innerHTML =
+    `<b>Por estrategia →</b> ≥${p.gate.strat_trades} trades vivos · exp&gt;0 · ratio live/backtest ≥${p.gate.strat_ratio} · PF ≥${p.gate.strat_pf}.<br>
+     <b>Por cartera (lote 1) →</b> ≥${p.gate.trades} trades agregados · exp agregado&gt;0 · ≥${p.gate.confirmed} estrategias confirmadas.`;
+  $('prod-confirmed').innerHTML = p.confirmed_ids.length
+    ? p.confirmed_ids.map(s=>`<span class="badge pass" style="margin:3px;display:inline-block">${s}</span>`).join('')
+    : '<span class="mut">Aún ninguna — acumulando trades vivos (es lo esperado al inicio).</span>';
+  $('prod-maemfe').innerHTML = p.avg_mae_r==null ? '<span class="mut">Sin trades cerrados aún.</span>' :
+    `MAE medio <b>${p.avg_mae_r}R</b> — si se acerca a −1, los stops se raspan seguido (¿stop muy ajustado?).<br>
+     MFE medio <b>${p.avg_mfe_r}R</b> — si es alto pero el PnL no acompaña, se están cortando ganadores.`;
+}
+
 /* ---------- evaluación ---------- */
 async function loadEval(){
   const d = await j('/api/evaluation');
@@ -310,7 +358,7 @@ async function loadEval(){
     const g = rows.filter(r=>r.role===role)
       .sort((a,b)=> b.n-a.n || ((b.live_exp??-999)-(a.live_exp??-999)));
     if (!g.length) continue;
-    html += `<tr><td colspan="11" style="color:var(--muted);font-weight:700;font-size:12px;
+    html += `<tr><td colspan="13" style="color:var(--muted);font-weight:700;font-size:12px;
       letter-spacing:.6px;padding-top:14px;border-bottom:1px solid var(--border)">${label} (${g.length})</td></tr>`;
     html += g.map(r=>`<tr>
       <td><b>${r.strategy_id}</b> · ${r.coin} <span class="mut">${r.tf}</span></td>
@@ -320,6 +368,8 @@ async function loadEval(){
       <td class="mut">${r.bt_exp==null?'—':r.bt_exp}</td>
       <td>${r.ratio==null?'—':r.ratio+'×'}</td>
       <td>${r.pf==null?'—':r.pf}</td><td class="mut">${r.bt_pf==null?'—':r.bt_pf}</td>
+      <td class="${r.avg_mae_r<-1?'neg':'mut'}">${r.avg_mae_r==null?'—':r.avg_mae_r}</td>
+      <td class="${r.avg_mfe_r>=1?'pos':'mut'}">${r.avg_mfe_r==null?'—':r.avg_mfe_r}</td>
       <td class="${cls(r.pnl)}">${fmt$(r.pnl||0)}</td>
       <td><span class="badge ${r.verdict}">${r.verdict_label}</span></td>
     </tr>`).join('');
@@ -451,7 +501,7 @@ function tick(){
 }
 async function refresh(){
   try{
-    await loadDash(); await loadStrats(); await loadEval();
+    await loadDash(); await loadStrats(); await loadEval(); await loadPortfolio();
     if (currentStrat) await selectStrat(currentStrat);
   }catch(e){ console.error(e); }
 }

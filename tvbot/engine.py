@@ -71,7 +71,14 @@ class PaperEngine:
             if tr["tf"] not in due_tfs or (tr["symbol"], tr["tf"]) not in market:
                 continue
             df, live_open = market[(tr["symbol"], tr["tf"])]
-            strat = BY_ID[tr["strategy_id"]]
+            strat = BY_ID.get(tr["strategy_id"])
+            if strat is None:
+                # estrategia ya no existe en el código (renombrada/quitada en un pull):
+                # NO se pierde el trade — se deja abierto y se avisa para revisión manual.
+                db.log_event("warn", "exits",
+                             f"trade {tr['id']} de estrategia desconocida {tr['strategy_id']} "
+                             f"— se mantiene abierto para revisión (no se pierde)")
+                continue
             side = 1 if tr["side"] == "long" else -1
             tf_s = 900 if tr["tf"] == "15m" else 3600
             entry_t = datetime.fromisoformat(tr["t_entry"])

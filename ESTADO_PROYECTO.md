@@ -40,7 +40,7 @@ Spec exacto y métricas: `CONSOLIDADO.md`. Veredictos de research: `indicadores_
 
 ## Arquitectura (ver ARQUITECTURA.md)
 ```
-tvbot/  indicators.py (réplicas Pine, NO tocar sin re-validar) · strategies.py (44 + BACKTEST_REF)
+tvbot/  indicators.py (réplicas Pine, NO tocar sin re-validar) · strategies.py (56 + BACKTEST_REF)
         data.py (ccxt, velas cerradas) · engine.py (PaperEngine: salidas→entradas→equity)
         db.py (SQLite WAL) · orchestrator.py (bucle 15m/1h + circuit breaker) · api/app.py (FastAPI :8090)
 deploy/ setup_vm.sh · deploy.sh · tvbot.service · tvbot-api.service (systemd, VM Oracle)
@@ -51,20 +51,36 @@ Modos de salida: `atrstop` (SL 2×ATR + timeout 48h), `flip` (ST/TM contrario + 
 
 ## Dashboard web (puerto 8090)
 - **Dashboard:** equity, PnL, WR, posiciones abiertas, gráficos por estrategia.
-- **Evaluación:** desempeño LIVE vs backtest + veredicto (Confirmada/En línea/Vigilar/Quitar) + descarga CSV.
-- **Estrategias:** buscador + filtros (long/short, solo-con-trades) sobre las 44, con **badge numérico de
-  trades (cerrados+abiertos)** por estrategia; al seleccionar: indicadores, métricas e histórico completo.
+- **🚀 Producción (nuevo):** tracker de confirmación a nivel CARTERA — veredicto go-live del lote 1
+  (Listo/Acumulando/Alerta), exp live vs backtest, ratio, maxDD vivo, estrategias confirmadas (X/8),
+  reglas de gate visibles, y salud de stops/objetivos (MAE/MFE en R agregado).
+- **Evaluación:** desempeño LIVE vs backtest por estrategia + veredicto + **gate de producción** +
+  columnas **MAE(R)/MFE(R)** + descarga CSV.
+- **Estrategias:** buscador + filtros (long/short, solo-con-trades) sobre las 56, **badge de trades
+  (cerrados+abiertos)** por estrategia + marca ⚠ de redundancia; al seleccionar: indicadores, métricas e
+  histórico completo (con MAE(R)/MFE(R) por trade).
 - **Logs:** logs del sistema por rango de fecha + eventos recientes.
+
+## Robustez operativa (pull-safe, no se pierden trades)
+- Posiciones abiertas viven en la DB; al reiniciar se retoman y las salidas se **re-escanean desde la vela
+  de entrada** (SL/timeout/flip perdidos durante una caída se detectan al volver). Fallback por reloj para
+  trades más viejos que la ventana de datos.
+- Migración de schema **idempotente** (`ALTER ADD COLUMN` en `db.init`) → un `git pull` que agrega columnas
+  no rompe la DB en producción.
+- Un trade abierto de una estrategia que ya no existe en el código (renombrada/quitada en un pull) **NO
+  tumba el ciclo ni se pierde**: se mantiene abierto y se avisa para revisión manual (verificado en test).
+- `deploy.sh` aborta el reinicio si fallan los imports (nunca reinicia con código roto).
 
 ## Desplegar en la VM
 ```bash
 # primera vez: bash deploy/setup_vm.sh   (crea venv, instala, units systemd)
 # actualizaciones:
-git push                                  # desde local (44 estrategias listas)
+git push                                  # desde local (56 estrategias listas)
 ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'   # git pull + pip + verificación de imports + restart
 ```
 `deploy.sh` aborta si fallan los imports (no reinicia con código roto). Servicios: `tvbot` (bucle) y
-`tvbot-api` (dashboard). Verificado local: `python -m tvbot --once` corre las 44; tests de salidas OK.
+`tvbot-api` (dashboard). Verificado local: `python -m tvbot --once` corre las 56; tests + seguridad de
+reinicio OK. Las columnas nuevas de la DB se crean solas al reiniciar (migración idempotente).
 
 ## Contexto (proyecto unificado)
 Este proyecto y **Oscilion** (otro bot, familia EMA/VWAP/ORB) acumulan datos de paper en paralelo; cuando
@@ -72,8 +88,15 @@ haya suficiente track record se elegirán los mejores candidatos para un proyect
 estrategias entre ambos (familias de indicadores disjuntas); sí solape de moneda (TRX/DOT/BTC), irrelevante
 mientras ninguno opere capital real. Objetivo actual: **producir candidatos validados rápido**.
 
-## Pendientes / ideas
-- Pushear y desplegar en la VM (commits locales listos).
-- Acumular ≥30 trades/estrategia para el gate de evaluación en vivo.
-- Vigilar S22/S24 (ENA/WIF, historia corta) y S37/S38 (ORDI, maxDD 1× alto).
-- Batch 6 posible: filtro de régimen (Choppiness/ADX) para *subir* el edge del roster existente, o multi-TF.
+## Próximos pasos
+1. **Pushear y desplegar** en la VM (`git push` + `deploy.sh`) — todo listo y verificado.
+2. **Acumular trades vivos** (~2-3 meses) y vigilar la pestaña 🚀 Producción hasta que la cartera confirme.
+3. **Lote 1 a producción** con capital chico (1×) cuando se cumpla el gate de cartera; graduación rodante por
+   estrategia (las de alta frecuencia S2/S3/S7 primero).
+4. Usar **MAE/MFE en vivo** para afinar stops/objetivos de las que confirmen; retirar las que el vivo condene.
+5. Vigilar S22/S24 (ENA/WIF, historia corta), S37/S38 (ORDI, maxDD alto) y la redundancia S1/S2 (marcada).
+6. Opcional: más indicadores (criterio correlación/contribución marginal); tracker live-vs-backtest de la
+   curva de equity agregada; integración con Oscilion hacia el proyecto unificado.
+
+> **Importante:** los nombres de las estrategias son irrelevantes — el roster vivo se decide por resultados
+> (gates objetivos). Cada trade guarda datos ricos (contexto + MAE/MFE) para esas decisiones.

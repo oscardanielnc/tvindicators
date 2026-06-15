@@ -31,6 +31,15 @@ ATR_MULT = 2.0
 CIRCUIT_BREAKER_ERRORS = 5  # errores consecutivos -> pausa
 CIRCUIT_BREAKER_PAUSE_S = 900
 
+# --- Gates de producción (graduación de paper -> capital real) ---
+# Por estrategia: pasa a producción si cumple TODO esto en vivo.
+GATE_MIN_TRADES = int(os.getenv("TVBOT_GATE_TRADES", "20"))     # nº trades cerrados vivos
+GATE_MIN_RATIO = float(os.getenv("TVBOT_GATE_RATIO", "0.30"))   # exp_live / exp_backtest (conserva >=30% del edge)
+GATE_MIN_PF = float(os.getenv("TVBOT_GATE_PF", "1.2"))          # profit factor vivo
+# Por cartera: lote 1 a producción si el track AGREGADO confirma el backtest.
+GATE_PORT_MIN_TRADES = int(os.getenv("TVBOT_GATE_PORT_TRADES", "150"))
+GATE_PORT_MIN_CONFIRMED = int(os.getenv("TVBOT_GATE_PORT_CONFIRMED", "8"))  # nº estrategias confirmadas
+
 # --- API ---
 API_HOST = os.getenv("TVBOT_API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("TVBOT_API_PORT", "8090"))

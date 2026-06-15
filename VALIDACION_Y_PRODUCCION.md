@@ -66,6 +66,24 @@ tarde años.
 rápidas). Roster maduro (incl. las de 1 trade/mes) **6-18 meses**. Las muy lentas quizá nunca alcancen
 significancia individual → se quedan/van por su aporte al portafolio, no por su t-stat solo.
 
+## Gates de producción (codificados en `config.py`, visibles en el dashboard → 🚀 Producción)
+
+**Por estrategia (graduación a capital real):** pasa si en VIVO cumple TODO:
+- `GATE_MIN_TRADES` = **20** trades cerrados · expectancy live **> 0** ·
+- ratio `live_exp / backtest_exp` ≥ `GATE_MIN_RATIO` = **0.30** (conserva ≥30% del edge) ·
+- PF live ≥ `GATE_MIN_PF` = **1.2**.
+→ veredicto "Confirmada ✓ (a producción)" en `/api/evaluation`.
+
+**Por cartera (go-live del lote 1):** la señal agregada (porque las de baja frecuencia tardan años
+individualmente, pero el libro junta potencia rápido):
+- `GATE_PORT_MIN_TRADES` = **150** trades agregados · expectancy agregada **> 0** ·
+- `GATE_PORT_MIN_CONFIRMED` = **8** estrategias que pasan su gate individual.
+→ veredicto "Listo para lote 1" / "Acumulando" / "Alerta: no confirma" en `/api/portfolio`.
+
+Todos los umbrales son tunables por variable de entorno. La verificación es automática y objetiva
+(el dashboard la muestra en vivo). El proceso degrada/retira estrategias que el vivo condena (exp<0 con
+≥gate trades) y gradúa las que confirma — sin importar cómo las nombramos: **mandan los resultados vivos.**
+
 ## Próximos pasos sugeridos
 - ✅ **Captura de datos por trade enriquecida (15/06/2026):** contexto de entrada (ATR%, dist. SMA200,
   hora, régimen vol, régimen B-X, funding) + MAE/MFE en % y R + slippage de salida. En `db.py`/`engine.py`,
