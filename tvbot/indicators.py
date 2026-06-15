@@ -281,3 +281,37 @@ def force_index(df, n=13):
     l = pos & ~np.roll(pos, 1); s = (~pos) & np.roll(pos, 1)
     l[0] = s[0] = False
     return l, s
+
+
+# --- batch 5 (momentum-systems; validados OOS 15/06/2026, ver batch5_VEREDICTO.md) ---
+
+def _cross_events(a, b):
+    """(a cruza arriba de b, a cruza debajo de b) como eventos booleanos."""
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    above = a > b
+    up = above & ~np.roll(above, 1); dn = (~above) & np.roll(above, 1)
+    up[0] = dn[0] = False
+    return up, dn
+
+
+def kst(df):
+    """KST (Know Sure Thing, Pring). (long_event, short_event) = cruce KST/señal."""
+    c = df["close"]
+    roc = lambda n: 100 * (c / c.shift(n) - 1)
+    k = (roc(10).rolling(10).mean() * 1 + roc(15).rolling(10).mean() * 2
+         + roc(20).rolling(10).mean() * 3 + roc(30).rolling(15).mean() * 4)
+    return _cross_events(k.values, k.rolling(9).mean().values)
+
+
+def tsi(df, long_=25, short_=13, sig_=13):
+    """True Strength Index. (long_event, short_event) = cruce TSI/señal."""
+    pc = df["close"].diff()
+    t = 100 * pine_ema(pine_ema(pc, long_), short_) / pine_ema(pine_ema(pc.abs(), long_), short_)
+    return _cross_events(t.values, pine_ema(t, sig_).values)
+
+
+def awesome_osc(df):
+    """Awesome Oscillator. (long_event, short_event) = cruce de cero de SMA(hl2,5)-SMA(hl2,34)."""
+    hl2 = (df["high"] + df["low"]) / 2
+    a = (hl2.rolling(5).mean() - hl2.rolling(34).mean()).values
+    return _cross_events(a, np.zeros(len(a)))

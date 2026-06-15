@@ -269,6 +269,32 @@ def s38_entry(df):      # ORDI 1h L: Force Index cruza a positivo + régimen
     le, _ = I.force_index(df)
     return _last(le) and _regime(df, +1)
 
+# --- batch 5: momentum-systems (KST/AO/TSI) sobre monedas NUEVAS, validados OOS 15/06/2026, role 0.5 ---
+
+def s39_entry(df):      # LINK 1h L: KST cruza arriba su señal + barrido<=6
+    le, _ = I.kst(df)
+    return _last(le) and _sweep(df, +1, 6)
+
+def s40_entry(df):      # NEO 1h L: Awesome Osc cruza cero + barrido<=6 + tendencia
+    le, _ = I.awesome_osc(df)
+    return _last(le) and _sweep(df, +1, 6) and _trend(df, +1)
+
+def s41_entry(df):      # ICP 1h S: KST cruza abajo su señal + régimen
+    _, se = I.kst(df)
+    return _last(se) and _regime(df, -1)
+
+def s42_entry(df):      # NEAR 1h S: Awesome Osc cruza cero abajo + barrido<=6
+    _, se = I.awesome_osc(df)
+    return _last(se) and _sweep(df, -1, 6)
+
+def s43_entry(df):      # ALGO 1h S: TSI cruza abajo su señal + barrido<=6 + tendencia
+    _, se = I.tsi(df)
+    return _last(se) and _sweep(df, -1, 6) and _trend(df, -1)
+
+def s44_entry(df):      # TAO 1h S: Awesome Osc cruza cero abajo + tendencia + vol
+    _, se = I.awesome_osc(df)
+    return _last(se) and _trend(df, -1) and _vol(df)
+
 def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
     sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
     full = sl == 10
@@ -313,6 +339,9 @@ BBR = "Bollinger Bands %b (reversión a la media)"
 ADX = "ADX / DMI (Wilder, DI+/DI−, ADX>25)"
 CMF = "Chaikin Money Flow (volumen)"
 FI = "Force Index (Elder, volumen)"
+KST = "Know Sure Thing (Pring)"
+AO = "Awesome Oscillator (Williams)"
+TSI = "True Strength Index"
 
 SL_TO = "SL 2×ATR + timeout 48h"
 FLIP = "flip contrario del Supertrend"
@@ -402,6 +431,19 @@ STRATEGIES = [
              role=0.5, indicators=[CMF], exit_desc=SL_TO + " + tendencia/vol"),
     Strategy("S38", "ORDI-L ForceIndex+régimen 1h","ORDI", "1h",  +1, "atrstop", s38_entry,
              role=0.5, indicators=[FI], exit_desc=SL_TO + " + régimen"),
+    # --- batch 5: momentum-systems sobre monedas NUEVAS (corr ~0 vs roster y entre sí) ---
+    Strategy("S39", "LINK-L KST+barrido 1h",      "LINK", "1h",  +1, "atrstop", s39_entry,
+             role=0.5, indicators=[KST], exit_desc=SL_TO + " + barrido"),
+    Strategy("S40", "NEO-L AwesomeOsc+barr+tend 1h","NEO", "1h",  +1, "atrstop", s40_entry,
+             role=0.5, indicators=[AO], exit_desc=SL_TO + " + barrido/tendencia"),
+    Strategy("S41", "ICP-S KST+régimen 1h",       "ICP",  "1h",  -1, "atrstop", s41_entry,
+             role=0.5, indicators=[KST], exit_desc=SL_TO + " + régimen"),
+    Strategy("S42", "NEAR-S AwesomeOsc+barrido 1h","NEAR", "1h",  -1, "atrstop", s42_entry,
+             role=0.5, indicators=[AO], exit_desc=SL_TO + " + barrido"),
+    Strategy("S43", "ALGO-S TSI+barr+tend 1h",    "ALGO", "1h",  -1, "atrstop", s43_entry,
+             role=0.5, indicators=[TSI], exit_desc=SL_TO + " + barrido/tendencia"),
+    Strategy("S44", "TAO-S AwesomeOsc+tend+vol 1h","TAO",  "1h",  -1, "atrstop", s44_entry,
+             role=0.5, indicators=[AO], exit_desc=SL_TO + " + tendencia/vol"),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
@@ -422,4 +464,6 @@ BACKTEST_REF = {
     "S31": (197, 2.13), "S32": (155, 1.93), "S33": (130, 1.97), "S34": (160, 2.31),
     "S35": (126, 1.72), "S36": (224, 2.87),
     "S37": (151, 1.46), "S38": (115, 1.47),
+    "S39": (89, 1.54), "S40": (78, 1.53), "S41": (74, 1.46), "S42": (116, 1.80),
+    "S43": (77, 1.54), "S44": (103, 1.45),
 }
