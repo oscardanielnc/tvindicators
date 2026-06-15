@@ -1,5 +1,9 @@
 # Estado del proyecto — tvindicators
-**Actualizado:** 2026-06-15 · Fase: **paper trading (listo para desplegar en VM)**
+**Actualizado:** 2026-06-15 · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
+
+> **Desplegado el 2026-06-15 ~13:30 Lima.** Las 56 estrategias corren en sombra en la VM acumulando
+> trades vivos; backup/watchdog/alertas activos; código sincronizado con `origin/main`. La fase ahora es
+> **esperar y vigilar** (~2-3 meses) hasta que la cartera confirme el backtest (pestaña 🚀 Producción).
 
 ## Resumen en una línea
 Bot de paper trading con **56 estrategias validadas OOS** sobre Binance perps (TF 1h/15m), motor con
