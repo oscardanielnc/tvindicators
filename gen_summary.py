@@ -11,7 +11,8 @@ from tvbot import strategies as STRAT
 
 TOP8_SID = {f"S{22+i}": spec for i, spec in enumerate(TOP8)}  # S22..S29 -> (coin,sig,side,fs)
 SIGFN = {"adx": I.adx_dmi, "sqz": I.squeeze_momentum, "cmf": I.cmf, "fi": I.force_index,
-         "kst": I.kst, "ao": I.awesome_osc, "tsi": I.tsi, "zl": I.zero_lag_entry}
+         "kst": I.kst, "ao": I.awesome_osc, "tsi": I.tsi, "zl": I.zero_lag_entry,
+         "srb": I.sr_volume_break}
 LATE = {  # S31-S44: (coin, sigfn, side, filtros)
     "S31": ("ARB", "adx", -1, ["trend", "vol"]), "S32": ("EGLD", "sqz", -1, ["sweep6"]),
     "S33": ("DOT", "adx", -1, ["sweep6"]), "S34": ("HBAR", "adx", -1, ["sweep6"]),
@@ -24,6 +25,9 @@ LATE = {  # S31-S44: (coin, sigfn, side, filtros)
     "S47": ("STX", "zl", -1, ["sweep6"]), "S48": ("CRV", "zl", -1, ["sweep6", "trend"]),
     "S49": ("TAO", "sqz", +1, ["trend", "vol"]), "S50": ("FET", "sqz", +1, ["trend", "vol"]),
     "S51": ("JUP", "ao", +1, ["trend", "vol"]),
+    "S52": ("DOGE", "srb", +1, ["trend"]), "S53": ("FET", "srb", +1, ["vol"]),
+    "S54": ("ARB", "srb", -1, ["regime"]), "S55": ("ALGO", "srb", +1, ["trend", "vol"]),
+    "S56": ("INJ", "srb", +1, ["vol"]),
 }
 _DF = {}
 def getdf(coin, tf="1h"):
