@@ -1,9 +1,9 @@
 # tvbot — Arquitectura (Fase 2: paper trading)
 
 ## Qué es
-Bot que opera en **simulado** las 9 estrategias validadas (ver CONSOLIDADO.md) con $1,000
+Bot que opera en **simulado** las **44 estrategias validadas** (ver CONSOLIDADO.md) con $1,000
 virtuales, margen 10% fijo ($100) y apalancamiento 5× fijo por trade. Genera el track
-record vivo que decidirá pesos/apalancamiento reales.
+record vivo que decidirá pesos/apalancamiento reales. Estado completo en `ESTADO_PROYECTO.md`.
 
 ## Estructura
 ```
@@ -35,9 +35,10 @@ python -m tvbot.api        # API en :8090
 ## Paridad con el backtest (decisiones de diseño)
 1. Señal evaluada SOLO en la última vela CERRADA (se descarta la vela en curso).
 2. Entrada = open de la vela en curso al detectar (≈ open de i+1 del backtest), fee maker.
-3. atrstop: SL = entrada ∓ 2×ATR14(vela señal), evaluado contra low/high de velas cerradas
-   del MISMO timeframe (no intra-vela) → exactamente como el backtest. Salida SL paga
-   taker+slippage; timeout 48h y flip pagan maker.
+3. Modos de salida: **atrstop** (SL 2×ATR + timeout 48h), **flip** (Supertrend contrario /
+   Trend Meter opuesto + SL seguridad 3×ATR) y **meanrev** (S30: vuelta a la SMA20 + SL 3×ATR
+   + timeout 24h propio vía `Strategy.timeout_h`). SL evaluado contra low/high de velas cerradas
+   del MISMO timeframe (no intra-vela) → como el backtest. SL paga taker+slippage; el resto maker.
 4. Funding real por trade vía fetch_funding_rate_history al cierre (long paga, short cobra).
 5. 1 posición por estrategia a la vez (entry_skipped se registra en signals para auditoría).
 6. Restart-safe: posiciones abiertas viven en la DB; al reiniciar se retoman.
@@ -47,7 +48,10 @@ python -m tvbot.api        # API en :8090
 - GET /api/status             — equity actual, posiciones abiertas, W/L, PnL total
 - GET /api/equity?limit=      — curva de equity (snapshots cada ciclo)
 - GET /api/summary            — por estrategia: #trades, wins, PnL total (gráfico de barras)
-- GET /api/strategies         — catálogo de las 9
+- GET /api/strategies         — catálogo de las 44
+- GET /api/evaluation         — desempeño LIVE vs backtest + veredicto por estrategia
+- GET /api/evaluation.csv     — el resumen de evaluación, descargable
+- GET /api/logs               — logs del sistema filtrados por rango (hora Lima)
 - GET /api/trades?strategy_id=&status=&limit= — histórico completo por estrategia
 - GET /api/trades/{id}        — detalle de un trade
 - GET /api/events             — log operativo

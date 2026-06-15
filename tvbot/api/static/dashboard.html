@@ -52,6 +52,17 @@ border-radius:8px;cursor:pointer;font-size:13px}
 .chip .side-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;margin-left:4px}
 .chip .side-tag.long{background:var(--green);color:#04260d}
 .chip .side-tag.short{background:var(--red);color:#2b0503}
+.count-badge{display:inline-block;min-width:20px;text-align:center;background:#1f6feb;color:#fff;
+border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px}
+.count-badge.zero{background:#21262d;color:var(--muted)}
+.chip.active .count-badge{background:#fff;color:#1f6feb}
+.strat-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.strat-toolbar input[type=text]{background:#0d1117;border:1px solid var(--border);color:var(--text);
+padding:9px 12px;border-radius:8px;font-family:inherit;min-width:220px;flex:1}
+.seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg-btn{background:none;border:none;color:var(--muted);padding:9px 16px;cursor:pointer;font-size:13px}
+.seg-btn.active{background:#1f6feb;color:#fff}
+.chk{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
 .badge.pass{background:var(--green);color:#04260d}
 .badge.ok{background:#58a6ff22;color:var(--blue);border:1px solid #58a6ff55}
 .badge.collect{background:#8b949e22;color:var(--muted)}
@@ -123,6 +134,16 @@ canvas{max-height:330px}
 
 <!-- ==================== PAGINA 2: ESTRATEGIAS ==================== -->
 <section id="page-strat" style="display:none">
+  <div class="strat-toolbar">
+    <input type="text" id="strat-search" placeholder="🔎 Buscar por ID, moneda o indicador…" oninput="renderChips()">
+    <div class="seg">
+      <button class="seg-btn active" onclick="setFilter(this,'side','all')">Todas</button>
+      <button class="seg-btn" onclick="setFilter(this,'side','long')">▲ Long</button>
+      <button class="seg-btn" onclick="setFilter(this,'side','short')">▼ Short</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="f-withtrades" onchange="renderChips()"> Solo con trades</label>
+    <span class="mut" id="strat-count"></span>
+  </div>
   <div class="chips" id="strat-chips"></div>
 
   <div class="panel" id="strat-header" style="display:none">
@@ -204,6 +225,7 @@ const fmtPx = v => v==null ? '—' : (+v).toPrecision(6);
 const fmtTs = s => s ? s.replace('T',' ').slice(0,16) : '—';
 const cls = v => v>0?'pos':v<0?'neg':'mut';
 let charts = {}, currentStrat = null, strategies = [];
+let stratFilter = {side:'all', q:'', withTrades:false};
 
 function show(p){
   for (const x of ['dash','eval','strat','logs']){
@@ -300,23 +322,50 @@ async function loadEval(){
 }
 
 /* ---------- estrategias ---------- */
+const tradeTotal = s => (s.n_trades||0) + (s.open_now||0);   // cerrados + abiertos
 function chipHtml(s){
+  const total = tradeTotal(s);
   return `<button class="chip" id="chip-${s.strategy_id}" onclick="selectStrat('${s.strategy_id}')">
       ${s.strategy_id} · ${s.coin}
       <span class="side-tag ${s.side}">${s.side==='long'?'LONG':'SHORT'}</span>
+      <span class="count-badge ${total?'':'zero'}" title="${s.n_trades||0} cerrados + ${s.open_now||0} abierto(s)">${total}</span>
       <span class="tag">${s.name.split(' ').slice(1).join(' ')} · ${s.tf}</span>
     </button>`;
 }
-async function loadStrats(){
-  strategies = await j('/api/summary');
-  let html='';
+function passesFilter(s){
+  const f = stratFilter;
+  if (f.side!=='all' && s.side!==f.side) return false;
+  if (f.withTrades && tradeTotal(s)===0) return false;
+  if (f.q){
+    const hay = (s.strategy_id+' '+s.coin+' '+s.name+' '+(s.indicators||[]).join(' ')).toLowerCase();
+    if (!hay.includes(f.q.toLowerCase())) return false;
+  }
+  return true;
+}
+function setFilter(btn,key,val){
+  stratFilter[key]=val;
+  btn.parentElement.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  renderChips();
+}
+function renderChips(){
+  stratFilter.q = $('strat-search').value;
+  stratFilter.withTrades = $('f-withtrades').checked;
+  let html='', shown=0;
   for (const [role,label] of [[1,'★ Titulares'],[0.5,'½ Suplentes']]){
-    const g = strategies.filter(s=>s.role===role)
+    const g = strategies.filter(s=>s.role===role && passesFilter(s))
       .sort((a,b)=> a.side===b.side ? 0 : a.side==='long'?-1:1);
     if (!g.length) continue;
-    html += `<div class="grouphdr">${label}</div>` + g.map(chipHtml).join('');
+    shown += g.length;
+    html += `<div class="grouphdr">${label} (${g.length})</div>` + g.map(chipHtml).join('');
   }
-  $('strat-chips').innerHTML = html;
+  $('strat-chips').innerHTML = html || '<div class="mut" style="padding:8px">Sin estrategias que coincidan.</div>';
+  const withTr = strategies.filter(s=>tradeTotal(s)>0).length;
+  $('strat-count').textContent = `${shown}/${strategies.length} estrategias · ${withTr} con trades`;
+  if (currentStrat) document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.id==='chip-'+currentStrat));
+}
+async function loadStrats(){
+  strategies = await j('/api/summary');
+  renderChips();
   $('t-ref').querySelector('tbody').innerHTML = strategies.map(s=>`<tr>
     <td>${s.strategy_id} · ${s.name}</td>
     <td><span class="badge ${s.side}">${s.side.toUpperCase()}</span></td>
@@ -337,8 +386,8 @@ async function selectStrat(sid){
   $('strat-title').textContent = `Histórico — ${s.strategy_id} · ${s.name}`;
   const wr = s.n_trades ? Math.round(100*s.wins/s.n_trades)+'%' : '—';
   $('strat-cards').innerHTML = `
-    <div class="card"><div class="lbl">Trades cerrados</div><div class="val">${s.n_trades}</div>
-      <div class="sub">${s.open_now? '1 abierto ahora':'sin posición abierta'}</div></div>
+    <div class="card"><div class="lbl">Trades registrados</div><div class="val">${(s.n_trades||0)+(s.open_now||0)}</div>
+      <div class="sub">${s.n_trades||0} cerrados${s.open_now?` · ${s.open_now} abierto(s)`:''}</div></div>
     <div class="card"><div class="lbl">Win rate</div><div class="val">${wr}</div>
       <div class="sub">${s.wins} ganados</div></div>
     <div class="card"><div class="lbl">PnL total</div><div class="val ${cls(s.pnl_total)}">${fmt$(s.pnl_total||0)}</div>

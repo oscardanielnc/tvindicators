@@ -1,5 +1,5 @@
 [Unit]
-Description=tvbot - paper trading bot (9 estrategias validadas)
+Description=tvbot - paper trading bot (44 estrategias validadas)
 After=network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=0
