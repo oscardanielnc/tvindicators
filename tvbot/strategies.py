@@ -30,7 +30,7 @@ def _sweep(df, side, F=6):
 
 class Strategy:
     def __init__(self, sid, name, coin, tf, side, exit_mode, entry_fn, flip_exit_fn=None,
-                 role=1.0, safety_atr=None, indicators=(), exit_desc="", timeout_h=None):
+                 role=1.0, safety_atr=None, indicators=(), exit_desc="", timeout_h=None, note=""):
         self.sid = sid
         self.name = name
         self.coin = coin
@@ -45,6 +45,7 @@ class Strategy:
         self.indicators = list(indicators)   # nombres COMPLETOS de los indicadores usados
         self.exit_desc = exit_desc
         self.timeout_h = timeout_h      # timeout propio (None -> config.TIMEOUT_HOURS); meanrev=24
+        self.note = note                # marca operativa (p.ej. redundancia con otra estrategia)
 
     def entry_signal(self, df):
         return self._entry(df)
@@ -313,6 +314,20 @@ def s48_entry(df):      # CRV 1h S: Zero Lag entry bajista + barrido<=6 + tenden
     _, se = I.zero_lag_entry(df)
     return _last(se) and _sweep(df, -1, 6) and _trend(df, -1)
 
+# --- challengers descorrelacionados del optimizador (15/06/2026): LONGS robustos OOS, role 0.5 ---
+
+def s49_entry(df):      # TAO 1h L: Squeeze release alcista + tendencia + vol
+    le, _ = I.squeeze_momentum(df)
+    return _last(le) and _trend(df, +1) and _vol(df)
+
+def s50_entry(df):      # FET 1h L: Squeeze release alcista + tendencia + vol
+    le, _ = I.squeeze_momentum(df)
+    return _last(le) and _trend(df, +1) and _vol(df)
+
+def s51_entry(df):      # JUP 1h L: Awesome Osc cruza cero + tendencia + vol
+    le, _ = I.awesome_osc(df)
+    return _last(le) and _trend(df, +1) and _vol(df)
+
 def s9_entry(df):       # BTC 1h L: Ribbon completa 10/10 (evento) + BXreg>0 + ST up
     sl, _ = I.ribbon_strength(df["close"], df["high"], df["low"])
     full = sl == 10
@@ -370,7 +385,8 @@ STRATEGIES = [
              indicators=[BX], exit_desc=SL_TO),
     Strategy("S2", "TRX-L TrendMeter 1h",      "TRX",  "1h",  +1, "flip",    s2_entry,
              tm_align_red_exit, safety_atr=3.0, indicators=[TM],
-             exit_desc="Trend Meter alinea rojo + SL seguridad 3×ATR"),
+             exit_desc="Trend Meter alinea rojo + SL seguridad 3×ATR",
+             note="Redundante con S1 (corr PnL 0.83, misma apuesta TRX-L) — observación / candidata a reemplazo"),
     Strategy("S3", "TRX-L ST+HAC+RIB 15m",     "TRX",  "15m", +1, "flip",    s3_entry,
              flip_dn_exit, indicators=[ST, HAC, RIB], exit_desc=FLIP),
     Strategy("S4", "SUI-S BX+regimen 1h",      "SUI",  "1h",  -1, "atrstop", s4_entry,
@@ -472,6 +488,13 @@ STRATEGIES = [
              role=0.5, indicators=[ZL], exit_desc=SL_TO + " + barrido"),
     Strategy("S48", "CRV-S ZeroLag+barr+tend 1h",  "CRV",  "1h",  -1, "atrstop", s48_entry,
              role=0.5, indicators=[ZL], exit_desc=SL_TO + " + barrido/tendencia"),
+    # --- challengers del optimizador (longs robustos OOS, corr ~0; corrigen el sesgo de antigüedad) ---
+    Strategy("S49", "TAO-L Squeeze+tend+vol 1h",  "TAO",  "1h",  +1, "atrstop", s49_entry,
+             role=0.5, indicators=[SQZM], exit_desc=SL_TO + " + tendencia/vol"),
+    Strategy("S50", "FET-L Squeeze+tend+vol 1h",  "FET",  "1h",  +1, "atrstop", s50_entry,
+             role=0.5, indicators=[SQZM], exit_desc=SL_TO + " + tendencia/vol"),
+    Strategy("S51", "JUP-L AwesomeOsc+tend+vol 1h","JUP",  "1h",  +1, "atrstop", s51_entry,
+             role=0.5, indicators=[AO], exit_desc=SL_TO + " + tendencia/vol"),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
@@ -495,4 +518,5 @@ BACKTEST_REF = {
     "S39": (89, 1.54), "S40": (78, 1.53), "S41": (74, 1.46), "S42": (116, 1.80),
     "S43": (77, 1.54), "S44": (103, 1.45),
     "S45": (190, 2.17), "S46": (225, 3.19), "S47": (98, 1.52), "S48": (106, 1.51),
+    "S49": (106, 1.46), "S50": (121, 1.44), "S51": (137, 1.52),
 }

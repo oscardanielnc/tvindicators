@@ -22,6 +22,8 @@ LATE = {  # S31-S44: (coin, sigfn, side, filtros)
     "S43": ("ALGO", "tsi", -1, ["sweep6", "trend"]), "S44": ("TAO", "ao", -1, ["trend", "vol"]),
     "S45": ("FIL", "zl", +1, ["sweep6"]), "S46": ("NEO", "zl", -1, ["sweep6", "trend"]),
     "S47": ("STX", "zl", -1, ["sweep6"]), "S48": ("CRV", "zl", -1, ["sweep6", "trend"]),
+    "S49": ("TAO", "sqz", +1, ["trend", "vol"]), "S50": ("FET", "sqz", +1, ["trend", "vol"]),
+    "S51": ("JUP", "ao", +1, ["trend", "vol"]),
 }
 _DF = {}
 def getdf(coin, tf="1h"):

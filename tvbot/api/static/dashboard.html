@@ -63,6 +63,9 @@ padding:9px 12px;border-radius:8px;font-family:inherit;min-width:220px;flex:1}
 .seg-btn{background:none;border:none;color:var(--muted);padding:9px 16px;cursor:pointer;font-size:13px}
 .seg-btn.active{background:#1f6feb;color:#fff}
 .chk{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.warn-mark{color:var(--yellow);margin-left:5px;font-size:12px}
+.note-banner{background:#d2992218;border:1px solid #d2992255;color:var(--yellow);border-radius:8px;
+padding:9px 12px;margin-top:10px;font-size:13px}
 .badge.pass{background:var(--green);color:#04260d}
 .badge.ok{background:#58a6ff22;color:var(--blue);border:1px solid #58a6ff55}
 .badge.collect{background:#8b949e22;color:var(--muted)}
@@ -155,6 +158,7 @@ canvas{max-height:330px}
     <h2>Indicadores que usa esta estrategia (nombre completo)</h2>
     <ul class="ind-list" id="sh-indicators"></ul>
     <div class="mut" style="margin-top:10px" id="sh-exit">—</div>
+    <div id="sh-note"></div>
   </div>
 
   <div class="cards" id="strat-cards"></div>
@@ -329,6 +333,7 @@ function chipHtml(s){
       ${s.strategy_id} · ${s.coin}
       <span class="side-tag ${s.side}">${s.side==='long'?'LONG':'SHORT'}</span>
       <span class="count-badge ${total?'':'zero'}" title="${s.n_trades||0} cerrados + ${s.open_now||0} abierto(s)">${total}</span>
+      ${s.note?`<span class="warn-mark" title="${s.note.replace(/"/g,'&quot;')}">⚠</span>`:''}
       <span class="tag">${s.name.split(' ').slice(1).join(' ')} · ${s.tf}</span>
     </button>`;
 }
@@ -383,6 +388,7 @@ async function selectStrat(sid){
   $('sh-tf').textContent = `${s.tf} · ${s.role===1?'titular':'suplente ½'}`;
   $('sh-indicators').innerHTML = s.indicators.map(i=>`<li><span class="dot">◆</span>${i}</li>`).join('');
   $('sh-exit').textContent = `Salida: ${s.exit_desc}`;
+  $('sh-note').innerHTML = s.note ? `<div class="note-banner">⚠ ${s.note}</div>` : '';
   $('strat-title').textContent = `Histórico — ${s.strategy_id} · ${s.name}`;
   const wr = s.n_trades ? Math.round(100*s.wins/s.n_trades)+'%' : '—';
   $('strat-cards').innerHTML = `
