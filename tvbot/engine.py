@@ -54,12 +54,8 @@ class PaperEngine:
             if s.tf in due_tfs and not (getattr(s, "session", "24/7") == "us" and not session_open):
                 needed.setdefault((s.symbol, s.tf), None)
         for trade in db.open_trades():
-            if trade["tf"] not in due_tfs:
-                continue
-            st = _BY_ID.get(trade["strategy_id"])
-            if st is not None and getattr(st, "session", "24/7") == "us" and not session_open:
-                continue                          # fuera de sesión no se gestionan los 'us' (re-scan al reabrir)
-            needed.setdefault((trade["symbol"], trade["tf"]), None)
+            if trade["tf"] in due_tfs:            # las SALIDAS siempre se gestionan (la vista filtra a sesión;
+                needed.setdefault((trade["symbol"], trade["tf"]), None)  # así el ORB cierra en el ciclo de las 16:00)
 
         market = {}
         for (symbol, tf) in needed:
@@ -115,9 +111,13 @@ class PaperEngine:
             # 'flip' y 'meanrev' usan array de salida; 'atrstop' y 'meanrev' tienen timeout
             flip = strat.exit_array(df) if strat.exit_mode in ("flip", "meanrev") else None
             has_timeout = strat.exit_mode in ("atrstop", "meanrev")
-            # 'orb' (acciones): cierre forzado al fin de la sesión del día de entrada
-            et_dates = df.index.tz_convert(data._ET).date if strat.exit_mode == "orb" else None
-            entry_et = et_dates[i0] if et_dates is not None else None
+            # 'orb' (acciones): cierre en la última vela de la sesión (15m->15:45, 30m->15:30 ET)
+            if strat.exit_mode == "orb":
+                et = df.index.tz_convert(data._ET)
+                et_mod = (et.hour * 60 + et.minute).to_numpy()
+                close_slot = 16 * 60 - tf_s // 60
+            else:
+                et_mod = None
             exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
             exit_k = None
@@ -131,10 +131,9 @@ class PaperEngine:
                         reason, cost_out = "SL", config.TAKER_FEE + config.SLIPPAGE
                         t_exit = df.index[k]; exit_k = k
                         break
-                # ORB: la sesión del día de entrada cerró -> salida al cierre de su última vela
-                if et_dates is not None and k > i0 and et_dates[k] != entry_et:
-                    j = k - 1
-                    exit_px, t_exit, reason, exit_k = cl[j], df.index[j], "session_close", j
+                # ORB: vela de cierre de sesión -> salir a su cierre (mismo día de entrada)
+                if et_mod is not None and et_mod[k] >= close_slot:
+                    exit_px, t_exit, reason, exit_k = cl[k], df.index[k], "session_close", k
                     break
                 # salida por senal (flip ST contrario / reversion a la media): prioritaria al timeout
                 if flip is not None and flip[k]:
@@ -202,6 +201,8 @@ class PaperEngine:
         for s in _ALL:
             if s.tf not in due_tfs or (s.symbol, s.tf) not in market:
                 continue
+            if getattr(s, "session", "24/7") == "us" and not data.in_us_session():
+                continue                           # titulares 'us' solo ABREN durante la sesión US
             raw_df, live_open = market[(s.symbol, s.tf)]
             df = _view(s, raw_df)                  # titular 'us' evalúa solo sobre barras de sesión US
             if len(df) < 30:
