@@ -125,6 +125,12 @@ def _pm_ratio_today(df):
     return rng_by_day[today] / base if base > 0 else None
 
 
+def _smc_sbos_long(df):
+    """SMC Swing Break of Structure (LuxAlgo), lado largo. Import perezoso de smc (motor compartido)."""
+    import smc
+    return bool(smc.compute(df)["sbos_bull"][-1])
+
+
 def _srst_long(df):
     """S/R[LuxAlgo]+Supertrend: flip alcista de Supertrend + ruptura de resistencia (volumen) reciente (<=10)."""
     up, _, _ = I.st_flips(df)
@@ -217,6 +223,25 @@ STRATEGIES_TRADFI = [
              asset_class="stocks", session="24/7", role=0.5,
              indicators=["S/R Levels with Breaks (LuxAlgo)", "Supertrend"], exit_desc="SL 2×ATR + timeout 48h",
              note="suplente experimental · short vence a su deriva, alpha +106bp"),
+    # --- SMC Swing BOS LONG-only en equity (en cripto fue bidireccional → S57-S64; en acciones solo
+    #     el largo tiene edge). Validado anti-beta por-ticker (alpha real, no momentum-beta); corr <0.5
+    #     vs S/R+ST mismo ticker (señal distinta). exit atrstop=lo backtesteado, role 0.5, session 24/7. ---
+    Strategy("T12", "NVDA-L SMC SwingBOS 1h", "NVDA", "1h", +1, "atrstop", _smc_sbos_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["Smart Money Concepts — Swing Break of Structure (LuxAlgo)"],
+             exit_desc="SL 2×ATR + timeout 48h", note="suplente experimental · alpha +128bp vs deriva (OOS +224)"),
+    Strategy("T13", "TSLA-L SMC SwingBOS 1h", "TSLA", "1h", +1, "atrstop", _smc_sbos_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["Smart Money Concepts — Swing Break of Structure (LuxAlgo)"],
+             exit_desc="SL 2×ATR + timeout 48h", note="suplente experimental · alpha +98bp (OOS +14, flojo)"),
+    Strategy("T14", "AAPL-L SMC SwingBOS 1h", "AAPL", "1h", +1, "atrstop", _smc_sbos_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["Smart Money Concepts — Swing Break of Structure (LuxAlgo)"],
+             exit_desc="SL 2×ATR + timeout 48h", note="suplente experimental · alpha +60bp vs deriva"),
+    Strategy("T15", "MU-L SMC SwingBOS 1h",   "MU",   "1h", +1, "atrstop", _smc_sbos_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["Smart Money Concepts — Swing Break of Structure (LuxAlgo)"],
+             exit_desc="SL 2×ATR + timeout 48h", note="suplente experimental · alpha +41bp vs deriva (OOS +208)"),
 ]
 
 BY_ID_TRADFI = {s.sid: s for s in STRATEGIES_TRADFI}
@@ -228,4 +253,6 @@ BACKTEST_REF_TRADFI = {
     "T6": (45, 1.72),    # NVDA ORB pre-market agitado: OOS exp +45bp/trade, PF 1.72 (acción real)
     # S/R[LuxAlgo]+Supertrend (ST_flip+SRrec), exp bp + PF del backtest de selección por (ticker,lado)
     "T7": (164, 2.12), "T8": (98, 2.29), "T9": (72, 1.68), "T10": (63, 1.43), "T11": (23, 1.14),
+    # SMC Swing BOS long-only equity (exp bp, PF del backtest anti-beta por-ticker)
+    "T12": (146, 2.80), "T13": (124, 1.91), "T14": (75, 2.31), "T15": (86, 1.67),
 }
