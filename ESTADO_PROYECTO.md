@@ -1,15 +1,35 @@
 # Estado del proyecto — tvindicators
-**Actualizado:** 2026-06-15 · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
+**Actualizado:** 2026-06-16 · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
 
-> **Desplegado el 2026-06-15 ~13:30 Lima.** Las 56 estrategias corren en sombra en la VM acumulando
-> trades vivos; backup/watchdog/alertas activos; código sincronizado con `origin/main`. La fase ahora es
-> **esperar y vigilar** (~2-3 meses) hasta que la cartera confirme el backtest (pestaña 🚀 Producción).
+> **Cripto desplegado 2026-06-15; TradFi (acciones) añadido e integrado 2026-06-16.** 56 estrategias cripto
+> + 5 tradfi corren en sombra en la VM acumulando trades; backup/watchdog/alertas activos; código en
+> `origin/main`. Fase: **esperar y vigilar** hasta que la cartera confirme el backtest (pestaña 🚀 Producción).
+> Para tomar lo último en la VM: `ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'`.
 
 ## Resumen en una línea
-Bot de paper trading con **56 estrategias validadas OOS** sobre Binance perps (TF 1h/15m), motor con
-paridad exacta al backtest, API + dashboard web, y track record vivo que decidirá el capital real.
+Bot de paper trading con **56 estrategias cripto (Binance perps, validadas OOS) + 5 tradfi (acciones, perps
+de Binance)**, motor con paridad al backtest, API + dashboard con secciones separadas 🪙 Cripto / 📈 TradFi,
+y track record vivo que decidirá el capital real.
 
-## Roster: 56 estrategias (7 titulares + 49 suplentes · 26 long / 30 short)
+## TradFi (acciones) — añadido 2026-06-16
+**5 estrategias sobre perps de ACCIONES de Binance** (`TSLA/NVDA`, mismo feed ccxt, donde se opera). Sección
+**📈 TradFi** separada en el dashboard; mismas reglas/monto/apalancamiento que cripto; corren en paper, en sombra.
+- **Titulares T2–T5** (NVDA/TSLA trend-following — Supertrend, Awesome Osc, Squeeze, ADX/DMI): validados con
+  **años de la acción REAL** (Databento) → holdout IS/OOS + anti-beta (le ganan a buy&hold = alpha, no solo beta).
+  Corren **gated a la sesión US regular** (09:30–16:00 ET), donde el perp ≈ la acción por arbitraje.
+- **Suplente T1** (ORB TSLA, ruptura de apertura): experimental; stop OR-low + cierre al fin de sesión (15:45 ET).
+- **Incógnita abierta (el único riesgo):** validadas en la acción real, corren sobre el **perp-en-sesión**; que
+  el edge transfiera lo decide el **paper vivo** (~semanas; vigilar live-exp T2–T5 vs backtest en 📈 TradFi). El
+  perp **24/7 NO transfiere** (smoke-test negativo → por eso el gating de sesión).
+- **Research (en `tradfi/`, no corre en la VM):** LITE, WDC y 10 tickers más → **rechazados** (beta o sin edge).
+  El edge de timing en acciones es **RARO** → roster chico/selectivo. Candidatos posibles = **87 perps EQUITY**
+  de Binance (semis/ETFs por validar; ver memoria `binance-equity-perp-universe`). Disciplina: placebo/holdout/anti-beta.
+
+**Arquitectura tradfi:** `tvbot/strategies_tradfi.py` (registro) · `data.filter_us_session/in_us_session`
+(DST-aware) · motor con `asset_class`/`session`/exit_mode `orb` + TF 30m · columna DB `asset_class` (migración
+idempotente) · API filtra por mercado · toggle 🪙/📈 en el dashboard. **Cripto (56) 100% intacto.**
+
+## Roster cripto: 56 estrategias (7 titulares + 49 suplentes · 26 long / 30 short)
 Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + sensibilidad + correlación):
 
 | Batch | Indicadores | Estrategias | Clase |
