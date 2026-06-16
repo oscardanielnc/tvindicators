@@ -30,16 +30,20 @@ def _sweep(df, side, F=6):
 
 class Strategy:
     def __init__(self, sid, name, coin, tf, side, exit_mode, entry_fn, flip_exit_fn=None,
-                 role=1.0, safety_atr=None, indicators=(), exit_desc="", timeout_h=None, note=""):
+                 role=1.0, safety_atr=None, indicators=(), exit_desc="", timeout_h=None, note="",
+                 asset_class="crypto", entry_stop_fn=None, session="24/7"):
         self.sid = sid
         self.name = name
         self.coin = coin
-        self.symbol = f"{coin}/USDT:USDT"
+        self.asset_class = asset_class  # 'crypto' | 'stocks' (perp de acción en Binance, p.ej. TSLA/USDT:USDT)
+        self.symbol = f"{coin}/USDT:USDT"   # ambos son perps Binance (mismo feed ccxt)
+        self.session = session          # '24/7' (cripto/suplentes) | 'us' (titulares: solo sesión US regular)
         self.tf = tf
         self.side = side                # +1 long / -1 short
-        self.exit_mode = exit_mode      # 'atrstop' | 'flip' | 'meanrev'
+        self.exit_mode = exit_mode      # 'atrstop' | 'flip' | 'meanrev' | 'orb' (stocks: OR-low + cierre sesión)
         self._entry = entry_fn
         self._flip_exit = flip_exit_fn  # 'flip': ST contrario · 'meanrev': vuelta a la media
+        self.entry_stop_fn = entry_stop_fn  # callable(df, entry_px)->stop_px (ORB: OR-low); None -> ATR
         self.role = role                # 1.0 titular / 0.5 suplente (informativo por ahora)
         self.safety_atr = safety_atr    # SL de seguridad (xATR) para exit_mode 'flip'/'meanrev'
         self.indicators = list(indicators)   # nombres COMPLETOS de los indicadores usados

@@ -85,6 +85,7 @@ def conn():
 # Columnas de enriquecimiento (datos valiosos por trade para el proyecto unificado).
 # Se agregan idempotentemente (ALTER ADD COLUMN) para no romper DBs ya en producción.
 _EXTRA_COLS = [
+    ("asset_class", "TEXT"),        # 'crypto' | 'stocks' (perp de acción) — separa secciones del dashboard
     ("entry_atr_pct", "REAL"),      # volatilidad al entrar (ATR/precio)
     ("entry_trend_dist", "REAL"),   # close/SMA200-1 (contexto de tendencia de la moneda)
     ("entry_hour", "INTEGER"),      # hora Lima de la entrada (sesión)

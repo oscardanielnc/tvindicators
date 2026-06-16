@@ -18,6 +18,18 @@ from . import data, db
 from . import indicators as I
 from .indicators import atr14
 from .strategies import STRATEGIES, BY_ID
+from .strategies_tradfi import STRATEGIES_TRADFI, BY_ID_TRADFI
+
+# cripto + tradfi (perps de acciones). El feed y el motor son comunes; lo único distinto de tradfi
+# es la sesión ('us' -> solo barras de sesión US regular) y el exit_mode 'orb'.
+_ALL = STRATEGIES + STRATEGIES_TRADFI
+_BY_ID = {**BY_ID, **BY_ID_TRADFI}
+_TF_S = {"15m": 900, "30m": 1800, "1h": 3600}
+
+
+def _view(strat, df):
+    """Vista del df que ve la estrategia: titulares 'us' solo ven barras de sesión US regular."""
+    return data.filter_us_session(df) if getattr(strat, "session", "24/7") == "us" else df
 
 
 def _now():
@@ -37,12 +49,17 @@ class PaperEngine:
     def run_cycle(self, due_tfs):
         """due_tfs: lista de timeframes cuya vela acaba de cerrar (p.ej. ['15m','1h'])."""
         needed = {}
-        for s in STRATEGIES:
-            if s.tf in due_tfs:
+        session_open = data.in_us_session()       # gating de titulares 'us' (acciones)
+        for s in _ALL:
+            if s.tf in due_tfs and not (getattr(s, "session", "24/7") == "us" and not session_open):
                 needed.setdefault((s.symbol, s.tf), None)
         for trade in db.open_trades():
-            if trade["tf"] in due_tfs:
-                needed.setdefault((trade["symbol"], trade["tf"]), None)
+            if trade["tf"] not in due_tfs:
+                continue
+            st = _BY_ID.get(trade["strategy_id"])
+            if st is not None and getattr(st, "session", "24/7") == "us" and not session_open:
+                continue                          # fuera de sesión no se gestionan los 'us' (re-scan al reabrir)
+            needed.setdefault((trade["symbol"], trade["tf"]), None)
 
         market = {}
         for (symbol, tf) in needed:
@@ -70,8 +87,8 @@ class PaperEngine:
         for tr in db.open_trades():
             if tr["tf"] not in due_tfs or (tr["symbol"], tr["tf"]) not in market:
                 continue
-            df, live_open = market[(tr["symbol"], tr["tf"])]
-            strat = BY_ID.get(tr["strategy_id"])
+            raw_df, live_open = market[(tr["symbol"], tr["tf"])]
+            strat = _BY_ID.get(tr["strategy_id"])
             if strat is None:
                 # estrategia ya no existe en el código (renombrada/quitada en un pull):
                 # NO se pierde el trade — se deja abierto y se avisa para revisión manual.
@@ -79,8 +96,9 @@ class PaperEngine:
                              f"trade {tr['id']} de estrategia desconocida {tr['strategy_id']} "
                              f"— se mantiene abierto para revisión (no se pierde)")
                 continue
+            df = _view(strat, raw_df)             # titulares 'us' ven solo barras de sesión US
             side = 1 if tr["side"] == "long" else -1
-            tf_s = 900 if tr["tf"] == "15m" else 3600
+            tf_s = _TF_S[tr["tf"]]
             entry_t = datetime.fromisoformat(tr["t_entry"])
             # vela de entrada = la que contiene t_entry (alineada al timeframe)
             entry_bar_start = int(entry_t.timestamp() // tf_s) * tf_s
@@ -90,12 +108,16 @@ class PaperEngine:
             i0 = int(starts.searchsorted(entry_bar_start))
             if i0 >= len(df):
                 continue                      # la vela de entrada aun no cierra
-            op, hi, lo = df["open"].values, df["high"].values, df["low"].values
+            op, hi, lo, cl = (df["open"].values, df["high"].values,
+                              df["low"].values, df["close"].values)
             timeout_h = strat.timeout_h or config.TIMEOUT_HOURS
             to_bars = timeout_h * 3600 // tf_s
             # 'flip' y 'meanrev' usan array de salida; 'atrstop' y 'meanrev' tienen timeout
             flip = strat.exit_array(df) if strat.exit_mode in ("flip", "meanrev") else None
             has_timeout = strat.exit_mode in ("atrstop", "meanrev")
+            # 'orb' (acciones): cierre forzado al fin de la sesión del día de entrada
+            et_dates = df.index.tz_convert(data._ET).date if strat.exit_mode == "orb" else None
+            entry_et = et_dates[i0] if et_dates is not None else None
             exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
             exit_k = None
@@ -109,6 +131,11 @@ class PaperEngine:
                         reason, cost_out = "SL", config.TAKER_FEE + config.SLIPPAGE
                         t_exit = df.index[k]; exit_k = k
                         break
+                # ORB: la sesión del día de entrada cerró -> salida al cierre de su última vela
+                if et_dates is not None and k > i0 and et_dates[k] != entry_et:
+                    j = k - 1
+                    exit_px, t_exit, reason, exit_k = cl[j], df.index[j], "session_close", j
+                    break
                 # salida por senal (flip ST contrario / reversion a la media): prioritaria al timeout
                 if flip is not None and flip[k]:
                     exit_px, t_exit = (op[k + 1], df.index[k + 1]) if k + 1 < len(df) \
@@ -156,8 +183,7 @@ class PaperEngine:
         pnl = gross_pct * notional - fees_usd + funding_usd
         ret_nolev = pnl / notional
         ret_lev = pnl / margin
-        bars_held = int((exit_dt - entry_t).total_seconds()
-                        // (900 if tr["tf"] == "15m" else 3600))
+        bars_held = int((exit_dt - entry_t).total_seconds() // _TF_S[tr["tf"]])
         db.close_trade(tr["id"], t_exit=_iso(exit_dt), exit_px=exit_px, exit_reason=reason,
                        pnl_usd=round(pnl, 4), fees_usd=round(fees_usd, 4),
                        funding_usd=round(funding_usd, 4),
@@ -173,10 +199,13 @@ class PaperEngine:
     # ---------- entradas ----------
     def _manage_entries(self, market, due_tfs):
         open_by_strat = {t["strategy_id"] for t in db.open_trades()}
-        for s in STRATEGIES:
+        for s in _ALL:
             if s.tf not in due_tfs or (s.symbol, s.tf) not in market:
                 continue
-            df, live_open = market[(s.symbol, s.tf)]
+            raw_df, live_open = market[(s.symbol, s.tf)]
+            df = _view(s, raw_df)                  # titular 'us' evalúa solo sobre barras de sesión US
+            if len(df) < 30:
+                continue
             try:
                 signal = s.entry_signal(df)
             except Exception as e:
@@ -216,14 +245,17 @@ class PaperEngine:
         qty = notional / entry_px
         ctx = self._entry_context(s, df)
         atr = float(atr14(df).iloc[-1])
-        atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
-        stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
-            if atr_mult else None
+        if s.entry_stop_fn is not None:                  # ORB: stop = OR-low (no ATR)
+            stop_px = s.entry_stop_fn(df, entry_px)
+        else:
+            atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
+            stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
+                if atr_mult else None
         timeout_at = _iso(_now() + timedelta(hours=(s.timeout_h or config.TIMEOUT_HOURS))) \
             if s.exit_mode in ("atrstop", "meanrev") else None
         tid = db.insert_trade(
             strategy_id=s.sid, strategy_name=s.name, symbol=s.symbol, tf=s.tf,
-            side="long" if s.side > 0 else "short", status="open",
+            side="long" if s.side > 0 else "short", status="open", asset_class=s.asset_class,
             t_signal=_iso(df.index[-1].to_pydatetime().astimezone(config.LIMA_TZ)),
             t_entry=db.utcnow(),
             entry_px=entry_px, base_amount=margin, leverage=config.LEVERAGE,

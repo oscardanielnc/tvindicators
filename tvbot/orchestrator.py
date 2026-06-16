@@ -8,6 +8,7 @@ import config
 from . import db, notify
 from .engine import PaperEngine
 from .strategies import STRATEGIES
+from .strategies_tradfi import STRATEGIES_TRADFI
 
 log = logging.getLogger("tvbot")
 
@@ -20,6 +21,8 @@ def next_quarter(now_s):
 def due_timeframes(ts):
     dt = datetime.fromtimestamp(ts - config.CYCLE_OFFSET_S, tz=timezone.utc)
     due = ["15m"]
+    if dt.minute % 30 == 0:          # velas 30m cierran en :00 y :30 (tradfi 30m)
+        due.append("30m")
     if dt.minute == 0:
         due.append("1h")
     return due
@@ -31,7 +34,8 @@ def main():
                  {"capital": config.CAPITAL_INICIAL, "leverage": config.LEVERAGE,
                   "margin_pct": config.MARGIN_PCT})
     log.info("tvbot iniciado - paper trading, capital $%.0f", config.CAPITAL_INICIAL)
-    notify.notify(f"tvbot iniciado · paper ${config.CAPITAL_INICIAL:.0f} · {len(STRATEGIES)} estrategias")
+    notify.notify(f"tvbot iniciado · paper ${config.CAPITAL_INICIAL:.0f} · "
+                  f"{len(STRATEGIES)} cripto + {len(STRATEGIES_TRADFI)} tradfi")
     errors = 0
     while True:
         target = next_quarter(time.time())

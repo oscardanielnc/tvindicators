@@ -1,5 +1,6 @@
 """Datos de mercado via ccxt (publico, sin API key). Sin look-ahead: solo velas CERRADAS."""
 import time
+from zoneinfo import ZoneInfo
 
 import ccxt
 import pandas as pd
@@ -17,7 +18,25 @@ def exchange():
     return _ex
 
 
-TF_MS = {"15m": 15 * 60_000, "1h": 60 * 60_000}
+TF_MS = {"15m": 15 * 60_000, "30m": 30 * 60_000, "1h": 60 * 60_000}
+
+_ET = ZoneInfo("America/New_York")
+
+
+def filter_us_session(df):
+    """Filtra velas a la sesión regular US (09:30-16:00 ET, L-V) — DST-aware. Para titulares 'us':
+    durante la sesión el perp Binance ≈ la acción real (arbitraje), que es donde se validaron."""
+    et = df.index.tz_convert(_ET)
+    mask = (et.weekday < 5) & (
+        ((et.hour > 9) | ((et.hour == 9) & (et.minute >= 30))) & (et.hour < 16))
+    return df[mask]
+
+
+def in_us_session(ts_utc=None):
+    """¿Estamos en sesión regular US ahora? (para gating de entradas de titulares 'us')."""
+    et = (ts_utc or pd.Timestamp.now(tz="UTC")).tz_convert(_ET)
+    return et.weekday() < 5 and (
+        (et.hour > 9 or (et.hour == 9 and et.minute >= 30)) and et.hour < 16)
 
 
 def fetch_bars(symbol, tf, limit=None):

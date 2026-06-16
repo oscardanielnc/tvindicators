@@ -95,6 +95,10 @@ canvas{max-height:330px}
   <h1>🤖 tvbot</h1>
   <span class="pill">PAPER · $1,000 · 10% × 5x = $500/trade</span>
   <span class="pill" id="clock">—</span>
+  <div class="seg" id="market-toggle" title="Cripto y TradFi corren con las mismas reglas/monto/apalancamiento">
+    <button class="seg-btn active" data-m="crypto" onclick="setMarket('crypto')">🪙 Cripto</button>
+    <button class="seg-btn" data-m="stocks" onclick="setMarket('stocks')">📈 TradFi</button>
+  </div>
   <nav>
     <button id="tab-dash" class="active" onclick="show('dash')">Dashboard</button>
     <button id="tab-prod" onclick="show('prod')">🚀 Producción</button>
@@ -250,6 +254,14 @@ const fmtTs = s => s ? s.replace('T',' ').slice(0,16) : '—';
 const cls = v => v>0?'pos':v<0?'neg':'mut';
 let charts = {}, currentStrat = null, strategies = [];
 let stratFilter = {side:'all', q:'', withTrades:false};
+let market = 'crypto';                       // 🪙 cripto | 📈 stocks (tradfi) — filtra estrategias/eval/producción
+
+function setMarket(m){
+  if (market===m) return;
+  market = m; currentStrat = null;
+  document.querySelectorAll('#market-toggle .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.m===m));
+  refresh();
+}
 
 function show(p){
   for (const x of ['dash','prod','eval','strat','logs']){
@@ -316,7 +328,7 @@ async function loadDash(){
 
 /* ---------- producción (tracker de cartera) ---------- */
 async function loadPortfolio(){
-  const p = await j('/api/portfolio');
+  const p = await j('/api/portfolio?asset_class='+market);
   const vmap = {pass:'pos', ok:'', collect:'mut', fail:'neg'};
   $('prod-verdict').innerHTML = `<div class="lbl">Estado de la cartera — señal de go-live del lote 1</div>
     <div style="font-size:26px;font-weight:800;margin-top:8px" class="${vmap[p.verdict]||''}">${p.verdict_label}</div>`;
@@ -345,7 +357,7 @@ async function loadPortfolio(){
 
 /* ---------- evaluación ---------- */
 async function loadEval(){
-  const d = await j('/api/evaluation');
+  const d = await j('/api/evaluation?asset_class='+market);
   const rows = d.rows, cnt = v => rows.filter(r=>r.verdict===v).length;
   $('eval-cards').innerHTML = `
     <div class="card"><div class="lbl">Confirmadas</div><div class="val pos">${cnt('pass')}</div><div class="sub">≥30 trades · exp&gt;0</div></div>
@@ -421,7 +433,7 @@ function renderChips(){
   if (currentStrat) document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.id==='chip-'+currentStrat));
 }
 async function loadStrats(){
-  strategies = await j('/api/summary');
+  strategies = (await j('/api/summary')).filter(s=>(s.asset_class||'crypto')===market);
   renderChips();
   $('t-ref').querySelector('tbody').innerHTML = strategies.map(s=>`<tr>
     <td>${s.strategy_id} · ${s.name}</td>

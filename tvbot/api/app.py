@@ -10,7 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 
 import config
+from tvbot import db
 from tvbot.strategies import STRATEGIES, BACKTEST_REF
+from tvbot.strategies_tradfi import STRATEGIES_TRADFI, BACKTEST_REF_TRADFI
+
+STRATEGIES = STRATEGIES + STRATEGIES_TRADFI          # cripto + tradfi (perps de acciones)
+BACKTEST_REF = {**BACKTEST_REF, **BACKTEST_REF_TRADFI}
+db.init()                                            # asegura schema/migración (asset_class) sin depender del orden de arranque
 
 app = FastAPI(title="tvbot", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -84,6 +90,7 @@ def summary():
         n_open = q("SELECT COUNT(*) n FROM trades WHERE strategy_id=? AND status='open'",
                    (s.sid,))[0]["n"]
         out.append({"strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,
+                    "asset_class": s.asset_class, "session": getattr(s, "session", "24/7"),
                     "side": "long" if s.side > 0 else "short", "exit_mode": s.exit_mode,
                     "exit_desc": s.exit_desc, "indicators": s.indicators, "note": s.note,
                     "role": s.role, "open_now": n_open, **{k: r.get(k) for k in
@@ -91,10 +98,12 @@ def summary():
     return out
 
 
-def _eval_rows(gate=None):
+def _eval_rows(gate=None, asset_class=None):
     gate = gate or config.GATE_MIN_TRADES
     out = []
     for s in STRATEGIES:
+        if asset_class and s.asset_class != asset_class:
+            continue
         rows = q("SELECT ret_pct_nolev, pnl_usd, mae_r, mfe_r FROM trades WHERE strategy_id=? "
                  "AND status='closed' AND ret_pct_nolev IS NOT NULL", (s.sid,))
         rets = [r["ret_pct_nolev"] for r in rows]
@@ -126,6 +135,7 @@ def _eval_rows(gate=None):
             vc, vl = ("watch", "Vigilar") if (live_exp or 0) > 0 else ("fail", "Candidata a quitar")
         out.append({
             "strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,
+            "asset_class": s.asset_class,
             "side": "long" if s.side > 0 else "short",
             "role": "titular" if s.role == 1 else "suplente", "note": s.note,
             "n": n, "wr": wr, "live_exp": live_exp, "pf": pf, "pnl": pnl,
@@ -138,22 +148,24 @@ def _eval_rows(gate=None):
 
 
 @app.get("/api/evaluation")
-def evaluation(gate: int = None):
+def evaluation(gate: int = None, asset_class: str = None):
     """Desempeno LIVE por estrategia vs backtest + veredicto + gate de producción."""
-    return {"gate": gate or config.GATE_MIN_TRADES, "rows": _eval_rows(gate)}
+    return {"gate": gate or config.GATE_MIN_TRADES, "rows": _eval_rows(gate, asset_class)}
 
 
 @app.get("/api/portfolio")
-def portfolio():
+def portfolio(asset_class: str = None):
     """Tracker de confirmación a NIVEL CARTERA: el track vivo agregado vs el backtest.
     Es la señal de go-live del lote 1 (porque las estrategias de baja frecuencia tardan años
-    individualmente, pero el libro junta potencia estadística rápido)."""
-    rows = _eval_rows()
+    individualmente, pero el libro junta potencia estadística rápido). asset_class separa cripto/tradfi."""
+    rows = _eval_rows(asset_class=asset_class)
     traded = [r for r in rows if r["n"] > 0]
     confirmed = [r for r in rows if r["gate_pass"]]
-    # agregados de trades cerrados
+    # agregados de trades cerrados (COALESCE: trades viejos sin asset_class = cripto)
+    ac_sql = " AND COALESCE(asset_class,'crypto')=?" if asset_class else ""
+    ac_args = (asset_class,) if asset_class else ()
     tr = q("SELECT ret_pct_nolev, pnl_usd, mae_r, mfe_r FROM trades "
-           "WHERE status='closed' AND ret_pct_nolev IS NOT NULL")
+           "WHERE status='closed' AND ret_pct_nolev IS NOT NULL" + ac_sql, ac_args)
     rets = [t["ret_pct_nolev"] for t in tr]
     n = len(rets)
     wins = sum(1 for x in rets if x > 0)
@@ -213,6 +225,7 @@ def evaluation_csv(gate: int = 30, download: bool = True):
 @app.get("/api/strategies")
 def strategies():
     return [{"strategy_id": s.sid, "name": s.name, "coin": s.coin, "tf": s.tf,
+             "asset_class": s.asset_class, "session": getattr(s, "session", "24/7"),
              "side": "long" if s.side > 0 else "short", "exit_mode": s.exit_mode,
              "exit_desc": s.exit_desc, "indicators": s.indicators,
              "role": s.role} for s in STRATEGIES]
