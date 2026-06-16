@@ -125,6 +125,21 @@ def _pm_ratio_today(df):
     return rng_by_day[today] / base if base > 0 else None
 
 
+def _srst_long(df):
+    """S/R[LuxAlgo]+Supertrend: flip alcista de Supertrend + ruptura de resistencia (volumen) reciente (<=10)."""
+    up, _, _ = I.st_flips(df)
+    brkL, _ = I.sr_break_lux(df)
+    rec = pd.Series(brkL).rolling(10, min_periods=1).max().fillna(0).astype(bool).values
+    return bool(np.asarray(up)[-1] and rec[-1])
+
+
+def _srst_short(df):
+    _, dn, _ = I.st_flips(df)
+    _, brkS = I.sr_break_lux(df)
+    rec = pd.Series(brkS).rolling(10, min_periods=1).max().fillna(0).astype(bool).values
+    return bool(np.asarray(dn)[-1] and rec[-1])
+
+
 def _orb_long_active(df):
     """Señal LONG NVDA: OR formado + última vela rompe OR-high + pre-market AGITADO (pm_ratio>=thr),
     dentro de la sesión y antes del corte. Auto-gating (session='24/7' para poder ver el pre-market)."""
@@ -179,6 +194,29 @@ STRATEGIES_TRADFI = [
              exit_desc="stop OR-low + salida al cierre de sesión (15:45 ET)",
              note="SUPLENTE experimental · filtro validado en ACCIÓN real; el pre-market del PERP es "
                   "proxy (poca arbitraje fuera de sesión) y baseline live ~9d vs 20d backtest -> validar en vivo"),
+    # --- S/R Breaks [LuxAlgo] + Supertrend (ST_flip+SRrec): validado tradfi líquido, anti-beta por
+    #     (ticker,lado) -> solo los pares con alpha real; corr ~0 con T1-T6 y entre sí. exit atrstop=lo
+    #     backtesteado. session 24/7 (backtest sobre equity extended-hours; perp es proxy -> validar vivo). ---
+    Strategy("T7", "TSLA-L S/R+Supertrend 1h",  "TSLA", "1h", +1, "atrstop", _srst_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["S/R Levels with Breaks (LuxAlgo)", "Supertrend"], exit_desc="SL 2×ATR + timeout 48h",
+             note="suplente experimental · ST flip + ruptura S/R(vol) reciente · alpha +153bp vs deriva"),
+    Strategy("T8", "AAPL-L S/R+Supertrend 1h",  "AAPL", "1h", +1, "atrstop", _srst_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["S/R Levels with Breaks (LuxAlgo)", "Supertrend"], exit_desc="SL 2×ATR + timeout 48h",
+             note="suplente experimental · alpha +81bp vs deriva"),
+    Strategy("T9", "NVDA-L S/R+Supertrend 1h",  "NVDA", "1h", +1, "atrstop", _srst_long,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["S/R Levels with Breaks (LuxAlgo)", "Supertrend"], exit_desc="SL 2×ATR + timeout 48h",
+             note="suplente experimental · alpha +60bp vs deriva"),
+    Strategy("T10", "MU-S S/R+Supertrend 1h",   "MU",   "1h", -1, "atrstop", _srst_short,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["S/R Levels with Breaks (LuxAlgo)", "Supertrend"], exit_desc="SL 2×ATR + timeout 48h",
+             note="suplente experimental · short vence a su deriva, alpha +139bp"),
+    Strategy("T11", "AMD-S S/R+Supertrend 1h",  "AMD",  "1h", -1, "atrstop", _srst_short,
+             asset_class="stocks", session="24/7", role=0.5,
+             indicators=["S/R Levels with Breaks (LuxAlgo)", "Supertrend"], exit_desc="SL 2×ATR + timeout 48h",
+             note="suplente experimental · short vence a su deriva, alpha +106bp"),
 ]
 
 BY_ID_TRADFI = {s.sid: s for s in STRATEGIES_TRADFI}
@@ -188,4 +226,6 @@ BY_ID_TRADFI = {s.sid: s for s in STRATEGIES_TRADFI}
 BACKTEST_REF_TRADFI = {
     "T1": (40, 1.45), "T2": (87, 1.64), "T3": (58, 1.62), "T4": (37, 1.53), "T5": (50, 1.86),
     "T6": (45, 1.72),    # NVDA ORB pre-market agitado: OOS exp +45bp/trade, PF 1.72 (acción real)
+    # S/R[LuxAlgo]+Supertrend (ST_flip+SRrec), exp bp + PF del backtest de selección por (ticker,lado)
+    "T7": (164, 2.12), "T8": (98, 2.29), "T9": (72, 1.68), "T10": (63, 1.43), "T11": (23, 1.14),
 }

@@ -379,3 +379,38 @@ def sr_volume_break(df, lookback=20, vol_len=2, box_w=1.0):
         if not np.isnan(sup1) and hi[t] < sup1 and hi[t - 1] >= sup1:
             brk_sup[t] = True
     return brk_res, brk_sup
+
+
+def sr_break_lux(df, left=15, right=15, vol_thr=20.0):
+    """S/R Levels with Breaks [LuxAlgo]: pivotes left/right, ruptura confirmada por oscilador de
+    volumen (EMA5 vs EMA10 > vol_thr) + filtro de mecha. Causal (nivel disponible en i+right+1).
+    Devuelve (brkL, brkS): eventos de ruptura alcista/bajista. Idéntico a poc_sr_supertrend.sr_break."""
+    h, l, c, o, v = (df[x].values for x in ("high", "low", "close", "open", "volume"))
+    n = len(df)
+    res = np.full(n, np.nan); sup = np.full(n, np.nan)
+    for i in range(left, n - right):
+        wh = h[i - left:i + right + 1]; wl = l[i - left:i + right + 1]
+        if h[i] == wh.max() and np.argmax(wh) == left:
+            res[i] = h[i]
+        if l[i] == wl.min() and np.argmin(wl) == left:
+            sup[i] = l[i]
+    resLvl = np.full(n, np.nan); supLvl = np.full(n, np.nan)
+    last_r = np.nan; last_s = np.nan
+    for i in range(n):
+        j = i - right - 1
+        if j >= 0:
+            if not np.isnan(res[j]):
+                last_r = res[j]
+            if not np.isnan(sup[j]):
+                last_s = sup[j]
+        resLvl[i] = last_r; supLvl[i] = last_s
+    short = pd.Series(v).ewm(span=5, adjust=False).mean().values
+    long = pd.Series(v).ewm(span=10, adjust=False).mean().values
+    osc = 100 * (short - long) / np.where(long == 0, np.nan, long)
+    cu = c < resLvl; xover = (~cu) & np.r_[True, cu[:-1]]
+    cd = c > supLvl; xunder = (~cd) & np.r_[True, cd[:-1]]
+    body_up = (o - l) <= (c - o)
+    body_dn = (o - c) >= (h - o)
+    brkL = xover & ~np.isnan(resLvl) & body_up & (osc > vol_thr)
+    brkS = xunder & ~np.isnan(supLvl) & body_dn & (osc > vol_thr)
+    return brkL, brkS
