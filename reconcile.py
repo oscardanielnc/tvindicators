@@ -18,8 +18,10 @@ src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\gen_summary.py", e
 exec(src.split("\ndef main():")[0])  # COIN_TF, coin_arrays, entry_array, TOP8_SID, SIGFN, LATE, I, filt_arrays, getdf, STRAT
 
 from tvbot import strategies as STRAT
+import smc
 
 TOPFN = {"SQZ": I.squeeze_momentum, "VTX": I.vortex}
+SBOS_SIDE = {"S57": 1, "S58": -1, "S59": 1, "S60": 1, "S61": -1, "S62": -1, "S63": -1, "S64": 1}
 WINDOW = 2500     # velas recientes a revisar (rápido y representativo)
 SAMPLE_SIG = 25   # muestras donde el backtest dice señal
 SAMPLE_NON = 15   # muestras donde NO
@@ -28,6 +30,9 @@ SAMPLE_NON = 15   # muestras donde NO
 def entry_array_for(sid, df):
     """Array de entrada estilo backtest (referencia independiente del sN_entry escalar)."""
     s = STRAT.BY_ID[sid]
+    if sid in SBOS_SIDE:                          # SMC Swing BOS (batch 8): array fiel del motor smc
+        res = smc.compute(df)
+        return np.asarray(res["sbos_bull"] if SBOS_SIDE[sid] > 0 else res["sbos_bear"])
     if sid in COIN_TF:
         return np.asarray(entry_array(sid, coin_arrays(s.coin, df)))
     if sid == "S30":
@@ -77,7 +82,7 @@ def main():
 
     print("\n" + "=" * 70)
     if total_mis == 0:
-        print("✅ RECONCILIACIÓN OK: el camino vivo reproduce el backtest en las 56 (0 mismatches).")
+        print(f"✅ RECONCILIACIÓN OK: el camino vivo reproduce el backtest en las {len(STRAT.STRATEGIES)} (0 mismatches).")
         print("   La comparación live-vs-backtest del dashboard es JUSTA.")
     else:
         print(f"⚠ {total_mis} mismatches en {len(flagged)} estrategias — REVISAR (la señal viva NO coincide):")

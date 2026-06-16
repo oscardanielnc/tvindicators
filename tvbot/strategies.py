@@ -11,6 +11,22 @@ def _last(arr):
     return bool(arr[-1])
 
 
+# --- Smart Money Concepts [LuxAlgo]: Swing Break of Structure (validado cripto, bidireccional) ---
+# Edge en el pivote swing de alta significancia (len=50); el motor smc.py reproduce el indicador.
+# Import perezoso para no atar el import de tvbot a la raíz del repo (tests/headless).
+def _sbos(df, side):
+    import smc
+    res = smc.compute(df)
+    arr = res["sbos_bull"] if side > 0 else res["sbos_bear"]
+    return bool(arr[-1])
+
+def _sbos_long(df):
+    return _sbos(df, +1)
+
+def _sbos_short(df):
+    return _sbos(df, -1)
+
+
 # --- filtros de conviccion (validados OOS 14/06/2026; ver roster-upgrades-validados) ---
 
 def _trend(df, side):
@@ -403,6 +419,7 @@ AO = "Awesome Oscillator (Williams)"
 TSI = "True Strength Index"
 ZL = "Zero Lag Trend Signals (AlgoAlpha)"
 SRB = "S/R High Volume Boxes (ChartPrime)"
+SMC = "Smart Money Concepts — Swing Break of Structure (LuxAlgo)"
 
 SL_TO = "SL 2×ATR + timeout 48h"
 FLIP = "flip contrario del Supertrend"
@@ -533,6 +550,25 @@ STRATEGIES = [
              role=0.5, indicators=[SRB], exit_desc=SL_TO + " + tendencia/vol"),
     Strategy("S56", "INJ-L SRBreak+vol 1h",       "INJ",  "1h",  +1, "atrstop", s56_entry,
              role=0.5, indicators=[SRB], exit_desc=SL_TO + " + vol"),
+    # --- batch 8: SMC Swing Break of Structure (LuxAlgo) — validado cripto (anti-beta + OOS Sharpe
+    #     1.47, PSR 99%; ambos lados ganan). Bidireccional, sin filtros (confluencia no aporta).
+    #     Subset robusto IS+OOS, descorrelacionado (corr media +0.07). exit atrstop = lo backtesteado. ---
+    Strategy("S57", "SUI-L SMC SwingBOS 1h",  "SUI",  "1h",  +1, "atrstop", _sbos_long,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S58", "ARB-S SMC SwingBOS 1h",  "ARB",  "1h",  -1, "atrstop", _sbos_short,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S59", "XRP-L SMC SwingBOS 1h",  "XRP",  "1h",  +1, "atrstop", _sbos_long,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S60", "DOGE-L SMC SwingBOS 1h", "DOGE", "1h",  +1, "atrstop", _sbos_long,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S61", "FET-S SMC SwingBOS 1h",  "FET",  "1h",  -1, "atrstop", _sbos_short,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S62", "NEAR-S SMC SwingBOS 1h", "NEAR", "1h",  -1, "atrstop", _sbos_short,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S63", "OP-S SMC SwingBOS 1h",   "OP",   "1h",  -1, "atrstop", _sbos_short,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
+    Strategy("S64", "DOT-L SMC SwingBOS 1h",  "DOT",  "1h",  +1, "atrstop", _sbos_long,
+             role=0.5, indicators=[SMC], exit_desc=SL_TO),
 ]
 
 BY_ID = {s.sid: s for s in STRATEGIES}
@@ -558,4 +594,7 @@ BACKTEST_REF = {
     "S45": (190, 2.17), "S46": (225, 3.19), "S47": (98, 1.52), "S48": (106, 1.51),
     "S49": (106, 1.46), "S50": (121, 1.44), "S51": (137, 1.52),
     "S52": (171, 1.98), "S53": (219, 1.85), "S54": (160, 1.96), "S55": (109, 1.59), "S56": (99, 1.43),
+    # batch 8 SMC Swing BOS (exp bps, PF — del backtest de selección sBOS)
+    "S57": (231, 2.30), "S58": (214, 2.41), "S59": (184, 2.17), "S60": (158, 1.95),
+    "S61": (144, 1.85), "S62": (138, 1.84), "S63": (85, 1.37), "S64": (64, 1.33),
 }
