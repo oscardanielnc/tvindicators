@@ -15,6 +15,7 @@ agrégalo a STRATEGIES_TRADFI. El motor lo recoge por asset_class='stocks' (dura
 from datetime import time as _time
 
 import numpy as np
+import pandas as pd
 
 from . import indicators as I
 from .strategies import Strategy
@@ -24,6 +25,13 @@ ATR_STOP = 3.0            # stop de seguridad para las de indicador (igual que e
 ORB_NMIN = 15            # ventana del rango de apertura (min)
 ORB_THR = 0.0225         # filtro: operar solo si el OR >= 2.25% del precio (umbral fijado en IS, TSLA)
 ORB_CUTOFF = _time(12, 0)  # solo rupturas antes del mediodía ET
+# --- filtro "pre-market agitado" (NVDA, validado IS/OOS+anti-beta, ver tradfi/validate_active_open.py
+#     y tradfi/promote_nvda_orb.py): operar el breakout SOLO si el rango pre-market (08:00-09:30 ET)
+#     fue >= PM_RATIO_THR veces su mediana reciente. Umbral fijado en IS (p67). ---
+PM_START_MIN, PM_END_MIN = 8 * 60, 9 * 60 + 30     # ventana pre-market 08:00-09:30 ET
+PM_RATIO_THR = 1.31      # hoy_pm_range / mediana_reciente >= 1.31 (fijado en IS, NVDA)
+PM_LOOKBACK_DAYS = 20    # mediana sobre hasta 20 días previos de pre-market
+PM_MIN_DAYS = 6          # mínimo de días previos para calcular baseline (si no, NO opera: degradación segura)
 
 
 # ---------- entradas de indicador (señal en la ÚLTIMA vela cerrada, como en el backtest) ----------
@@ -89,6 +97,51 @@ def _orb_stop(df, entry_px):
     return lv[1] if lv else None
 
 
+# ---------- ORB con filtro PRE-MARKET AGITADO (NVDA) ----------
+def _pm_ratio_today(df):
+    """rango pre-market de HOY (08:00-09:30 ET) / mediana de días previos. None si no hay base.
+    Sin look-ahead: a la hora del breakout (>=09:45 ET) el pre-market ya cerró; la mediana usa SOLO
+    días anteriores. Requiere ver el df 24/7 (NO la vista 'us', que recorta el pre-market)."""
+    et = df.index.tz_convert(ET)
+    mins = (et.hour * 60 + et.minute).to_numpy()
+    pm = (mins >= PM_START_MIN) & (mins < PM_END_MIN)
+    dates = np.array([d for d in et.date])
+    rng_by_day = {}
+    for d in pd.unique(dates):
+        sel = pm & (dates == d)
+        if sel.sum() < 3:
+            continue
+        sub = df[sel]
+        ref = float(sub["close"].iloc[-1])
+        if ref > 0:
+            rng_by_day[d] = (float(sub["high"].max()) - float(sub["low"].min())) / ref * 100
+    today = et[-1].date()
+    if today not in rng_by_day:
+        return None
+    prior = [rng_by_day[d] for d in sorted(rng_by_day) if d < today]
+    if len(prior) < PM_MIN_DAYS:
+        return None
+    base = float(np.median(prior[-PM_LOOKBACK_DAYS:]))
+    return rng_by_day[today] / base if base > 0 else None
+
+
+def _orb_long_active(df):
+    """Señal LONG NVDA: OR formado + última vela rompe OR-high + pre-market AGITADO (pm_ratio>=thr),
+    dentro de la sesión y antes del corte. Auto-gating (session='24/7' para poder ver el pre-market)."""
+    lv = _orb_levels(df)
+    if lv is None:
+        return False
+    orh, _orl, _or_pct = lv
+    g, et = _session_today(df)
+    lt = et[-1].time()
+    if lt < _time(9, 30 + ORB_NMIN) or lt >= ORB_CUTOFF:    # ya formó el OR y antes del mediodía
+        return False
+    pr = _pm_ratio_today(df)
+    if pr is None or pr < PM_RATIO_THR:                      # sin base o pre-market tranquilo -> no opera
+        return False
+    return bool(float(g["high"].iloc[-1]) >= orh)
+
+
 # ---------- roster ----------
 # TITULARES (role 1.0, session 'us'): validados con AÑOS de datos de acción real en sesión US regular.
 #   Corren sobre el perp Binance PERO solo en horario de sesión US (donde perp≈acción por arbitraje).
@@ -111,12 +164,21 @@ STRATEGIES_TRADFI = [
              flip_exit_fn=_st_against_long, safety_atr=ATR_STOP, asset_class="stocks", session="us",
              role=1.0, indicators=["ADX/DMI"], exit_desc="ST contrario + stop 3·ATR",
              note="titular · acción real OOS Sharpe 1.06, PF 1.86"),
-    # --- suplente experimental ---
+    # --- suplentes experimentales ---
     Strategy("T1", "TSLA-L ORB apertura volátil 15m", "TSLA", "15m", +1, "orb", _orb_long,
              asset_class="stocks", session="us", role=0.5, entry_stop_fn=_orb_stop,
              indicators=["Opening Range Breakout"],
              exit_desc="stop OR-low + salida al cierre de sesión (16:00 ET)",
              note="SUPLENTE experimental · OR del perp no es subasta fresca; validar en vivo"),
+    # NVDA ORB con filtro PRE-MARKET AGITADO (validado IS/OOS+anti-beta: OOS Sharpe +2.89, PF 1.72,
+    # gana al beta; promoción formal en cartera tradfi OK, corr +0.12). session='24/7' para VER el
+    # pre-market (la vista 'us' lo recorta); auto-gating por hora dentro de la entrada.
+    Strategy("T6", "NVDA-L ORB pre-market agitado 15m", "NVDA", "15m", +1, "orb", _orb_long_active,
+             asset_class="stocks", session="24/7", role=0.5, entry_stop_fn=_orb_stop,
+             indicators=["Opening Range Breakout", "Pre-market range filter"],
+             exit_desc="stop OR-low + salida al cierre de sesión (15:45 ET)",
+             note="SUPLENTE experimental · filtro validado en ACCIÓN real; el pre-market del PERP es "
+                  "proxy (poca arbitraje fuera de sesión) y baseline live ~9d vs 20d backtest -> validar en vivo"),
 ]
 
 BY_ID_TRADFI = {s.sid: s for s in STRATEGIES_TRADFI}
@@ -125,4 +187,5 @@ BY_ID_TRADFI = {s.sid: s for s in STRATEGIES_TRADFI}
 # (exp en bps de nominal por trade, profit factor OOS).
 BACKTEST_REF_TRADFI = {
     "T1": (40, 1.45), "T2": (87, 1.64), "T3": (58, 1.62), "T4": (37, 1.53), "T5": (50, 1.86),
+    "T6": (45, 1.72),    # NVDA ORB pre-market agitado: OOS exp +45bp/trade, PF 1.72 (acción real)
 }
