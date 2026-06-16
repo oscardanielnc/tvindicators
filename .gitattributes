@@ -1,0 +1,3 @@
+# Los git hooks los ejecuta el bash de Git for Windows: DEBEN tener saltos LF
+# (CRLF mete \r y rompe el script con "command not found"). Forzar LF siempre.
+hooks/** text eol=lf

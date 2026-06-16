@@ -5,8 +5,14 @@ edit que toca solo una de las dos), la comparación live-vs-backtest queda corru
 Esto lo verifica: para cada estrategia, sobre velas recientes, compara sN_entry(df[:k+1]) (camino
 vivo) contra el array del backtest en k. Reporta mismatches. Uso: python reconcile.py
 """
+import sys
 import numpy as np
 import pandas as pd
+
+try:                                    # consola/hook en Windows suele ser cp1252; el reporte usa ✅/⚠
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\gen_summary.py", encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # COIN_TF, coin_arrays, entry_array, TOP8_SID, SIGFN, LATE, I, filt_arrays, getdf, STRAT
@@ -77,7 +83,9 @@ def main():
         print(f"⚠ {total_mis} mismatches en {len(flagged)} estrategias — REVISAR (la señal viva NO coincide):")
         for sid, coin, mis, n, ns in flagged:
             print(f"   {sid} {coin}: {mis}/{n} discrepancias (señales bt={ns})")
+    return total_mis
 
 
 if __name__ == "__main__":
-    main()
+    # exit-code != 0 si hay mismatches -> el pre-push hook bloquea el push (ver hooks/pre-push)
+    sys.exit(1 if main() else 0)

@@ -106,10 +106,17 @@ mientras ninguno opere capital real. Objetivo actual: **producir candidatos vali
    (alta frecuencia S2/S3/S7 primero).
 4. Usar **MAE/MFE en vivo** para afinar stops/objetivos de las que confirmen; retirar las que el vivo condene.
 5. Vigilar S22/S24 (ENA/WIF, historia corta), S37/S38 (ORDI, maxDD alto) y la redundancia S1/S2 (marcada).
-6. **Metodología (P2):** Deflated Sharpe + holdout limpio para estimación insesgada antes de capital real.
+6. **Metodología (P2): HECHO** → `deflated_sharpe.py` (Deflated Sharpe Ratio de Bailey-LdP, sin scipy).
+   Corrige sesgo de selección (~185 pruebas) + no-normalidad. Veredicto: PSR(0)=100% y DSR=100% aun
+   asumiendo N=1000 pruebas → el Sharpe de cartera NO es artefacto de muestreo/selección. La mejor
+   estrategia SUELTA (S22) apenas roza 97.7% → el edge vive en la combinación (√N), no en ninguna
+   individual. Límite honesto: el DSR no ve el sobreajuste a este histórico → el juez sigue siendo el paper.
 7. **Unificado (P3):** schema de trade estándar con Oscilion + correlación cruzada entre proyectos.
-8. Correr `reconcile.py` periódicamente (o tras cada cambio de indicadores) para garantizar que el vivo
-   sigue reproduciendo el backtest.
+8. Reconciliación **automatizada (HECHO)**: `git pre-push hook` (`hooks/pre-push`, activado con
+   `git config core.hooksPath hooks`) corre `reconcile.py` SOLO si el push toca la lógica de señal
+   (`indicators.py`/`strategies.py`/cadena de backtest) y **bloquea el push** si hay mismatches
+   (override `--no-verify`). Es local porque el store de parquets no está en la VM. Pushes que no tocan
+   señal no se ralentizan. `reconcile.py` ahora devuelve exit-code ≠0 en mismatch.
 
 > **Hecho hoy:** tracker de cartera + gates + captura enriquecida + backup/watchdog/alertas + reconciliación.
 > El cuello de botella ahora es TIEMPO de acumular trades — NO añadir más estrategias (diluiría).

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# pre-push: si el push toca la LÓGICA DE SEÑAL, corre reconcile.py (señal viva vs backtest)
+# y BLOQUEA el push si hay mismatches. Los pushes que no tocan esos archivos NO se ralentizan.
+#
+# Por qué aquí y no en la VM: el backtest/reconcile necesita el store de parquets local
+# (Oscilion/data/ohlcv/...) que NO existe en la VM. El riesgo real es un edit que desincronice
+# la señal viva (sN_entry) del backtest -> el momento exacto de revisar es el push, no el reloj.
+#
+# Override (cuando la desincronización es intencional y ya la entiendes): git push --no-verify
+# Activación (una vez por clon):  git config core.hooksPath hooks
+set -u
+
+# Archivos cuya edición puede desincronizar viva-vs-backtest (señal + cadena de reconstrucción).
+WATCH='tvbot/indicators.py|tvbot/strategies.py|reconcile.py|gen_summary.py|valida_roster_completo.py|valida_profunda_nuevos.py'
+ZERO='0000000000000000000000000000000000000000'
+
+# Determina el rango de commits a empujar (git pasa por stdin: <lref> <lsha> <rref> <rsha>).
+range=''
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$ZERO" ] && continue            # borrado de rama: nada que revisar
+  if [ "$remote_sha" = "$ZERO" ]; then              # rama nueva en el remoto
+    if git rev-parse --verify -q '@{upstream}' >/dev/null 2>&1; then
+      range="$(git rev-parse '@{upstream}')..$local_sha"
+    else
+      range="$local_sha"                            # sin upstream: revisa el commit empujado
+    fi
+  else
+    range="$remote_sha..$local_sha"
+  fi
+done
+
+[ -z "$range" ] && exit 0
+
+changed="$(git diff --name-only "$range" 2>/dev/null | grep -E "$WATCH" || true)"
+[ -z "$changed" ] && exit 0                          # nada relevante: push instantáneo
+
+echo "pre-push: cambios en lógica de señal -> reconcile.py (viva vs backtest)..."
+echo "$changed" | sed 's/^/   /'
+
+PY="${TVBOT_PYTHON:-python}"
+"$PY" reconcile.py
+code=$?
+if [ "$code" -ne 0 ]; then
+  echo ""
+  echo "❌ pre-push BLOQUEADO: reconcile reportó mismatches (la señal viva NO reproduce el backtest)."
+  echo "   Arregla la desincronización, o si es intencional repite con:  git push --no-verify"
+  exit 1
+fi
+echo "✅ pre-push OK: reconcile sin mismatches."
+exit 0
