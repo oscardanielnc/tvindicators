@@ -1,35 +1,47 @@
 # Estado del proyecto — tvindicators
-**Actualizado:** 2026-06-16 · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
+**Actualizado:** 2026-06-16 (sesión "indicadores populares de TradingView") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
 
-> **Cripto desplegado 2026-06-15; TradFi (acciones) añadido e integrado 2026-06-16.** 56 estrategias cripto
-> + 5 tradfi corren en sombra en la VM acumulando trades; backup/watchdog/alertas activos; código en
-> `origin/main`. Fase: **esperar y vigilar** hasta que la cartera confirme el backtest (pestaña 🚀 Producción).
-> Para tomar lo último en la VM: `ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'`.
+> **Cripto desplegado 2026-06-15; TradFi añadido 2026-06-16; roster ampliado el mismo día con indicadores
+> populares validados.** Roster actual: **64 estrategias cripto + 15 tradfi = 79** corriendo en sombra en la
+> VM; backup/watchdog/alertas activos; reconciliación ahora cubre cripto + tradfi (77 reconciliadas, 0 mismatches).
+> Código en `origin/main` (commit más nuevo pendiente de push: T12–T15 + reconcile tradfi).
+> Fase: **esperar y vigilar** hasta que la cartera confirme el backtest. VM: `ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'`.
 
 ## Resumen en una línea
-Bot de paper trading con **56 estrategias cripto (Binance perps, validadas OOS) + 5 tradfi (acciones, perps
-de Binance)**, motor con paridad al backtest, API + dashboard con secciones separadas 🪙 Cripto / 📈 TradFi,
-y track record vivo que decidirá el capital real.
+Bot de paper trading con **64 estrategias cripto + 15 tradfi (acciones, perps de Binance)**, motor con paridad
+al backtest, API + dashboard con secciones separadas 🪙 Cripto / 📈 TradFi, y track record vivo que decidirá el capital real.
 
-## TradFi (acciones) — añadido 2026-06-16
-**5 estrategias sobre perps de ACCIONES de Binance** (`TSLA/NVDA`, mismo feed ccxt, donde se opera). Sección
-**📈 TradFi** separada en el dashboard; mismas reglas/monto/apalancamiento que cripto; corren en paper, en sombra.
+## Sesión 2026-06-16 — indicadores populares de TradingView (validación en paralelo)
+Probados con disciplina (placebo/holdout IS-OOS + **anti-beta por-ticker** + costos reales). Lección transversal:
+las métricas *pooled* (Sharpe/PSR altos) **mienten** si no se separa alpha de beta por símbolo.
+- **GANADORES cableados:**
+  - **SMC Swing Break of Structure [LuxAlgo]** → cripto bidireccional **S57–S64** (8; OOS Sharpe 1.47, PSR 99%,
+    ambos lados ganan) + equity long-only **T12–T15** (NVDA/TSLA/AAPL/MU, anti-beta+).
+  - **S/R Breaks [LuxAlgo] + Supertrend** (confluencia) → tradfi líquido **T7–T11** (TSLA/AAPL/NVDA long, MU/AMD short).
+  - **NVDA ORB pre-market agitado** → **T6** (hipótesis del usuario invertida: el edge está en pre-market ACTIVO, no quieto).
+- **RECHAZADOS (sin edge / beta disfrazada):** Candle Range Theory (gross≈0), Order-Block+PDH/PDL, Squeeze+MACD
+  (era beta de momentum-stocks), Order Blocks/FVG/zonas de SMC, roster sobre PAXG (oro = beta), LITE/WDC (beta).
+- **Datos:** descargados perps de oro (XAU ~6mo, PAXG ~15mo) al store.
+- **Pendiente anotado (memoria):** 2ª oleada sBOS cripto (10 combos más) SI las S57–S64 confirman edge en vivo.
+
+## TradFi (acciones) — 15 estrategias (perps de ACCIONES de Binance)
+Sección **📈 TradFi** separada en el dashboard; mismas reglas/monto/apalancamiento que cripto; en paper, en sombra.
 - **Titulares T2–T5** (NVDA/TSLA trend-following — Supertrend, Awesome Osc, Squeeze, ADX/DMI): validados con
-  **años de la acción REAL** (Databento) → holdout IS/OOS + anti-beta (le ganan a buy&hold = alpha, no solo beta).
-  Corren **gated a la sesión US regular** (09:30–16:00 ET), donde el perp ≈ la acción por arbitraje.
-- **Suplente T1** (ORB TSLA, ruptura de apertura): experimental; stop OR-low + cierre al fin de sesión (15:45 ET).
-- **Incógnita abierta (el único riesgo):** validadas en la acción real, corren sobre el **perp-en-sesión**; que
-  el edge transfiera lo decide el **paper vivo** (~semanas; vigilar live-exp T2–T5 vs backtest en 📈 TradFi). El
-  perp **24/7 NO transfiere** (smoke-test negativo → por eso el gating de sesión).
-- **Research (en `tradfi/`, no corre en la VM):** LITE, WDC y 10 tickers más → **rechazados** (beta o sin edge).
-  El edge de timing en acciones es **RARO** → roster chico/selectivo. Candidatos posibles = **87 perps EQUITY**
-  de Binance (semis/ETFs por validar; ver memoria `binance-equity-perp-universe`). Disciplina: placebo/holdout/anti-beta.
+  **años de la acción REAL** (Databento) → holdout IS/OOS + anti-beta. **Gated a sesión US regular** (09:30–16:00 ET).
+- **Suplentes experimentales (role 0.5, session 24/7):**
+  - **T1** ORB TSLA apertura volátil · **T6** NVDA ORB **pre-market agitado** (filtro invertido validado).
+  - **T7–T11** S/R[LuxAlgo]+Supertrend (ST_flip + ruptura S/R-volumen): TSLA-L, AAPL-L, NVDA-L, MU-S, AMD-S.
+    Selección por **anti-beta por (ticker,lado)** (solo pares con alpha real); corr ~0 vs T1–T6.
+  - **T12–T15** SMC Swing BOS long-only: NVDA, TSLA, AAPL, MU (en cripto fue bidireccional → S57–S64).
+- **Caveat clave:** T6–T15 se validaron sobre la acción real / extended-hours; corren sobre el **perp** (proxy
+  fuera de sesión). El edge transfiere o no según el **paper vivo**. Nota de concentración: NVDA aparece en T2/T3/T4/T9/T12.
+- **Rechazados (research):** LITE, WDC, AMD-L, MU-L y otros → beta o sin edge. El edge de timing en acciones es RARO.
 
-**Arquitectura tradfi:** `tvbot/strategies_tradfi.py` (registro) · `data.filter_us_session/in_us_session`
-(DST-aware) · motor con `asset_class`/`session`/exit_mode `orb` + TF 30m · columna DB `asset_class` (migración
-idempotente) · API filtra por mercado · toggle 🪙/📈 en el dashboard. **Cripto (56) 100% intacto.**
+**Arquitectura tradfi:** `tvbot/strategies_tradfi.py` (registro T1–T15) · `data.filter_us_session/in_us_session`
+(DST-aware) · motor con `asset_class`/`session`/exit_mode `orb`+`atrstop` · `smc.py`/`sr_break_lux` para señales nuevas
+· columna DB `asset_class` · toggle 🪙/📈 en el dashboard. **Reconcile cubre T2–T5 y T7–T15** (T1/T6 ORB = causalidad por construcción).
 
-## Roster cripto: 56 estrategias (7 titulares + 49 suplentes · 26 long / 30 short)
+## Roster cripto: 64 estrategias (+ batch 8 SMC Swing BOS S57–S64)
 Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + sensibilidad + correlación):
 
 | Batch | Indicadores | Estrategias | Clase |
@@ -43,6 +55,7 @@ Construido en 5 batches de research (todos validados OOS: IS<2025/OOS≥2025 + s
 | 6 | **Zero Lag Trend Signals** (AlgoAlpha) | S45-S48 | trend-pullback (monedas nuevas) |
 | opt | challengers del optimizador (Squeeze/AO longs) | S49-S51 | corrige sesgo de antigüedad |
 | 7 | **S/R High Volume Boxes** (ChartPrime) | S52-S56 | ruptura S/R + volumen (KVO y Turtle Soup descartados) |
+| 8 | **Smart Money Concepts — Swing BOS** (LuxAlgo) | S57-S64 | ruptura de estructura swing (bidireccional; anti-beta+, OOS Sharpe 1.47) |
 
 **Selección de roster (`roster_optimizer.py` + `metodologia-seleccion-roster`):** la redundancia y la
 elección de estrategias se deciden por **correlación de PnL + contribución marginal al Sharpe**, NO por
@@ -64,7 +77,7 @@ Spec exacto y métricas: `CONSOLIDADO.md`. Veredictos de research: `indicadores_
 
 ## Arquitectura (ver ARQUITECTURA.md)
 ```
-tvbot/  indicators.py (réplicas Pine, NO tocar sin re-validar) · strategies.py (56 + BACKTEST_REF)
+tvbot/  indicators.py (réplicas Pine, NO tocar sin re-validar; incl. sr_break_lux) · strategies.py (64 cripto) · strategies_tradfi.py (15) · ../smc.py (motor SMC)
         data.py (ccxt, velas cerradas) · engine.py (PaperEngine: salidas→entradas→equity)
         db.py (SQLite WAL) · orchestrator.py (bucle 15m/1h + circuit breaker) · api/app.py (FastAPI :8090)
 deploy/ setup_vm.sh · deploy.sh · tvbot.service · tvbot-api.service (systemd, VM Oracle)
@@ -98,14 +111,15 @@ Modos de salida: `atrstop` (SL 2×ATR + timeout 48h), `flip` (ST/TM contrario + 
   no se pierde si la VM muere. **Watchdog** cada 10 min (`tvbot.watchdog`, timer): alerta si el bot no
   late (sin ciclo >40 min) o si saltó el circuit breaker. Alertas por **ntfy/Telegram** (`tvbot.notify`,
   configurables en `/opt/tvbot/.env`: `TVBOT_NTFY_URL`, `TVBOT_TG_TOKEN`/`TVBOT_TG_CHAT`).
-- **Reconciliación señal viva vs backtest** (`reconcile.py`): verifica que `sN_entry` (vivo) dispara en
-  las mismas velas que el backtest. Última corrida: **0 mismatches en las 56** → la comparación es justa.
+- **Reconciliación señal viva vs backtest** (`reconcile.py`): verifica que el sN_entry (vivo) dispara en
+  las mismas velas que el backtest. **Ahora cubre cripto (S1–S64) + tradfi (T2–T5, T7–T15)** → última corrida:
+  **77 estrategias, 0 mismatches** (T1/T6 ORB son session-stateful → causalidad por construcción, no array).
 
 ## Desplegar en la VM
 ```bash
 # primera vez: bash deploy/setup_vm.sh   (crea venv, instala, units systemd)
 # actualizaciones:
-git push                                  # desde local (56 estrategias listas)
+git push                                  # desde local (79 estrategias: 64 cripto + 15 tradfi)
 ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'   # git pull + pip + verificación de imports + restart
 ```
 `deploy.sh` aborta si fallan los imports (no reinicia con código roto). Servicios: `tvbot` (bucle) y
