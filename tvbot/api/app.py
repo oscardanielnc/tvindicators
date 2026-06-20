@@ -1,8 +1,10 @@
 """API REST para el dashboard (pantalla 1: resumen; pantalla 2: historico por estrategia).
 Todas las horas en zona de Lima, Peru (UTC-5)."""
 import json
+import math
 import re
 import sqlite3
+import statistics as st
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -104,8 +106,10 @@ def _eval_rows(gate=None, asset_class=None):
     for s in STRATEGIES:
         if asset_class and s.asset_class != asset_class:
             continue
-        rows = q("SELECT ret_pct_nolev, pnl_usd, mae_r, mfe_r FROM trades WHERE strategy_id=? "
-                 "AND status='closed' AND ret_pct_nolev IS NOT NULL", (s.sid,))
+        rows = q("SELECT ret_pct_nolev, pnl_usd, mae_r, mfe_r, bars_held, exit_reason, "
+                 "entry_funding, entry_hour, entry_atr_pct, entry_trend_dist, entry_regime_ok "
+                 "FROM trades WHERE strategy_id=? AND status='closed' "
+                 "AND ret_pct_nolev IS NOT NULL", (s.sid,))
         rets = [r["ret_pct_nolev"] for r in rows]
         n = len(rets)
         wins = [x for x in rets if x > 0]
@@ -119,6 +123,37 @@ def _eval_rows(gate=None, asset_class=None):
         mfes = [r["mfe_r"] for r in rows if r["mfe_r"] is not None]
         bt_exp, bt_pf = BACKTEST_REF.get(s.sid, (None, None))
         ratio = round(live_exp / bt_exp, 2) if (live_exp is not None and bt_exp) else None
+
+        # --- campos de aprendizaje (revisión semanal, ver METODOLOGIA_PRODUCCION.md §7) ---
+        def _avg(xs, k=1.0, nd=2):
+            xs = [x for x in xs if x is not None]
+            return round(sum(xs) / len(xs) * k, nd) if xs else None
+        # t-stat de la expectancia: ¿el edge se distingue del ruido?
+        t_stat = (round(st.mean(rets) / (st.stdev(rets) / math.sqrt(n)), 2)
+                  if n >= 2 and st.stdev(rets) > 0 else None)
+        # % movimiento medio sin leverage (insumo del sizing por riesgo)
+        move_nolev = _avg([abs(x) for x in rets], 100, 2)
+        avg_win = _avg(wins, 100, 2)
+        avg_loss = _avg(losses, 100, 2)
+        # tiempo en mercado y motivo de salida
+        hold = _avg([r["bars_held"] for r in rows], 1.0, 1)
+        reasons = [r["exit_reason"] for r in rows if r["exit_reason"]]
+        nr = len(reasons) or 1
+        pct_sl = round(sum(x == "SL" for x in reasons) / nr * 100)
+        pct_timeout = round(sum(x == "timeout" for x in reasons) / nr * 100)
+        pct_flip = round(sum(x == "flip" for x in reasons) / nr * 100)
+        # contexto GANADOR vs PERDEDOR (¿por qué falla?): se separan por signo del ret
+        win_rows = [r for r, x in zip(rows, rets) if x > 0]
+        los_rows = [r for r, x in zip(rows, rets) if x <= 0]
+        def _ctx(rws, col, k=1.0, nd=4):
+            return _avg([r[col] for r in rws], k, nd)
+        ctx = {
+            "fund_w": _ctx(win_rows, "entry_funding", 1, 5), "fund_l": _ctx(los_rows, "entry_funding", 1, 5),
+            "hour_w": _ctx(win_rows, "entry_hour", 1, 1), "hour_l": _ctx(los_rows, "entry_hour", 1, 1),
+            "atr_w": _ctx(win_rows, "entry_atr_pct", 1, 2), "atr_l": _ctx(los_rows, "entry_atr_pct", 1, 2),
+            "trend_w": _ctx(win_rows, "entry_trend_dist", 100, 2), "trend_l": _ctx(los_rows, "entry_trend_dist", 100, 2),
+            "regok_w": _ctx(win_rows, "entry_regime_ok", 100, 0), "regok_l": _ctx(los_rows, "entry_regime_ok", 100, 0),
+        }
         # gate de producción (config): nº trades + exp>0 + ratio + PF
         gate_pass = bool(n >= config.GATE_MIN_TRADES and live_exp and live_exp > 0
                          and ratio is not None and ratio >= config.GATE_MIN_RATIO
@@ -139,9 +174,13 @@ def _eval_rows(gate=None, asset_class=None):
             "side": "long" if s.side > 0 else "short",
             "role": "titular" if s.role == 1 else "suplente", "note": s.note,
             "n": n, "wr": wr, "live_exp": live_exp, "pf": pf, "pnl": pnl,
-            "bt_exp": bt_exp, "bt_pf": bt_pf, "ratio": ratio, "gate_pass": gate_pass,
+            "bt_exp": bt_exp, "bt_pf": bt_pf, "ratio": ratio, "t_stat": t_stat,
+            "gate_pass": gate_pass,
             "avg_mae_r": round(sum(maes) / len(maes), 2) if maes else None,
             "avg_mfe_r": round(sum(mfes) / len(mfes), 2) if mfes else None,
+            "move_nolev": move_nolev, "avg_win": avg_win, "avg_loss": avg_loss,
+            "hold_bars": hold, "pct_sl": pct_sl, "pct_timeout": pct_timeout, "pct_flip": pct_flip,
+            **ctx,
             "verdict": vc, "verdict_label": vl,
         })
     return out
@@ -212,7 +251,11 @@ def evaluation_csv(gate: int = 30, download: bool = True):
     """Resumen de evaluacion en CSV (descargable) para analisis offline."""
     rows = evaluation(gate)["rows"]
     cols = ["strategy_id", "role", "coin", "side", "tf", "n", "wr", "live_exp",
-            "bt_exp", "ratio", "pf", "bt_pf", "pnl", "verdict_label"]
+            "bt_exp", "ratio", "t_stat", "pf", "bt_pf", "pnl",
+            "move_nolev", "avg_win", "avg_loss", "avg_mae_r", "avg_mfe_r",
+            "hold_bars", "pct_sl", "pct_timeout", "pct_flip",
+            "fund_w", "fund_l", "hour_w", "hour_l", "atr_w", "atr_l",
+            "trend_w", "trend_l", "regok_w", "regok_l", "verdict_label"]
     lines = [",".join(cols)]
     for r in rows:
         lines.append(",".join("" if r.get(c) is None else str(r.get(c)) for c in cols))

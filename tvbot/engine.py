@@ -241,9 +241,6 @@ class PaperEngine:
         return ctx
 
     def _open(self, s, df, entry_px):
-        margin = self.capital0 * config.MARGIN_PCT          # 10% fijo de $1000
-        notional = margin * config.LEVERAGE                  # 5x
-        qty = notional / entry_px
         ctx = self._entry_context(s, df)
         atr = float(atr14(df).iloc[-1])
         if s.entry_stop_fn is not None:                  # ORB: stop = OR-low (no ATR)
@@ -252,6 +249,17 @@ class PaperEngine:
             atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
             stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
                 if atr_mult else None
+        # --- sizing por RIESGO: el leverage se deriva de la distancia al stop (vol de la moneda) ---
+        margin = self.capital0 * config.MARGIN_PCT          # margen fijo ($100)
+        stop_dist = abs(entry_px - stop_px) / entry_px if (stop_px and entry_px) else None
+        if stop_dist and stop_dist > 0:
+            risk_usd = self.capital0 * config.RISK_PER_TRADE          # arriesga 0.5% si toca stop
+            leverage = risk_usd / (stop_dist * margin)               # leverage para ese riesgo
+            leverage = min(config.MAX_LEVERAGE, max(1.0, leverage))   # cap de seguridad
+        else:
+            leverage = config.LEVERAGE                                # fallback (sin stop): 5x
+        notional = margin * leverage
+        qty = notional / entry_px
         timeout_at = _iso(_now() + timedelta(hours=(s.timeout_h or config.TIMEOUT_HOURS))) \
             if s.exit_mode in ("atrstop", "meanrev") else None
         tid = db.insert_trade(
@@ -259,13 +267,13 @@ class PaperEngine:
             side="long" if s.side > 0 else "short", status="open", asset_class=s.asset_class,
             t_signal=_iso(df.index[-1].to_pydatetime().astimezone(config.LIMA_TZ)),
             t_entry=db.utcnow(),
-            entry_px=entry_px, base_amount=margin, leverage=config.LEVERAGE,
+            entry_px=entry_px, base_amount=margin, leverage=round(leverage, 2),
             notional=notional, qty=qty, stop_px=stop_px, timeout_at=timeout_at,
             atr_entry=atr, signal_meta=json.dumps({"exit_mode": s.exit_mode}), **ctx)
         db.log_signal(s.sid, s.symbol, "entry", {"px": entry_px, "trade_id": tid})
         db.log_event("info", "trade",
                      f"{s.sid} abre {'long' if s.side > 0 else 'short'} {s.symbol} @ {entry_px} "
-                     f"(margen ${margin:.0f} x{config.LEVERAGE:.0f})")
+                     f"(margen ${margin:.0f} x{leverage:.1f} = ${notional:.0f} nocional, R={config.RISK_PER_TRADE*100:.2f}%)")
 
     # ---------- equity ----------
     def _snapshot(self, market):

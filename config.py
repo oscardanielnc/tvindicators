@@ -13,9 +13,16 @@ LOG_DIR = Path(os.getenv("TVBOT_LOG_DIR", DATA_DIR / "logs"))
 
 # --- Capital simulado ---
 CAPITAL_INICIAL = float(os.getenv("TVBOT_CAPITAL", "1000"))
-MARGIN_PCT = float(os.getenv("TVBOT_MARGIN_PCT", "0.10"))      # 10% fijo por trade
-LEVERAGE = float(os.getenv("TVBOT_LEVERAGE", "5"))             # 5x fijo
+MARGIN_PCT = float(os.getenv("TVBOT_MARGIN_PCT", "0.10"))      # margen fijo por trade ($100 de $1000)
+LEVERAGE = float(os.getenv("TVBOT_LEVERAGE", "5"))             # leverage de FALLBACK (si no hay stop)
 MARGIN_MODE = os.getenv("TVBOT_MARGIN_MODE", "fixed")          # fixed = 10% del capital inicial
+
+# --- Sizing por RIESGO (leverage dinámico por volatilidad) ---
+# Cada trade arriesga RISK_PER_TRADE del capital si toca el stop. El leverage se deriva de la
+# distancia al stop (ATR de cada moneda): leverage = R*capital / (dist_stop * margen). Margen fijo.
+# Ver METODOLOGIA_PRODUCCION.md §5/§5.1. R calibrado a maxDD anual <=25% al p95 (calibra_R.py).
+RISK_PER_TRADE = float(os.getenv("TVBOT_RISK_PER_TRADE", "0.005"))  # 0.5% del capital por trade
+MAX_LEVERAGE = float(os.getenv("TVBOT_MAX_LEVERAGE", "10"))         # tope de seguridad (liquidación)
 
 # --- Costos (identicos al backtest validado) ---
 MAKER_FEE = 0.0002

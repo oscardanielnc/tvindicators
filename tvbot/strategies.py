@@ -44,6 +44,33 @@ def _sweep(df, side, F=6):
     return bool(I.sweep_recent(sL if side > 0 else sS, F)[-1])
 
 
+# --- filtro de régimen de MERCADO (BTC), no de la propia moneda ---
+# LINK (S39) y JUP (S51) solo tienen edge en bull (validado regime_split.py 19/06/2026:
+# exp bull +173/+214 bps, exp bear -17/-32). Se gatea su entrada a BTC en tendencia alcista.
+import time as _time
+from . import data as _data
+
+_BTC_CACHE = {"ts": 0.0, "bull": None}
+_BTC_TTL = 1800   # 30 min (el régimen diario de BTC cambia lento)
+
+def _btc_bull():
+    """True si BTC está en régimen alcista (close diario > SMA200d). Cache 30 min.
+    Si la API falla, cae al último valor conocido (o True) para no bloquear el ciclo."""
+    now = _time.time()
+    c = _BTC_CACHE
+    if c["bull"] is not None and now - c["ts"] < _BTC_TTL:
+        return c["bull"]
+    try:
+        df, _ = _data.fetch_bars("BTC/USDT:USDT", "1d", limit=210)  # >200 velas diarias para SMA200
+        close = df["close"]
+        sma200 = close.rolling(200).mean().iloc[-1]
+        bull = bool(close.iloc[-1] > sma200) if sma200 == sma200 else True
+        c.update(ts=now, bull=bull)
+        return bull
+    except Exception:
+        return c["bull"] if c["bull"] is not None else True
+
+
 class Strategy:
     def __init__(self, sid, name, coin, tf, side, exit_mode, entry_fn, flip_exit_fn=None,
                  role=1.0, safety_atr=None, indicators=(), exit_desc="", timeout_h=None, note="",
@@ -292,9 +319,9 @@ def s38_entry(df):      # ORDI 1h L: Force Index cruza a positivo + régimen
 
 # --- batch 5: momentum-systems (KST/AO/TSI) sobre monedas NUEVAS, validados OOS 15/06/2026, role 0.5 ---
 
-def s39_entry(df):      # LINK 1h L: KST cruza arriba su señal + barrido<=6
+def s39_entry(df):      # LINK 1h L: KST cruza arriba su señal + barrido<=6 + BTC bull (solo edge en bull)
     le, _ = I.kst(df)
-    return _last(le) and _sweep(df, +1, 6)
+    return _last(le) and _sweep(df, +1, 6) and _btc_bull()
 
 def s40_entry(df):      # NEO 1h L: Awesome Osc cruza cero + barrido<=6 + tendencia
     le, _ = I.awesome_osc(df)
@@ -344,9 +371,9 @@ def s50_entry(df):      # FET 1h L: Squeeze release alcista + tendencia + vol
     le, _ = I.squeeze_momentum(df)
     return _last(le) and _trend(df, +1) and _vol(df)
 
-def s51_entry(df):      # JUP 1h L: Awesome Osc cruza cero + tendencia + vol
+def s51_entry(df):      # JUP 1h L: Awesome Osc cruza cero + tendencia + vol + BTC bull (solo edge en bull)
     le, _ = I.awesome_osc(df)
-    return _last(le) and _trend(df, +1) and _vol(df)
+    return _last(le) and _trend(df, +1) and _vol(df) and _btc_bull()
 
 # --- batch 7: S/R High Volume Boxes (ruptura de S/R confirmada por volumen), validados OOS 15/06/2026, role 0.5 ---
 
@@ -511,8 +538,8 @@ STRATEGIES = [
     Strategy("S38", "ORDI-L ForceIndex+régimen 1h","ORDI", "1h",  +1, "atrstop", s38_entry,
              role=0.5, indicators=[FI], exit_desc=SL_TO + " + régimen"),
     # --- batch 5: momentum-systems sobre monedas NUEVAS (corr ~0 vs roster y entre sí) ---
-    Strategy("S39", "LINK-L KST+barrido 1h",      "LINK", "1h",  +1, "atrstop", s39_entry,
-             role=0.5, indicators=[KST], exit_desc=SL_TO + " + barrido"),
+    Strategy("S39", "LINK-L KST+barrido+BTCbull 1h", "LINK", "1h",  +1, "atrstop", s39_entry,
+             role=0.5, indicators=[KST], exit_desc=SL_TO + " + barrido + BTC bull"),
     Strategy("S40", "NEO-L AwesomeOsc+barr+tend 1h","NEO", "1h",  +1, "atrstop", s40_entry,
              role=0.5, indicators=[AO], exit_desc=SL_TO + " + barrido/tendencia"),
     Strategy("S41", "ICP-S KST+régimen 1h",       "ICP",  "1h",  -1, "atrstop", s41_entry,
@@ -537,8 +564,8 @@ STRATEGIES = [
              role=0.5, indicators=[SQZM], exit_desc=SL_TO + " + tendencia/vol"),
     Strategy("S50", "FET-L Squeeze+tend+vol 1h",  "FET",  "1h",  +1, "atrstop", s50_entry,
              role=0.5, indicators=[SQZM], exit_desc=SL_TO + " + tendencia/vol"),
-    Strategy("S51", "JUP-L AwesomeOsc+tend+vol 1h","JUP",  "1h",  +1, "atrstop", s51_entry,
-             role=0.5, indicators=[AO], exit_desc=SL_TO + " + tendencia/vol"),
+    Strategy("S51", "JUP-L AwesomeOsc+tend+vol+BTCbull 1h","JUP",  "1h",  +1, "atrstop", s51_entry,
+             role=0.5, indicators=[AO], exit_desc=SL_TO + " + tendencia/vol + BTC bull"),
     # --- batch 7: S/R High Volume Boxes (ruptura S/R + volumen) ---
     Strategy("S52", "DOGE-L SRBreak+tend 1h",     "DOGE", "1h",  +1, "atrstop", s52_entry,
              role=0.5, indicators=[SRB], exit_desc=SL_TO + " + tendencia"),
