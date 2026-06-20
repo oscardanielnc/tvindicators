@@ -1,11 +1,33 @@
 # Estado del proyecto — tvindicators
-**Actualizado:** 2026-06-16 (sesión "indicadores populares de TradingView") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
+**Actualizado:** 2026-06-19 (sesión "metodología de producción + sizing por riesgo") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
 
-> **Cripto desplegado 2026-06-15; TradFi añadido 2026-06-16; roster ampliado el mismo día con indicadores
-> populares validados.** Roster actual: **64 estrategias cripto + 15 tradfi = 79** corriendo en sombra en la
-> VM; backup/watchdog/alertas activos; reconciliación ahora cubre cripto + tradfi (77 reconciliadas, 0 mismatches).
-> Código en `origin/main` (commit más nuevo pendiente de push: T12–T15 + reconcile tradfi).
-> Fase: **esperar y vigilar** hasta que la cartera confirme el backtest. VM: `ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'`.
+> **Cripto desplegado 2026-06-15; TradFi añadido 2026-06-16; metodología de producción + sizing por riesgo 2026-06-19.**
+> Roster: **64 estrategias cripto + 15 tradfi = 79** en sombra en la VM; backup/watchdog/alertas activos;
+> reconcile 0 mismatches en 77 (T1/T6 ORB y S39/S51 overlay-BTC excluidas por construcción).
+> Código en `origin/main` (commit `cb94eed`, desplegado en la VM 2026-06-19).
+> **Sizing por riesgo R=0.5% VIVO** (leverage dinámico por volatilidad), filtro régimen BTC en LINK/JUP,
+> CSV de evaluación enriquecido. Fase: **esperar y vigilar** hasta que la cartera confirme el backtest.
+> VM: `ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'`. Metodología completa: `METODOLOGIA_PRODUCCION.md`.
+
+## Sesión 2026-06-19 — metodología de producción + sizing por riesgo (DESPLEGADO)
+Revisión de los primeros 38 trades vivos (cuenta en negativo) → diagnóstico honesto + diseño de la ruta a real.
+- **Diagnóstico (datos, no opinión):** las pérdidas vivas NO son de régimen — 8/10 longs perdedores tienen
+  expectativa positiva en bear en backtest (`regime_split.py`); es **varianza de muestra n=1** (WR ~40%).
+  Solo **LINK (S39) / JUP (S51)** son beta de bull → único ajuste justificado.
+- **Riesgo de ruina** (`riesgo_ruina.py`): el sizing viejo (10%×5 plano, sin tope) llegaba a **~18× bruto**
+  en paper. Decidido sizing por RIESGO: leverage = R·cap/(dist_stop·margen), margen $100 fijo.
+- **R calibrado** (`calibra_R.py`): **R=0.5%/trade** (medio-Kelly) → maxDD anual p95 −14%, +47%/año, nunca rompe 25%.
+  **R incrementable a futuro** tras confirmación viva. 25% maxDD anual = techo de cola (clave para copy-trading).
+- **Implementado y desplegado (commit `cb94eed`):**
+  - `engine._open`: leverage dinámico (1.5×–4.4× según ATR; antes 5× plano sobre-arriesgaba alts). `config.RISK_PER_TRADE=0.005`, `MAX_LEVERAGE=10`.
+  - Filtro `_btc_bull()` (BTC close diario > SMA200) en S39/S51. `data.py` soporta tf `1d`. **Su contador de 20 trades se reinicia.**
+  - CSV `/api/evaluation.csv` enriquecido: `t_stat`, `move_nolev`, `avg_win/loss`, MAE/MFE, `hold_bars`, motivo de salida, contexto ganador-vs-perdedor.
+  - `reconcile`: S39/S51 excluidas (overlay BTC cross-asset, no reproducible bar-a-bar).
+- **Metodología fijada** (en `METODOLOGIA_PRODUCCION.md`): embudo 79→real, gate (20 trades + t-stat≥1.5-2 + ratio≥0.3 + PF≥1.2),
+  **demotion: bajar peso si exp<0 con ≥40 trades**, pesos por edge-ajustado-a-riesgo+correlación+tope+shrinkage (al tener 8),
+  copy-trading proporcional (% del total), sim de cartera antes del go-live real.
+- **A re-validar otro día:** (1) que trades NUEVOS muestren leverage variable (los pre-deploy son 5× viejo);
+  (2) revisión semanal (domingo) de quién llega a 20 trades; (3) cuando haya 8 candidatas: pesos + sim de cartera + tope de riesgo agregado.
 
 ## Resumen en una línea
 Bot de paper trading con **64 estrategias cripto + 15 tradfi (acciones, perps de Binance)**, motor con paridad
