@@ -95,11 +95,19 @@ def entry_array_for(sid, df):
     return ev & m
 
 
+# Estrategias con overlay cross-asset EN VIVO (régimen de BTC vía API), no reproducible bar-a-bar
+# desde el df de la propia moneda → se excluyen de reconcile igual que los ORB session-stateful.
+# Su edge se valida por los trades vivos (contador reiniciado), no por reconciliación de array.
+REGIME_LIVE_SKIP = {"S39", "S51"}
+
+
 def main():
     print(f"Reconciliación señal viva (sN_entry) vs backtest (array) · ventana {WINDOW} velas recientes\n")
     total_mis = 0; flagged = []
     rng = np.random.RandomState(0)
     for s in STRAT.STRATEGIES:
+        if s.sid in REGIME_LIVE_SKIP:
+            continue
         try:
             df0 = getdf(s.coin, s.tf)
         except Exception:
@@ -155,6 +163,7 @@ def main():
               f"mismatches={mis}", end="\r" if not mis else "\n", flush=True)
     if skipped_tf:
         print(f"\n  (ORB session-stateful sin array: {skipped_tf} — causalidad por construcción, no reconciliadas)")
+    print(f"  (overlay régimen BTC en vivo: {sorted(REGIME_LIVE_SKIP)} — cross-asset, se validan por trades vivos)")
 
     print("\n" + "=" * 70)
     if total_mis == 0:
