@@ -17,7 +17,7 @@ import config
 from . import data, db
 from . import indicators as I
 from .indicators import atr14
-from .strategies import STRATEGIES, BY_ID
+from .strategies import STRATEGIES, BY_ID, _btc_bull
 from .strategies_tradfi import STRATEGIES_TRADFI, BY_ID_TRADFI
 
 # cripto + tradfi (perps de acciones). El feed y el motor son comunes; lo único distinto de tradfi
@@ -213,6 +213,13 @@ class PaperEngine:
                 db.log_event("error", "signal", f"{s.sid} error evaluando senal: {e}")
                 continue
             if not signal:
+                continue
+            # --- Gate de regimen: los LONGS de cripto solo entran con BTC en regimen alcista
+            # (close diario > SMA200). En vivo (n=89) los longs sangraron -234 vs shorts +73:
+            # era beta bajista de mercado, no alpha. Los shorts NO se filtran. Los 'stocks'
+            # tampoco (BTC no gobierna equities — necesitan su propio gate de indice).
+            if s.side > 0 and s.asset_class == "crypto" and not _btc_bull():
+                db.log_signal(s.sid, s.symbol, "entry_skipped", {"motivo": "btc_bear_regime"})
                 continue
             if s.sid in open_by_strat:
                 db.log_signal(s.sid, s.symbol, "entry_skipped", {"motivo": "posicion abierta"})

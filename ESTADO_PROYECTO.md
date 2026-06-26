@@ -1,13 +1,22 @@
 # Estado del proyecto — tvindicators
-**Actualizado:** 2026-06-19 (sesión "metodología de producción + sizing por riesgo") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
+**Actualizado:** 2026-06-25 (sesión "análisis con datos vivos + gate de régimen a todos los longs") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
 
-> **Cripto desplegado 2026-06-15; TradFi añadido 2026-06-16; metodología de producción + sizing por riesgo 2026-06-19.**
-> Roster: **64 estrategias cripto + 15 tradfi = 79** en sombra en la VM; backup/watchdog/alertas activos;
-> reconcile 0 mismatches en 77 (T1/T6 ORB y S39/S51 overlay-BTC excluidas por construcción).
-> Código en `origin/main` (commit `cb94eed`, desplegado en la VM 2026-06-19).
-> **Sizing por riesgo R=0.5% VIVO** (leverage dinámico por volatilidad), filtro régimen BTC en LINK/JUP,
-> CSV de evaluación enriquecido. Fase: **esperar y vigilar** hasta que la cartera confirme el backtest.
-> VM: `ssh <vm> 'bash /opt/tvbot/deploy/deploy.sh'`. Metodología completa: `METODOLOGIA_PRODUCCION.md`.
+> **Cripto desplegado 2026-06-15; TradFi añadido 2026-06-16; metodología de producción + sizing por riesgo 2026-06-19; gate de régimen global 2026-06-25.**
+> Roster: **64 estrategias cripto + 15 tradfi = 79** en sombra en la VM; backup/watchdog/alertas activos.
+> **Datos vivos al 2026-06-25 (n=89 trades, ~5 días):** exp viva **−60.5 bps** (vs +107 backtest), WR 34%, maxDD **−25%**, 0/43 confirmadas.
+> **Hallazgo clave:** longs de cripto −234 PnL vs shorts +73 → era **beta bajista de mercado, no fallo de señal** (BTC bear desde antes).
+> **Desplegado HOY:** gate de régimen BTC extendido a **TODOS los longs de cripto** (`engine._manage_entries`); BTC bear → 0 longs ahora.
+> Fase: **acumular datos + corregir semanal**, sin tradear sobre más pérdidas. Recalibración de sizing agregado APLAZADA (esperar n suficiente).
+> VM acceso: `ssh -i sentinel-prod.key opc@213.35.121.9`. Metodología: `METODOLOGIA_PRODUCCION.md`.
+
+## Sesión 2026-06-25 — análisis con datos VIVOS + gate de régimen global (DESPLEGADO)
+Análisis honesto pedido por el usuario ("falla 2 de cada 1, ¿tiene futuro?"). Se accedió a la VM por SSH y se leyó la API viva (`localhost:8090`).
+- **Aclaración de fondo:** WR bajo (34%) NO es el problema — es un sistema trend/momentum (diseñado para acertar ~33-42% con ganadores grandes). El juez es la **expectancia**, no el WR.
+- **Datos vivos reales (n=89, desde 2026-06-20):** exp **−60.5 bps** (backtest +107), ratio live/bt **−0.56**, maxDD **−25.07%** (tocó el techo en 5 días), 0/43 confirmadas, avg MAE −0.92R / MFE +1.23R.
+- **Diagnóstico por dirección (decisivo):** **LONGS 59 trades → −234.8 PnL** vs **SHORTS 30 trades → +72.6 PnL**. Los 8 peores son todos longs (ORDI/ENA/WIF/JUP/TSLA/MU), los 8 mejores todos shorts. **BTC estaba bear** (`close diario < SMA200`) → era beta de mercado, no alpha rota. (Revisa el diagnóstico previo del 2026-06-19 que decía "no es régimen": era cierto a n=38, pero a n=89 con BTC en bear sostenido el sesgo direccional es claro.)
+- **Cambio desplegado (gate de régimen global):** en `engine._manage_entries`, todo long de cripto requiere `_btc_bull()` (BTC close diario > SMA200). Antes solo lo tenían S39/S51; ahora **todos**. Shorts NO se filtran. Los `stocks` (T*) **excluidos a propósito** (BTC no gobierna equities — necesitan su propio gate de índice SPY/QQQ, pendiente). Un solo punto de control. Aplicado en VM (servicio reiniciado, `active`) + repo local (compila). Backup VM: `engine.py.bak-20260625`.
+- **Sizing — recomendación dada, ejecución APLAZADA por decisión del usuario:** el maxDD −25% en 5 días (modelo lo ponía como techo *anual*) viene de 3 fallos de `calibra_R.py`: (1) **sin tope de riesgo agregado** — N_concurrentes ×0.5% se apila sin límite; calibró para N=8 pero corre 43; (2) calibró solo sobre ganadoras (filtro `mean>0`); (3) bootstrap de bloques de 10d rompe la persistencia del bear. **El gate de hoy ya ataca (1) y (3)** al cortar la sangría de longs correlacionados. El cap de riesgo agregado y recalibrar R se harán **cuando haya estrategias con suficientes trades y prometedoras** (no ahora).
+- **Plan de trabajo acordado:** acumular datos + corregir semanalmente lo accionable, evitando tradear sobre más pérdidas. NO añadir estrategias. NO tocar sizing completo todavía.
 
 ## Sesión 2026-06-19 — metodología de producción + sizing por riesgo (DESPLEGADO)
 Revisión de los primeros 38 trades vivos (cuenta en negativo) → diagnóstico honesto + diseño de la ruta a real.
