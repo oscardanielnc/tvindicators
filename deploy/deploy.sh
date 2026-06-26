@@ -7,7 +7,9 @@ PY="${APP_DIR}/.venv/bin/python"
 cd "$APP_DIR"
 echo "=== TVBOT DEPLOY - $(TZ=America/Lima date '+%Y-%m-%d %H:%M') Lima ==="
 echo "[1/4] git pull..."
-sudo -u "$(stat -c '%U' .)" git pull --ff-only
+# -H carga el HOME del dueño (opc) para que git/ssh encuentren ~/.ssh/config + la deploy key
+# (remote por SSH). Sin -H, al invocar el script con sudo el pull buscaba la key en /root/.ssh y fallaba.
+sudo -H -u "$(stat -c '%U' .)" git pull --ff-only
 echo "[2/4] dependencias..."
 "$PY" -m pip install --quiet -r requirements.txt || true
 echo "[3/4] verificacion de imports..."
