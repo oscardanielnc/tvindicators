@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 import config
-from . import data, db
+from . import data, db, shadow
 from . import indicators as I
 from .indicators import atr14
 from .strategies import STRATEGIES, BY_ID, _btc_bull
@@ -117,7 +117,7 @@ class PaperEngine:
                 et_mod = (et.hour * 60 + et.minute).to_numpy()
                 close_slot = 16 * 60 - tf_s // 60
             else:
-                et_mod = None
+                et_mod = close_slot = None
             exit_px = reason = t_exit = None
             cost_out = config.MAKER_FEE
             exit_k = None
@@ -167,6 +167,13 @@ class PaperEngine:
                              "mae_r": round(mae / sd, 3) if sd else None,
                              "mfe_r": round(mfe / sd, 3) if sd else None,
                              "exit_slippage_bps": round(config.SLIPPAGE * 1e4, 1) if reason == "SL" else 0.0}
+                    # contrafactuales de salida: MISMAS velas, otras reglas. No tocan la ejecución
+                    # (ver shadow.py) — alimentan la decisión de stops/objetivos con datos OOS.
+                    sh = shadow.compute(side, tr["entry_px"], tr["stop_px"], (op, hi, lo, cl), i0,
+                                        to_bars if has_timeout else None, flip,
+                                        et_mod, close_slot, live_open)
+                    if sh:
+                        extra["shadow_exits"] = json.dumps(sh)
                 self._close(tr, float(exit_px), reason, cost_out, t_exit, extra)
 
     def _close(self, tr, exit_px, reason, cost_out, t_exit=None, extra=None):
@@ -256,10 +263,17 @@ class PaperEngine:
             atr_mult = config.ATR_MULT if s.exit_mode == "atrstop" else s.safety_atr
             stop_px = entry_px - (1 if s.side > 0 else -1) * atr_mult * atr \
                 if atr_mult else None
-        # --- sizing por RIESGO: el leverage se deriva de la distancia al stop (vol de la moneda) ---
+        # --- sizing ---
+        # FASE DE MEDICIÓN (SIZING_MODE='flat'): nocional constante. Cada trade pesa IGUAL en el
+        # PnL, así el dólar es un estimador limpio del edge en vez de una mezcla de edge y leverage.
+        # (Con sizing por riesgo, cripto-short daba +88 USD con 0.0 bps/trade: el dólar venía del
+        # leverage variable, no del edge — auditoría 03/08/2026.) El leverage óptimo por estrategia
+        # se calibra DESPUÉS, cuando una tesis esté aprobada como rentable.
         margin = self.capital0 * config.MARGIN_PCT          # margen fijo ($100)
         stop_dist = abs(entry_px - stop_px) / entry_px if (stop_px and entry_px) else None
-        if stop_dist and stop_dist > 0:
+        if config.SIZING_MODE == "flat":
+            leverage = config.FLAT_LEVERAGE
+        elif stop_dist and stop_dist > 0:
             risk_usd = self.capital0 * config.RISK_PER_TRADE          # arriesga 0.5% si toca stop
             leverage = risk_usd / (stop_dist * margin)               # leverage para ese riesgo
             leverage = min(config.MAX_LEVERAGE, max(1.0, leverage))   # cap de seguridad

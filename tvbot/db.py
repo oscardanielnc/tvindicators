@@ -97,6 +97,7 @@ _EXTRA_COLS = [
     ("mae_r", "REAL"),              # MAE en múltiplos de la distancia al stop
     ("mfe_r", "REAL"),              # MFE en R (¿se cortó al ganador?)
     ("exit_slippage_bps", "REAL"),  # slippage modelado en la salida (bps)
+    ("shadow_exits", "TEXT"),       # JSON {variante: bps netos} — salidas alternativas (shadow.py)
 ]
 
 

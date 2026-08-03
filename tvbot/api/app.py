@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 
 import config
-from tvbot import db
+from tvbot import db, theses
 from tvbot.strategies import STRATEGIES, BACKTEST_REF
 from tvbot.strategies_tradfi import STRATEGIES_TRADFI, BACKTEST_REF_TRADFI
 
@@ -244,6 +244,82 @@ def portfolio(asset_class: str = None):
                  "strat_pf": config.GATE_MIN_PF},
         "verdict": vc, "verdict_label": vl,
     }
+
+
+@app.get("/api/theses")
+def theses_view():
+    """Desempeño agrupado por TESIS — la unidad de decisión en fase de medición.
+
+    Una estrategia suelta necesita años para separar su edge del ruido; la tesis que comparten
+    junta esa potencia hoy. Se mide en bps sobre nocional (independiente del sizing) con t-stat
+    e IC95%, y se lista qué estrategias arrastran a cada tesis."""
+    by_thesis = {}
+    for s in STRATEGIES:
+        by_thesis.setdefault(theses.thesis_of(s), []).append(s)
+    tr = q("SELECT strategy_id, ret_pct_nolev, pnl_usd FROM trades "
+           "WHERE status='closed' AND ret_pct_nolev IS NOT NULL")
+    rows_by_sid = {}
+    for t in tr:
+        rows_by_sid.setdefault(t["strategy_id"], []).append(t)
+    out = []
+    for tid, strats in by_thesis.items():
+        rows = [r for s in strats for r in rows_by_sid.get(s.sid, [])]
+        agg = theses.aggregate(tid, rows)
+        # diagnóstico: qué estrategias arrastran (mejores y peores por bps medios)
+        det = []
+        for s in strats:
+            rs = [r["ret_pct_nolev"] * 100 for r in rows_by_sid.get(s.sid, [])]
+            if rs:
+                det.append({"strategy_id": s.sid, "name": s.name, "n": len(rs),
+                            "exp_bps": round(sum(rs) / len(rs), 1)})
+        det.sort(key=lambda d: d["exp_bps"])
+        agg["n_estrategias"] = len(strats)
+        agg["peores"], agg["mejores"] = det[:3], det[-3:][::-1]
+        out.append(agg)
+    out.sort(key=lambda d: -(d.get("t_stat") or -99))
+    return {"gate": {"trades": config.GATE_THESIS_MIN_TRADES, "t": config.GATE_THESIS_MIN_T,
+                     "pf": config.GATE_THESIS_MIN_PF},
+            "sizing_mode": config.SIZING_MODE, "rows": out}
+
+
+@app.get("/api/shadow")
+def shadow_view(thesis: str = None):
+    """Salidas alternativas en la sombra: qué habría rendido cada trade con otros stops/objetivos.
+
+    Contrafactual EXACTO (mismas velas, camino real), no una cota. Sirve para decidir stops con
+    evidencia en vez de retrofit. OJO: los trades anteriores al despliegue del shadow-logging son
+    IN-SAMPLE (ya se miraron para formular la hipótesis) — se marcan aparte por eso."""
+    sql = "SELECT strategy_id, ret_pct_nolev, shadow_exits, t_exit FROM trades " \
+          "WHERE status='closed' AND shadow_exits IS NOT NULL"
+    rows = q(sql)
+    if thesis:
+        keep = {s.sid for s in STRATEGIES if theses.thesis_of(s) == thesis}
+        rows = [r for r in rows if r["strategy_id"] in keep]
+    acc, real = {}, []
+    for r in rows:
+        try:
+            sh = json.loads(r["shadow_exits"])
+        except Exception:
+            continue
+        real.append(r["ret_pct_nolev"] * 100)
+        for k, v in sh.items():
+            acc.setdefault(k, []).append(v)
+    if not real:
+        return {"n": 0, "variants": [], "note": "sin datos de shadow todavía"}
+    base = acc.get("base", [])
+    out = []
+    for k, v in acc.items():
+        m = st.mean(v)
+        d = [a - b for a, b in zip(v, base)] if len(base) == len(v) else []
+        t_d = (round(st.mean(d) / (st.stdev(d) / math.sqrt(len(d))), 2)
+               if len(d) >= 2 and st.stdev(d) > 0 else None)
+        out.append({"variant": k, "n": len(v), "exp_bps": round(m, 1),
+                    "delta_vs_base_bps": round(st.mean(d), 1) if d else None,
+                    "t_delta": t_d})
+    out.sort(key=lambda d: -d["exp_bps"])
+    return {"n": len(real), "exp_real_bps": round(st.mean(real), 1),
+            "fidelidad_base_vs_real_bps": round(st.mean(base) - st.mean(real), 2) if base else None,
+            "variants": out}
 
 
 @app.get("/api/evaluation.csv", response_class=PlainTextResponse)
