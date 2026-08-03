@@ -294,7 +294,9 @@ class PaperEngine:
         db.log_signal(s.sid, s.symbol, "entry", {"px": entry_px, "trade_id": tid})
         db.log_event("info", "trade",
                      f"{s.sid} abre {'long' if s.side > 0 else 'short'} {s.symbol} @ {entry_px} "
-                     f"(margen ${margin:.0f} x{leverage:.1f} = ${notional:.0f} nocional, R={config.RISK_PER_TRADE*100:.2f}%)")
+                     f"(margen ${margin:.0f} x{leverage:.1f} = ${notional:.0f} nocional, "
+                     + ("sizing plano — fase de medición)" if config.SIZING_MODE == "flat"
+                        else f"R={config.RISK_PER_TRADE*100:.2f}%)"))
 
     # ---------- equity ----------
     def _snapshot(self, market):

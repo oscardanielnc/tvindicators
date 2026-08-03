@@ -1,5 +1,59 @@
 # Estado del proyecto — tvindicators
-**Actualizado:** 2026-06-25 (sesión "análisis con datos vivos + gate de régimen a todos los longs") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
+**Actualizado:** 2026-08-03 (sesión "auditoría de 52 días + fase de medición") · Fase: **MEDICIÓN** (paper en VM, sizing plano) ⏳
+
+## Sesión 2026-08-03 — auditoría de 52 días vivos + giro a fase de MEDICIÓN (DESPLEGADO)
+**Veredicto de la auditoría (272 trades cerrados, 13/06–03/08):** equity 1000→926 (−7.4%), maxDD
+−28.4%, exp viva **−14.7 bps/trade contra +105 del backtest**, WR 37%, PF 0.90, **0/62 estrategias
+confirmadas** (la que más tiene son 16 trades; el gate pide 20).
+- **La frase honesta:** t vs 0 = −0.85 (no se puede probar que pierda) pero **t vs +105bp = −6.9**
+  → sí se rechaza que el edge del backtest sobreviviera. No es varianza, es fallo de transferencia.
+- **No es ejecución ni costes:** reconcile 0 mismatches, fees 6 bps del nocional, PnL bruto también
+  negativo (−34 USD). Lo que falló es el edge.
+- **`entry_regime_ok` NO es un gate roto** — es una etiqueta de contexto que se graba en TODOS los
+  trades (engine.py:240), no "el filtro disparó". Que los trades con régimen favorable rindan peor
+  (−36 vs +22 bps) es un hallazgo sobre el poder predictivo del régimen, no un bug.
+- **Concentración:** sin los 5 mejores trades el PnL es −244; sin los 5 peores, +10. 272 trades
+  pero ~10 deciden el resultado.
+
+**Cambios desplegados (premisa del usuario: en esta etapa NO importa el balance, importa MEDIR
+qué estrategias son rentables; el leverage óptimo se calibra después, ya aprobada la estrategia):**
+1. **Sizing plano** (`SIZING_MODE='flat'`, nocional constante). Con sizing por riesgo, cripto-short
+   daba +88 USD con **0.0 bps/trade**: el dólar venía del leverage variable, no de la señal. Cada
+   trade debe pesar igual para que el PnL estime el edge. El sizing por riesgo queda tras el flag.
+2. **Tesis como unidad de decisión** (`tvbot/theses.py`, `/api/theses`): las 79 estrategias se
+   agrupan en 6 apuestas económicas. Gate por tesis con **t-stat e IC95**, no solo PnL>0 — más
+   exigente que el gate por estrategia, y baja las comparaciones múltiples de 79 hipótesis a 6.
+3. **Shadow-logging de salidas** (`tvbot/shadow.py`, `/api/shadow`): por cada trade cerrado se
+   recorren las MISMAS velas con otras reglas (stops 0.5/0.75/1.5R, TP 1/1.5/2/3R, breakeven,
+   trailing). Contrafactual exacto, no una cota. **No toca la ejecución** — registra evidencia para
+   decidir stops con datos OOS en vez de retrofit. Fidelidad verificada: la variante `base`
+   reprodujo el retorno real con mediana +0.0 bps y 0/168 trades con desvío >25 bps.
+
+**Lo que reveló el sizing plano el primer día — el resultado más importante de la sesión:**
+| Tesis | n | exp (bps) | t | veredicto |
+|---|---|---|---|---|
+| ORB de acciones | 11 | **+90.2** | +1.38 | acumulando — **le bastan ~24 trades** para confirmarse |
+| Shorts de alts 1h | 162 | +0.4 | +0.02 | **edge demasiado fino para confirmarse nunca** (~2.1M trades) |
+| Cripto intradía 15m/30m | 20 | −2.2 | −0.08 | sin edge |
+| Longs de acciones (swing) | 46 | −10.9 | −0.33 | sin edge |
+| Shorts de acciones | 4 | −43.4 | −0.16 | sin datos útiles |
+| Longs de cripto | 29 | **−150.2** | **−3.65** | negativa (ya gateada desde 25/06) |
+
+**Shorts de alts 1h era la tesis "prometedora" por sus +88 USD — medida en bps es plana.** Ese
++88 era un artefacto del leverage. Y con exp=+0.4 bps contra sd=320, confirmarla exigiría ~1100
+años: la respuesta no es esperar sino **engordar la expectancia por trade** (salidas, filtros) o
+abandonarla. `ORB de acciones` pasa a ser la única candidata con edge grueso — frágil (2 de sus
+11 trades mandan) pero **barata de resolver**.
+
+**Shadow (in-sample, 168 trades — orientativo, NO decisorio):** `tp2R` +25.8 bps sobre la salida
+real (t=1.84) y `sl0.75R` +13.6 (t=1.90); `be1R` y `sl1.5R` empeoran. Consistente con MFE +1.50R
+vs MAE −0.84R. **La decisión se toma con los trades posteriores al despliegue**, no con estos.
+
+**Próximo paso:** acumular ~13 trades más de ORB de acciones y revisar `informe_tesis.py`.
+Herramientas: `python informe_tesis.py` (VM) · `/api/theses` · `/api/shadow` · `backfill_shadow.py`.
+
+---
+**Actualizado antes:** 2026-06-25 (sesión "análisis con datos vivos + gate de régimen a todos los longs") · Fase: **DESPLEGADO en producción (paper trading en VM)** ✅
 
 > **Cripto desplegado 2026-06-15; TradFi añadido 2026-06-16; metodología de producción + sizing por riesgo 2026-06-19; gate de régimen global 2026-06-25.**
 > Roster: **64 estrategias cripto + 15 tradfi = 79** en sombra en la VM; backup/watchdog/alertas activos.
