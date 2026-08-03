@@ -47,9 +47,13 @@ def main():
               f"t={a['t_stat']:+5.2f}  IC95=[{a['ci95_bps'][0]:+.0f},{a['ci95_bps'][1]:+.0f}]  "
               f"WR={a['wr']}%  PF={a['pf']}")
         print(f"  {a['verdict_label']}", end="")
-        if a.get("n_para_significancia"):
-            falta = a["n_para_significancia"] - a["n"]
-            print(f" — con este tamaño de edge harían falta ~{a['n_para_significancia']} trades "
+        nn = a.get("n_para_significancia")
+        if nn and nn > config.THESIS_N_INVIABLE:
+            print(f" — harían falta ~{nn:,} trades para confirmarla (~{nn/160/12:.0f} años a este "
+                  f"ritmo): el edge es demasiado fino, hay que engordarlo, no esperar")
+        elif nn:
+            falta = nn - a["n"]
+            print(f" — con este tamaño de edge harían falta ~{nn} trades "
                   f"({'faltan ~%d' % falta if falta > 0 else 'ya alcanzado'})")
         else:
             print(" — expectancia <=0: no hay tamaño de muestra que la salve, hay que arreglar la idea")

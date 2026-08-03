@@ -62,6 +62,9 @@ GATE_PORT_MIN_CONFIRMED = int(os.getenv("TVBOT_GATE_PORT_CONFIRMED", "8"))  # n�
 GATE_THESIS_MIN_TRADES = int(os.getenv("TVBOT_GATE_TH_TRADES", "80"))
 GATE_THESIS_MIN_T = float(os.getenv("TVBOT_GATE_TH_T", "2.0"))    # t-stat de la expectancia en bps
 GATE_THESIS_MIN_PF = float(os.getenv("TVBOT_GATE_TH_PF", "1.15"))
+# si confirmar la tesis exigiría más trades que esto, el edge es demasiado fino para confirmarse
+# nunca (a ~160 trades/mes, 20k trades son ~10 años): no es esperar más, es cambiar la idea.
+THESIS_N_INVIABLE = int(os.getenv("TVBOT_TH_N_INVIABLE", "20000"))
 
 # --- API ---
 API_HOST = os.getenv("TVBOT_API_HOST", "0.0.0.0")

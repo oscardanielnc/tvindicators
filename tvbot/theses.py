@@ -69,6 +69,11 @@ def aggregate(tid, rows):
     n_need = int(math.ceil((2 * sd / exp) ** 2)) if exp > 0 else None
     if exp <= 0:
         vc, vl = ("fail", "Negativa") if t <= -2 else ("watch", "Sin edge todavía")
+    elif n_need and n_need > config.THESIS_N_INVIABLE:
+        # el edge es tan fino frente a su varianza que ninguna muestra alcanzable lo confirma:
+        # no es cuestión de esperar, la idea no da de sí (o hay que engordarla: mejores salidas,
+        # menos trades pero más gruesos, filtros que suban la expectancia por trade)
+        vc, vl = "thin", "Edge demasiado fino para confirmarse nunca"
     elif n < config.GATE_THESIS_MIN_TRADES:
         vc, vl = "collect", f"Acumulando ({n}/{config.GATE_THESIS_MIN_TRADES})"
     elif t >= config.GATE_THESIS_MIN_T and pf and pf >= config.GATE_THESIS_MIN_PF:
