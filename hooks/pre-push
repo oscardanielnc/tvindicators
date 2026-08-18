@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# pre-push: si el push toca la LÓGICA DE SEÑAL, corre reconcile.py (señal viva vs backtest)
+# pre-push: si el push toca la LÓGICA DE SEÑAL, corre research/reconcile.py (señal viva vs backtest)
 # y BLOQUEA el push si hay mismatches. Los pushes que no tocan esos archivos NO se ralentizan.
 #
 # Por qué aquí y no en la VM: el backtest/reconcile necesita el store de parquets local
@@ -11,7 +11,7 @@
 set -u
 
 # Archivos cuya edición puede desincronizar viva-vs-backtest (señal + cadena de reconstrucción).
-WATCH='tvbot/indicators.py|tvbot/strategies.py|reconcile.py|gen_summary.py|valida_roster_completo.py|valida_profunda_nuevos.py'
+WATCH='tvbot/indicators.py|tvbot/strategies.py|research/reconcile.py|gen_summary.py|valida_roster_completo.py|valida_profunda_nuevos.py'
 ZERO='0000000000000000000000000000000000000000'
 
 # Determina el rango de commits a empujar (git pasa por stdin: <lref> <lsha> <rref> <rsha>).
@@ -34,11 +34,11 @@ done
 changed="$(git diff --name-only "$range" 2>/dev/null | grep -E "$WATCH" || true)"
 [ -z "$changed" ] && exit 0                          # nada relevante: push instantáneo
 
-echo "pre-push: cambios en lógica de señal -> reconcile.py (viva vs backtest)..."
+echo "pre-push: cambios en lógica de señal -> research/reconcile.py (viva vs backtest)..."
 echo "$changed" | sed 's/^/   /'
 
 PY="${TVBOT_PYTHON:-python}"
-"$PY" reconcile.py
+"$PY" research/reconcile.py
 code=$?
 if [ "$code" -ne 0 ]; then
   echo ""
