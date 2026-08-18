@@ -11,7 +11,7 @@
 set -u
 
 # Archivos cuya edición puede desincronizar viva-vs-backtest (señal + cadena de reconstrucción).
-WATCH='tvbot/indicators.py|tvbot/strategies.py|research/reconcile.py|gen_summary.py|valida_roster_completo.py|valida_profunda_nuevos.py'
+WATCH='tvbot/indicators.py|tvbot/strategies.py|research/reconcile.py|research/gen_summary.py|research/valida_roster_completo.py|research/valida_profunda_nuevos.py'
 ZERO='0000000000000000000000000000000000000000'
 
 # Determina el rango de commits a empujar (git pasa por stdin: <lref> <lsha> <rref> <rsha>).

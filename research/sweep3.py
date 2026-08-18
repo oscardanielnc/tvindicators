@@ -1,6 +1,10 @@
 # Barrido 3: + Donchian Trend Ribbon y HACOLT sobre el stack existente
 # Gatillos nuevos {RIB, HAC} x filtros (subsets<=2 de los otros 5)
 # Gatillos viejos {BX, ST, TM, TMWT} x subsets que incluyan RIB o HAC (no re-validar)
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 from itertools import combinations
@@ -197,7 +201,7 @@ for coin in COINS:
     print(coin, "ok", flush=True)
 
 res = pd.DataFrame(rows)
-res.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\results_sweep3.csv", index=False)
+res.to_csv(str(_ROOT / "results_sweep3.csv"), index=False)
 print(f"\nTotal: {len(res)} backtests -> results_sweep3.csv")
 
 print("\n=== Por GATILLO (mediana) ===")

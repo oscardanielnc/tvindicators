@@ -1,10 +1,14 @@
 """Resumen integral de las 44 estrategias: per-estrategia (tr/mes, exp neto) + portafolio
 combinado (vol-parity 1/σ): rentabilidad MENSUAL esperada (neta de ganancias y pérdidas),
 maxDD, Sharpe, trades/mes totales. Uso: python gen_summary.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\valida_roster_completo.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/valida_roster_completo.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # entry_array(S1-21), coin_arrays, COIN_TF, run_f, met, load_fund, DATA, I, filt_arrays, build_tr, TOP8, daily_pnl
 
 from tvbot import strategies as STRAT

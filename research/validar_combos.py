@@ -10,10 +10,14 @@ Tres pruebas para separar señal real de sobreajuste:
 Reusa el motor de salida de poc_sweep_filter.py + funding (paridad engine.py / portafolio.py).
 Uso: python validar_combos.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_sweep_filter.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_sweep_filter.py"), encoding="utf-8").read()
 exec(src.split("TFMAP =")[0])   # detect_sweeps, recent, roster_entries, run, I, DATA, MAKER, TAKER, SLIP, WARM
 
 FUND = "D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet"

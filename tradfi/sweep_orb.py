@@ -12,6 +12,10 @@ Por día y ticker:
 Gate honesto: expectancy neto>0 en LONG y SHORT (dos lados), año-a-año, PF>1.1.
 Uso: python tradfi/sweep_orb.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 from __future__ import annotations
 import os
 import numpy as np
@@ -155,7 +159,7 @@ def main():
     t = run(sym_data, 15, None)
     for sym in sym_data:
         show(sym, t[t.sym == sym])
-    t.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\tradfi\results_orb.csv", index=False)
+    t.to_csv(str(_ROOT / "tradfi/results_orb.csv"), index=False)
 
     # ── REFINACION: filtro de volatilidad (solo rangos de apertura amplios) ──
     print("\n===== REFINACION: filtro por amplitud del OR (OR=30min, salida cierre) =====")

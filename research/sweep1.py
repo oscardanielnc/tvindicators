@@ -1,6 +1,10 @@
 # Barrido 1: B-Xtrender +/- Donchian Trend
 # 13 monedas x {15m,1h} x {long,short} x 4 entradas x 2 salidas. IS<=2025-12 / OOS 2026.
 # Costos: entrada/salida por senal = maker 0.02%; salida por stop = taker 0.045% + slip 0.02%.
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 import os
@@ -119,7 +123,7 @@ for coin in COINS:
     print(f"{coin} ok", flush=True)
 
 res = pd.DataFrame(rows)
-res.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\results_sweep1.csv", index=False)
+res.to_csv(str(_ROOT / "results_sweep1.csv"), index=False)
 print(f"\nTotal filas: {len(res)}  (guardado en results_sweep1.csv)")
 
 piv = res.pivot_table(index=["entry", "exit", "side", "tf"], columns="period",

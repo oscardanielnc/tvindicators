@@ -1,9 +1,13 @@
 """Chequeo de robustez de los supervivientes de reversion (batch 2) mas solidos.
 Sensibilidad al umbral/exit + correlacion vs roster (proxy). Uso: python valida_meanrev.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_meanrev.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_meanrev.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # run_mr, signals, target, met, split_met, load_fund, DATA, I, roster_pnl_daily
 
 # top robustos (IS≈OOS, PF>1.4 ambos, años+): (coin, sig, side, thr, trend, exit, stop)

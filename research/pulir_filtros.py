@@ -13,11 +13,15 @@ Filtros combinables (alineados al lado de cada estrategia):
 Reusa el motor de salida de poc_sweep_filter.py (paridad con engine.py).
 Uso: python pulir_filtros.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import itertools
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_sweep_filter.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_sweep_filter.py"), encoding="utf-8").read()
 exec(src.split("TFMAP =")[0])   # detect_sweeps, recent, roster_entries, run, I, DATA, WARM, etc.
 
 TFMAP = {"S3-TRX-L": "15m", "S7-AVAX-L": "15m"}

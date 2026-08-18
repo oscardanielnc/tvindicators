@@ -1,9 +1,13 @@
 """Validacion de los top de batch 3: sensibilidad de params + correlacion DIRECTA con el
 short del mismo par que ya esta en el roster (redundancia). Uso: python valida_batch3.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_batch3.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_batch3.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # fisher, kama, adx_dmi, vortex, squeeze_momentum, run_f, met, filt_arrays, load_fund, DATA, I, split_met
 
 # candidato -> (coin, kind, side, filtros) + short existente del mismo par para corr directa

@@ -1,10 +1,14 @@
 """Validacion batch 4: ¿el edge de volumen es NUEVO o redundante con los shorts del roster?
 Para cada candidato robusto (IS>0 y OOS>0): sensibilidad + corr directa vs la(s) estrategia(s)
 del mismo par ya en el roster. Uso: python valida_batch4.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_batch4.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_batch4.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # obv_sig, cmf_sig, fi_sig, stc_sig, run_f, met, filt_arrays, load_fund, DATA, I, split_met
 
 SIGFN = {"OBV": obv_sig, "CMF": cmf_sig, "FI": fi_sig, "STC": stc_sig}

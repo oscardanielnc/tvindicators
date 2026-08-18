@@ -1,8 +1,12 @@
 # Confirmacion (sensibilidad + funding) de candidatos 9-13 + 2 upgrades
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\sweep3.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/sweep3.py"), encoding="utf-8").read()
 exec(src.split("def prep(")[0])   # helpers: pine_*, t3, tema, dch_trend, supertrend_dir, hacolt
 
 MAKER, TAKER, SLIP, WARMUP = 0.0002, 0.00045, 0.0002, 300

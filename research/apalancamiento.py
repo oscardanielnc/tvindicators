@@ -1,11 +1,15 @@
 # Apalancamiento por anclaje de maxDD (metodo kepler: biseccion) sobre el portafolio de 9
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import io, sys
 import numpy as np
 import pandas as pd
 
 buf = io.StringIO()
 old = sys.stdout; sys.stdout = buf
-exec(open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\portafolio.py", encoding="utf-8").read())
+exec(open(str(_ROOT / "research/portafolio.py"), encoding="utf-8").read())
 sys.stdout = old
 # disponibles: D (retornos diarios por estrategia), w (pesos), port (retorno diario portafolio), stats
 

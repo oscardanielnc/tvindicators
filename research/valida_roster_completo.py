@@ -10,10 +10,14 @@ respondo la pregunta de riesgo que queda:
 
 Uso: python valida_roster_completo.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\valida_profunda_nuevos.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/valida_profunda_nuevos.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # TOP8, daily_pnl, build_tr, run_f, met, filt_arrays, load_fund, DATA, I, basket_stats...
 
 # --- reconstruccion array-form de las 21 entradas (fiel a strategies.py) ---

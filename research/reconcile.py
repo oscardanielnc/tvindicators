@@ -5,6 +5,10 @@ edit que toca solo una de las dos), la comparación live-vs-backtest queda corru
 Esto lo verifica: para cada estrategia, sobre velas recientes, compara sN_entry(df[:k+1]) (camino
 vivo) contra el array del backtest en k. Reporta mismatches. Uso: python reconcile.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import sys
 import numpy as np
 import pandas as pd
@@ -14,7 +18,7 @@ try:                                    # consola/hook en Windows suele ser cp12
 except Exception:
     pass
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\gen_summary.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/gen_summary.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # COIN_TF, coin_arrays, entry_array, TOP8_SID, SIGFN, LATE, I, filt_arrays, getdf, STRAT
 
 from tvbot import strategies as STRAT

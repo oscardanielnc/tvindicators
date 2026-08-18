@@ -10,10 +10,14 @@ Señales nuevas:
 
 Uso: python poc_batch3.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_indicadores_nuevos.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_indicadores_nuevos.py"), encoding="utf-8").read()
 exec(src.split("def main(")[0])  # I, DATA, MAKER/TAKER/SLIP, WARM, run_f, met, filt_arrays, load_fund, all_coins, FILTER_SETS, squeeze_momentum, vortex, roster_pnl_daily
 
 

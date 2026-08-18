@@ -1,8 +1,12 @@
 # Tabla consolidada de candidatos (sweep1 validados + sweep2 pendientes), con funding real
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\sweep2.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/sweep2.py"), encoding="utf-8").read()
 exec(src.split("SKIP_BX")[0])          # solo defs: pine_*, t3, donch, supertrend_dir, prep, run
 
 FUND = {c: (rf"D:/OSCAR/Documents/Trading Proyects/Oscilion/data/funding/binanceusdm/{c}_USDT_USDT.parquet", "ts")

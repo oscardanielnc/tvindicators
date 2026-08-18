@@ -1,10 +1,14 @@
 """Validacion batch 5: ¿los momentum-systems aportan algo NUEVO o son redundantes?
 Foco en candidatos de MONEDA NUEVA (no en roster). corr vs roster + corr mutua + IS/OOS.
 Uso: python valida_batch5.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_batch5.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_batch5.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # ichimoku, kst, tsi, ao, run_f, met, filt_arrays, load_fund, DATA, I, FILTER_SETS, split_met, roster_pnl_daily
 
 SIGFN = {"ICHI": ichimoku, "KST": kst, "TSI": tsi, "AO": ao}

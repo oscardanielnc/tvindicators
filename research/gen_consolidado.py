@@ -5,10 +5,14 @@ portafolio combinado vol-parity a 1x + anclas de apalancamiento por DD.
 
 Uso: python gen_consolidado.py   (imprime el markdown; lo escribo a CONSOLIDADO.md aparte)
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\valida_roster_completo.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/valida_roster_completo.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # COIN_TF, coin_arrays, entry_array, run_f, met, load_fund, DATA, I, TOP8, daily_pnl, build_tr, eff_bets...
 
 from tvbot import strategies as STRAT

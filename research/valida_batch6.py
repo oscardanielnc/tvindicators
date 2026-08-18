@@ -1,9 +1,13 @@
 """Validación batch 6 (Zero Lag): sensibilidad a length/mult + corr vs roster + corr mutua.
 Foco en monedas nuevas y balance IS/OOS. Uso: python valida_batch6.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_batch6.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_batch6.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # zl_flip, zl_entry, run_f, met, filt_arrays, load_fund, DATA, I, FILTER_SETS, split_met, roster_pnl_daily
 
 SIGFN = {"ZLflip": zl_flip, "ZLentry": zl_entry}

@@ -7,11 +7,15 @@ Reusa el motor de portafolio.py. S2 se reconstruye con su salida de PRODUCCION
 (flip Trend Meter rojo + stop de seguridad 3xATR, sin timeout), no el atrstop viejo.
 Sizing fiel al bot: cada trade = $100 margen x5 = $500 nominal sobre $1000.
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
 # --- traer el motor y helpers de portafolio.py (sin correr su analisis) ---
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\portafolio.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/portafolio.py"), encoding="utf-8").read()
 exec(src.split("daily, stats =")[0])   # load_df, load_fund, atr14, engine, tm_trig, st_flips, rib_str, build, hacolt...
 
 NOTIONAL = 500.0        # $100 margen x 5

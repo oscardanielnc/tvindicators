@@ -6,11 +6,15 @@ Gate estricto: historia>=3.4 años (train/test = regímenes reales), train_exp>4
 PF>=1.5, n>=50, sensibilidad min>0. Cap 2 por moneda. Luego matriz de correlación.
 Uso: python shortlist.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import os, glob
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\pipeline_universo.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/pipeline_universo.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # load_coin, run_f, templates, fil_arrays, met, split_met, detect_sweeps, ALREADY, FILTER_SETS
 
 HIST_MIN, TRAIN_MIN, TEST_MIN, PF_MIN, N_MIN, CAP = 3.4, 40, 40, 1.5, 50, 2

@@ -6,10 +6,14 @@ descartar (sobreajuste / fallan fuera de muestra).
 
 Uso: python validar_nuevos.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\expandir_universo.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/expandir_universo.py"), encoding="utf-8").read()
 exec(src.split("def main(")[0])   # templates, run_f, load_fund, detect_sweeps, recent, I, DATA, met, WARM
 
 

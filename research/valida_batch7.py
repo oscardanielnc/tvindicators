@@ -1,10 +1,14 @@
 """Validación batch 7a: candidatos SRB (S/R High Volume Boxes). KVO se descarta (redundante).
 Sensibilidad (lookback/vol_len) + corr vs roster + corr vs incumbente del mismo par/lado.
 Uso: python valida_batch7.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_batch7.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_batch7.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # srbreak, run_f, met, filt_arrays, load_fund, DATA, I, FILTER_SETS, split_met, roster_pnl_daily
 
 # candidatos SRB con IS/OOS balanceado: (coin, side, filtros)  + incumbente del mismo par/lado para corr

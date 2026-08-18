@@ -4,10 +4,14 @@ calidad (expectancy alta, ambos regímenes positivos, PF>=1.5, n>=50), valida se
 Si ninguno da la talla -> DROP. Sobrevivientes -> implementar.
 Uso: python tune_nuevos.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\pipeline_universo.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/pipeline_universo.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # load_coin, run_f, templates, fil_arrays, met, split_met, detect_sweeps, load_fund
 
 SETUPS = [("XLM", "TM-L"), ("RUNE", "STdonhac-L"), ("IMX", "STdonhac-L"), ("FLOW", "SThac-L"),

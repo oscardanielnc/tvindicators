@@ -23,6 +23,10 @@ Aquí reportamos full y OOS(≥2025) para contraste, etiquetados honestamente.
 
 Uso: python deflated_sharpe.py [N_pruebas]   (N_pruebas por defecto 185, el nº de candidatos probados)
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import sys
 import math
 from statistics import NormalDist
@@ -34,7 +38,7 @@ try:                                    # consola Windows suele ser cp1252; el r
 except Exception:
     pass
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\gen_summary.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/gen_summary.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # tr_for, STRAT, ...
 
 from tvbot import strategies as STRAT

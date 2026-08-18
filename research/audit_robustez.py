@@ -7,10 +7,14 @@ Mide los modos típicos de inflar el Sharpe de backtest:
   5) Sesgo de selección: cuántas estrategias serían significativas tras corregir por nº de pruebas.
 Uso: python audit_robustez.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\gen_summary.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/gen_summary.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])  # tr_for, STRAT, ...
 
 from tvbot import strategies as STRAT

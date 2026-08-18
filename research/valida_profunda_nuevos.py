@@ -9,10 +9,14 @@ reales disfrazadas de muchas. Aqui:
 
 Uso: python valida_profunda_nuevos.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\valida_indicadores_nuevos.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/valida_indicadores_nuevos.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])   # build_tr, CANDS, FN, run_f, met, filt_arrays, squeeze_momentum, vortex, load_fund, DATA, I, roster_pnl_daily...
 
 # las 8 de alta conviccion (#1-8 del veredicto)

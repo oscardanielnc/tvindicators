@@ -1,6 +1,10 @@
 # Barrido 2: 4 indicadores (B-Xtrender, Donchian, Supertrend, Trend Meter)
 # Gatillos x filtros de regimen (AND de subconjuntos) x 13 monedas x {15m,1h} x {L,S}
 # Salida: ATR-stop 2.0 + timeout 48h (validada en sweep1). ST tambien flip-a-flip.
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 from itertools import combinations
@@ -166,7 +170,7 @@ for coin in COINS:
     print(coin, "ok", flush=True)
 
 res = pd.DataFrame(rows)
-res.to_csv(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\results_sweep2.csv", index=False)
+res.to_csv(str(_ROOT / "results_sweep2.csv"), index=False)
 print(f"\nTotal: {len(res)} backtests -> results_sweep2.csv")
 
 print("\n=== Por GATILLO (mediana entre todos los runs) ===")

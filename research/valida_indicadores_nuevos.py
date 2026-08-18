@@ -8,10 +8,14 @@ multiple-comparison. Aqui el gate honesto (mismo que valido S10-S21):
 
 Uso: python valida_indicadores_nuevos.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_indicadores_nuevos.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_indicadores_nuevos.py"), encoding="utf-8").read()
 exec(src.split("def main(")[0])   # I, DATA, run_f, met, squeeze_momentum, vortex, filt_arrays, load_fund, SIGNALS...
 
 # candidatos = supervivientes top del sweep: (coin, signal, side, filtros)

@@ -5,11 +5,15 @@ por estrategia, SIN tope agregado, margen fijo sobre capital0).
 - Concurrencia / exposicion bruta pico
 - Peor racha perdedora analitica por estrategia
 Uso: python riesgo_ruina.py"""
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 import config
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\gen_summary.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/gen_summary.py"), encoding="utf-8").read()
 exec(src.split("\ndef main():")[0])
 
 NOTIONAL_FRAC = config.MARGIN_PCT * config.LEVERAGE  # 0.10*5 = 0.5x capital por trade

@@ -4,10 +4,14 @@ fade -> TP/SL dinámico (SL = swing ∓ atr*mult, TP = entry ± |entry-SL|*RR, R
 Adaptado a 1h con HTF=4h (barLength=4). Costos + funding reales. IS/OOS. Evaluación honesta.
 Uso: python poc_turtlesoup.py
 """
+from pathlib import Path as _P
+import sys as _sys
+_ROOT = _P(__file__).resolve().parents[1]
+_sys.path.insert(0, str(_ROOT))
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\poc_indicadores_nuevos.py", encoding="utf-8").read()
+src = open(str(_ROOT / "research/poc_indicadores_nuevos.py"), encoding="utf-8").read()
 exec(src.split("def main(")[0])  # I, DATA, MAKER, TAKER, SLIP, WARM, load_fund, all_coins
 
 BARLEN = 4        # HTF 4h / TF 1h
