@@ -5,88 +5,156 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tvbot — Paper Trading</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;
---green:#3fb950;--red:#f85149;--blue:#58a6ff;--yellow:#d29922}
+/* ===================================================================
+   tvbot — sistema visual "Luminous"  (design/luminous/*)
+   Tokens extraidos del design system de Stitch. No inventar colores:
+   cualquier color nuevo se añade aqui primero.
+   =================================================================== */
+:root{
+  /* superficies */
+  --bg:#faf9f6; --card:#ffffff; --surface-container:#efeeeb; --surface-low:#f4f3f1;
+  --border:#E1DFD8; --border-low:#F1EFE9; --hover:#F1EFE9;
+  /* texto */
+  --text:#2D3135; --muted:#757B80;
+  /* marca */
+  --primary:#446276; --on-primary:#ffffff; --primary-container:#c8e7ff;
+  --on-primary-container:#123345;
+  /* semantica: verde=long/positivo, rojo=short/negativo, ambar=abierto */
+  --green:#4c6955; --green-bg:#c7e8cf; --green-mint:#B4D4BC;
+  --red:#93000a; --red-bg:#ffdad6; --red-coral:#F2A6A2;
+  --yellow:#6e3735; --yellow-bg:#ffdad7; --yellow-solid:#cb8581;
+  --info:#A7C7E7; --lavender:#B2B5D9;
+  /* forma y medida */
+  --r-sm:2px; --r:4px; --r-lg:8px; --r-full:12px; --maxw:1340px;
+  --font-ui:'Hanken Grotesk',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
-header{display:flex;align-items:center;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border);
-background:var(--card);position:sticky;top:0;z-index:10;flex-wrap:wrap}
-header h1{font-size:18px;font-weight:600}
-header .pill{background:#1f6feb22;color:var(--blue);border:1px solid #1f6feb55;border-radius:20px;
-padding:3px 12px;font-size:12px}
-nav{margin-left:auto;display:flex;gap:8px}
-nav button{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 18px;
-border-radius:8px;cursor:pointer;font-size:14px}
-nav button.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
-main{padding:20px;max-width:1300px;margin:0 auto}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
-.card .lbl{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
-.card .val{font-size:24px;font-weight:700;margin-top:6px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;
+line-height:20px;-webkit-font-smoothing:antialiased}
+::selection{background:var(--primary);color:#fff}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+/* --- cabecera --- */
+/* borde inferior a todo el ancho, contenido centrado a --maxw sin wrapper extra */
+header{display:flex;align-items:center;gap:16px;min-height:64px;
+padding:8px max(20px, calc((100% - var(--maxw)) / 2));
+border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:10;
+flex-wrap:wrap}
+header h1{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--primary)}
+header .pill{background:var(--surface-container);color:var(--muted);border:1px solid var(--border-low);
+border-radius:var(--r);padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;
+font-family:var(--font-mono)}
+nav{margin-left:auto;display:flex;gap:2px}
+nav button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+padding:10px 16px;cursor:pointer;font-size:14px;font-family:inherit;transition:.15s}
+nav button:hover{color:var(--text);background:var(--surface-low)}
+nav button.active{color:var(--primary);font-weight:700;border-bottom-color:var(--primary)}
+main{padding:24px 20px;max-width:var(--maxw);margin:0 auto}
+
+/* --- tarjetas KPI --- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:24px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border-low);border-radius:var(--r-lg);
+padding:16px;transition:border-color .15s}
+.card:hover{border-color:var(--border)}
+.card .lbl{color:var(--muted);font-size:11px;line-height:16px;text-transform:uppercase;
+letter-spacing:1px;font-weight:600}
+.card .val{font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.5px;margin-top:8px;
+font-variant-numeric:tabular-nums}
 .card .sub{color:var(--muted);font-size:12px;margin-top:4px}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:20px}
-.panel h2{font-size:15px;margin-bottom:14px;color:var(--muted);font-weight:600}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* --- paneles --- */
+.panel{background:var(--card);border:1px solid var(--border-low);border-radius:var(--r-lg);
+padding:20px;margin-bottom:24px}
+.panel h2{font-size:15px;line-height:20px;letter-spacing:.5px;margin-bottom:16px;
+color:var(--text);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media(max-width:900px){.grid2{grid-template-columns:1fr}}
 .pos{color:var(--green)}.neg{color:var(--red)}.mut{color:var(--muted)}
-table{width:100%;border-collapse:collapse;font-size:13px}
+
+/* --- tablas: cifras siempre monoespaciadas y tabulares --- */
+table{width:100%;border-collapse:collapse;font-size:13px;line-height:18px}
 th{color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);
-font-weight:600;white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid #21262d;white-space:nowrap}
-tr:hover td{background:#1c2128}
+font-weight:600;white-space:nowrap;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+td{padding:8px 10px;border-bottom:1px solid var(--border-low);white-space:nowrap;
+font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+tr:hover td{background:var(--hover)}
+thead th{position:sticky;top:0;background:var(--card);z-index:1}
 .tbl-wrap{overflow-x:auto}
+
+/* --- chips de estrategia --- */
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.chip{background:none;border:1px solid var(--border);color:var(--text);padding:8px 14px;
-border-radius:8px;cursor:pointer;font-size:13px}
-.chip.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.chip{background:var(--card);border:1px solid var(--border-low);color:var(--text);padding:8px 14px;
+border-radius:var(--r-lg);cursor:pointer;font-size:13px;font-family:inherit;transition:.15s}
+.chip:hover{border-color:var(--border);background:var(--surface-low)}
+.chip.active{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 .chip .tag{font-size:11px;color:var(--muted);display:block}
-.chip.active .tag{color:#c9d8ff}
-.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
-.badge.long{background:#3fb95022;color:var(--green)}
-.badge.short{background:#f8514922;color:var(--red)}
-.badge.open{background:#d2992222;color:var(--yellow)}
-.badge.big{font-size:14px;padding:5px 16px;border-radius:8px;letter-spacing:1px}
-.badge.big.long{background:var(--green);color:#04260d}
-.badge.big.short{background:var(--red);color:#2b0503}
-.chip .side-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;margin-left:4px}
-.chip .side-tag.long{background:var(--green);color:#04260d}
-.chip .side-tag.short{background:var(--red);color:#2b0503}
-.count-badge{display:inline-block;min-width:20px;text-align:center;background:#1f6feb;color:#fff;
-border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px}
-.count-badge.zero{background:#21262d;color:var(--muted)}
-.chip.active .count-badge{background:#fff;color:#1f6feb}
+.chip.active .tag{color:#d5e4ee}
+
+/* --- badges --- */
+.badge{padding:2px 8px;border-radius:var(--r);font-size:11px;font-weight:600;letter-spacing:.5px}
+.badge.long{background:var(--green-bg);color:var(--green)}
+.badge.short{background:var(--red-bg);color:var(--red)}
+.badge.open{background:var(--yellow-bg);color:var(--yellow)}
+.badge.big{font-size:14px;padding:5px 16px;border-radius:var(--r-lg);letter-spacing:1px}
+.badge.big.long{background:var(--green-mint);color:#12281a}
+.badge.big.short{background:var(--red-coral);color:#4a0f0c}
+.chip .side-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:var(--r);margin-left:4px}
+.chip .side-tag.long{background:var(--green-mint);color:#12281a}
+.chip .side-tag.short{background:var(--red-coral);color:#4a0f0c}
+.count-badge{display:inline-block;min-width:20px;text-align:center;background:var(--primary);
+color:#fff;border-radius:var(--r);font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px;
+font-family:var(--font-mono)}
+.count-badge.zero{background:var(--surface-container);color:var(--muted)}
+.chip.active .count-badge{background:#fff;color:var(--primary)}
+.badge.pass{background:var(--green-mint);color:#12281a}
+.badge.ok{background:var(--info);color:#0d2b45}
+.badge.collect{background:var(--surface-container);color:var(--muted)}
+.badge.watch{background:var(--yellow-bg);color:var(--yellow)}
+.badge.fail{background:var(--red-coral);color:#4a0f0c}
+.badge.none{background:var(--surface-container);color:var(--muted)}
+.badge.titular{background:var(--lavender);color:#25284a}
+.badge.suplente{background:var(--surface-container);color:var(--muted)}
+
+/* --- controles --- */
 .strat-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.strat-toolbar input[type=text]{background:#0d1117;border:1px solid var(--border);color:var(--text);
-padding:9px 12px;border-radius:8px;font-family:inherit;min-width:220px;flex:1}
-.seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.seg-btn{background:none;border:none;color:var(--muted);padding:9px 16px;cursor:pointer;font-size:13px}
-.seg-btn.active{background:#1f6feb;color:#fff}
-.chk{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.strat-toolbar input[type=text]{background:var(--card);border:1px solid var(--border-low);
+color:var(--text);padding:9px 12px;border-radius:var(--r-lg);font-family:inherit;min-width:220px;flex:1}
+.strat-toolbar input[type=text]:focus{outline:none;border-color:var(--primary)}
+.seg{display:flex;border:1px solid var(--border-low);border-radius:var(--r-lg);overflow:hidden;
+background:var(--card)}
+.seg-btn{background:none;border:none;color:var(--muted);padding:9px 16px;cursor:pointer;
+font-size:13px;font-family:inherit;transition:.15s}
+.seg-btn:hover{background:var(--surface-low);color:var(--text)}
+.seg-btn.active{background:var(--primary);color:var(--on-primary)}
+.chk{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;
+white-space:nowrap}
 .warn-mark{color:var(--yellow);margin-left:5px;font-size:12px}
-.note-banner{background:#d2992218;border:1px solid #d2992255;color:var(--yellow);border-radius:8px;
-padding:9px 12px;margin-top:10px;font-size:13px}
-.badge.pass{background:var(--green);color:#04260d}
-.badge.ok{background:#58a6ff22;color:var(--blue);border:1px solid #58a6ff55}
-.badge.collect{background:#8b949e22;color:var(--muted)}
-.badge.watch{background:#d2992222;color:var(--yellow);border:1px solid #d2992255}
-.badge.fail{background:var(--red);color:#2b0503}
-.badge.none{background:#21262d;color:var(--muted)}
-.badge.titular{background:#1f6feb22;color:var(--blue)}
-.badge.suplente{background:#8b949e22;color:var(--muted)}
-.grouphdr{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;
-font-weight:700;margin:16px 0 8px;width:100%;border-top:1px solid var(--border);padding-top:12px}
+.note-banner{background:var(--yellow-bg);border:1px solid var(--yellow-solid);color:var(--yellow);
+border-radius:var(--r-lg);padding:9px 12px;margin-top:10px;font-size:13px}
+.grouphdr{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;
+font-weight:600;margin:16px 0 8px;width:100%;border-top:1px solid var(--border-low);padding-top:12px}
 .ind-list{list-style:none;display:flex;flex-direction:column;gap:6px}
-.ind-list li{background:#0d1117;border:1px solid var(--border);border-radius:8px;
-padding:8px 12px;font-size:13px}
-.ind-list .dot{color:var(--blue);margin-right:8px}
-input[type=date],input[type=datetime-local]{background:#0d1117;border:1px solid var(--border);
-color:var(--text);padding:7px 10px;border-radius:8px;font-family:inherit}
-.btn{background:#238636;border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px}
-.btn.secondary{background:none;border:1px solid var(--border);color:var(--text)}
-pre{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;
-max-height:400px;overflow:auto;white-space:pre-wrap;margin-top:12px}
-.footer{color:var(--muted);font-size:12px;text-align:center;padding:14px}
+.ind-list li{background:var(--surface-low);border:1px solid var(--border-low);
+border-radius:var(--r-lg);padding:8px 12px;font-size:13px}
+.ind-list .dot{color:var(--primary);margin-right:8px}
+input[type=date],input[type=datetime-local]{background:var(--card);border:1px solid var(--border-low);
+color:var(--text);padding:7px 10px;border-radius:var(--r-lg);font-family:inherit}
+.btn{background:var(--primary);border:none;color:var(--on-primary);padding:8px 16px;
+border-radius:var(--r-lg);cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;
+transition:.15s}
+.btn:hover{opacity:.88}
+.btn.secondary{background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:400}
+.btn.secondary:hover{background:var(--surface-low)}
+pre{background:var(--surface-low);border:1px solid var(--border-low);border-radius:var(--r-lg);
+padding:12px;font-size:12px;max-height:400px;overflow:auto;white-space:pre-wrap;margin-top:12px;
+font-family:var(--font-mono);line-height:1.6}
+.footer{color:var(--muted);font-size:12px;text-align:center;padding:20px;
+border-top:1px solid var(--border-low);margin-top:8px}
 canvas{max-height:330px}
 </style>
 </head>
@@ -274,6 +342,18 @@ function show(p){
   if (p==='logs') loadEvents();
 }
 
+/* Paleta de los charts leida del CSS (sistema Luminous) para que no diverja
+   del resto de la UI si se tocan los tokens en :root. */
+const CSSV = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const CH = {
+  get line(){ return CSSV('--primary') },
+  get green(){ return CSSV('--green-mint') },
+  get red(){ return CSSV('--red-coral') },
+  get info(){ return CSSV('--info') },
+  get muted(){ return CSSV('--muted') },
+  get grid(){ return CSSV('--border-low') },
+};
+
 function mkChart(id, cfg){
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart($(id), cfg);
@@ -306,24 +386,24 @@ async function loadDash(){
 
   const eqs = await j('/api/equity?limit=2000');
   mkChart('ch-equity', {type:'line', data:{labels:eqs.map(r=>fmtTs(r.ts)),
-    datasets:[{data:eqs.map(r=>r.equity), borderColor:'#58a6ff', borderWidth:2,
-    pointRadius:0, fill:{target:{value:1000}, above:'#3fb95018', below:'#f8514918'}, tension:.25}]},
-    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{maxTicksLimit:8,color:'#8b949e'},grid:{color:'#21262d'}},
-    y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}, animation:false}});
+    datasets:[{data:eqs.map(r=>r.equity), borderColor:CH.line, borderWidth:2,
+    pointRadius:0, fill:{target:{value:1000}, above:CH.green+'40', below:CH.red+'40'}, tension:.25}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{maxTicksLimit:8,color:CH.muted},grid:{color:CH.grid}},
+    y:{ticks:{color:CH.muted},grid:{color:CH.grid}}}, animation:false}});
 
   const sm = await j('/api/summary');
   const names = sm.map(s=>s.strategy_id);
   mkChart('ch-ntrades', {type:'bar', data:{labels:names,
-    datasets:[{label:'cerrados', data:sm.map(s=>s.n_trades), backgroundColor:'#58a6ff'},
-              {label:'ganados', data:sm.map(s=>s.wins), backgroundColor:'#3fb950'}]},
-    options:{plugins:{legend:{labels:{color:'#8b949e'}}},
-    scales:{x:{ticks:{color:'#8b949e'},grid:{display:false}},
-    y:{ticks:{color:'#8b949e',precision:0},grid:{color:'#21262d'}}}, animation:false}});
+    datasets:[{label:'cerrados', data:sm.map(s=>s.n_trades), backgroundColor:CH.info},
+              {label:'ganados', data:sm.map(s=>s.wins), backgroundColor:CH.green}]},
+    options:{plugins:{legend:{labels:{color:CH.muted}}},
+    scales:{x:{ticks:{color:CH.muted},grid:{display:false}},
+    y:{ticks:{color:CH.muted,precision:0},grid:{color:CH.grid}}}, animation:false}});
   mkChart('ch-pnl', {type:'bar', data:{labels:names,
-    datasets:[{data:sm.map(s=>s.pnl_total), backgroundColor:sm.map(s=>s.pnl_total>=0?'#3fb950':'#f85149')}]},
+    datasets:[{data:sm.map(s=>s.pnl_total), backgroundColor:sm.map(s=>s.pnl_total>=0?CH.green:CH.red)}]},
     options:{plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#8b949e'},grid:{display:false}},
-    y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}, animation:false}});
+    scales:{x:{ticks:{color:CH.muted},grid:{display:false}},
+    y:{ticks:{color:CH.muted},grid:{color:CH.grid}}}, animation:false}});
 }
 
 /* ---------- producción (tracker de cartera) ---------- */

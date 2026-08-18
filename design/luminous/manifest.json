@@ -1,0 +1,26 @@
+{
+ "estrategias": {
+  "screenId": "6b2a64ea37414ac18388eda24da3a454",
+  "html": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\estrategias.html",
+  "title": "tvbot - Estrategias (Luminous)",
+  "png": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\estrategias.png"
+ },
+ "evaluacion": {
+  "screenId": "febb7991c9664b9592a7c118d0a7980d",
+  "html": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\evaluacion.html",
+  "title": "tvbot - Evaluación (Luminous)",
+  "png": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\evaluacion.png"
+ },
+ "dashboard": {
+  "screenId": "52caffa735054d57872e60550db6ea70",
+  "html": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\dashboard.html",
+  "title": "tvbot - Dashboard (Luminous)",
+  "png": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\dashboard.png"
+ },
+ "logs": {
+  "screenId": "f6479144230d4276a0ba713fc250f76f",
+  "html": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\logs.html",
+  "title": "tvbot - Logs (Luminous)",
+  "png": "D:\\OSCAR\\Documents\\Trading Proyects\\tvindicators\\design\\luminous\\logs.png"
+ }
+}

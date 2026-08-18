@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Strategy Evaluation - Luminous Quant</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+        }
+    </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#7d9bb1",
+                        "on-primary-fixed-variant": "#2c4a5d",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#8a4d4b",
+                        "on-error": "#ffffff",
+                        "text-main": "#2D3135",
+                        "primary-fixed-dim": "#accae2",
+                        "surface-container-high": "#e9e8e5",
+                        "inverse-surface": "#2f312f",
+                        "secondary-fixed": "#caead2",
+                        "background": "#faf9f6",
+                        "surface-variant": "#e3e2e0",
+                        "secondary-fixed-dim": "#aeceb6",
+                        "tertiary-container": "#cb8581",
+                        "primary": "#446276",
+                        "on-background": "#1a1c1a",
+                        "on-primary-container": "#123345",
+                        "on-secondary-container": "#4c6955",
+                        "border-low": "#F1EFE9",
+                        "outline-variant": "#c2c7cc",
+                        "primary-fixed": "#c8e7ff",
+                        "on-secondary-fixed": "#042011",
+                        "on-primary-fixed": "#001e2e",
+                        "surface": "#FFFFFF",
+                        "on-secondary": "#ffffff",
+                        "alert-coral": "#F2A6A2",
+                        "secondary-container": "#c7e8cf",
+                        "surface-container": "#efeeeb",
+                        "on-secondary-fixed-variant": "#314d3b",
+                        "secondary": "#486551",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e3e2e0",
+                        "on-tertiary-fixed-variant": "#6e3735",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#370c0d",
+                        "outline": "#72787d",
+                        "surface-dim": "#dbdad7",
+                        "surface-bright": "#faf9f6",
+                        "error": "#ba1a1a",
+                        "on-surface": "#1a1c1a",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#accae2",
+                        "surface-container-low": "#f4f3f1",
+                        "border-mid": "#E1DFD8",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "success-mint": "#B4D4BC",
+                        "tertiary-fixed": "#ffdad7",
+                        "on-tertiary": "#ffffff",
+                        "info-sky": "#A7C7E7",
+                        "on-surface-variant": "#42474c",
+                        "inverse-on-surface": "#f2f1ee",
+                        "text-muted": "#757B80",
+                        "action-lavender": "#B2B5D9",
+                        "on-tertiary-container": "#51201f",
+                        "surface-tint": "#446276"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "card-padding": "1rem",
+                        "max-width": "1340px",
+                        "panel-gap": "1.5rem",
+                        "table-cell-x": "0.625rem",
+                        "base-padding": "1.25rem",
+                        "table-cell-y": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "headline-panel": ["Hanken Grotesk"],
+                        "body-main": ["Hanken Grotesk"],
+                        "display-kpi": ["Hanken Grotesk"],
+                        "table-data": ["JetBrains Mono"],
+                        "label-caps": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-panel": ["15px", { "lineHeight": "20px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+                        "body-main": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-kpi": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.5px", "fontWeight": "700" }],
+                        "table-data": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "1px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-text-main font-body-main text-body-main min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface border-b border-border-mid w-full sticky top-0 z-40">
+<div class="flex justify-between items-center w-full px-base-padding max-w-max-width mx-auto h-16">
+<!-- Brand & Search -->
+<div class="flex items-center gap-8">
+<div class="font-display-kpi text-display-kpi text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span>
+                    tvbot
+                </div>
+<div class="hidden md:flex items-center bg-surface-container-low border border-border-mid rounded-md px-3 py-1.5 focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-text-muted text-[18px] mr-2">search</span>
+<input class="bg-transparent border-none outline-none text-body-main font-body-main text-text-main placeholder-text-muted w-48 focus:ring-0 p-0" placeholder="Search strategies..." type="text"/>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center h-full gap-8">
+<a class="h-full flex items-center text-text-muted hover:text-text-main transition-colors font-body-main text-body-main" href="#">Dashboard</a>
+<a class="h-full flex items-center text-text-muted hover:text-text-main transition-colors font-body-main text-body-main" href="#">Production</a>
+<a class="h-full flex items-center text-primary font-bold border-b-2 border-primary pt-[2px] font-body-main text-body-main" href="#">Evaluation</a>
+<a class="h-full flex items-center text-text-muted hover:text-text-main transition-colors font-body-main text-body-main" href="#">Strategies</a>
+<a class="h-full flex items-center text-text-muted hover:text-text-main transition-colors font-body-main text-body-main" href="#">Logs</a>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="text-text-muted hover:text-text-main transition-colors p-1 cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">sensors</span>
+</button>
+<button class="text-text-muted hover:text-text-main transition-colors p-1 cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">link</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-border-mid overflow-hidden border border-border-low ml-2">
+<img alt="User account profile" class="w-full h-full object-cover" data-alt="A professional corporate headshot of a financial analyst, well-lit against a clean, minimalist white background. The lighting is soft and bright, embodying a modern, sophisticated FinTech aesthetic. The palette is neutral with subtle cool tones, conveying trust and clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnpPSp26uLsMzonv6Svj7gTlqIqMceoHEmy8GdWHEHAnt8VE4nPeHEoAP41FEyUaFU6WgDsTngXxB5XoIO5DM7YGoxcdrqJsGoPmp7HJw4e1h0ODsOrFmHjm5bpJbRG0mNmObQG0zTprIM_Qg-arzwCCQ7A7zmaiSPevazkh2jVOV-249PA_lJ2OHrcmkTJ-5ffAIpfxhR7S7nDtaCCvDt9Zn9DtNXuWbyhAvRn3PTXt5BjIWLd7uu"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-max-width mx-auto px-base-padding py-panel-gap flex flex-col gap-panel-gap">
+<!-- Page Header -->
+<header class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-panel text-headline-panel text-text-main mb-1">Strategy Evaluation Suite</h1>
+<p class="font-body-main text-body-main text-text-muted">Comparing live production metrics against historical backtest data.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 border border-border-mid rounded-lg font-label-caps text-label-caps text-text-main hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">filter_list</span> Filter
+                </button>
+<button class="px-4 py-2 bg-action-lavender text-surface rounded-lg font-label-caps text-label-caps hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">download</span> Export Report
+                </button>
+</div>
+</header>
+<!-- KPI Cards Row -->
+<section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-card-padding">
+<!-- Card 1 -->
+<div class="bg-surface border border-border-mid rounded-lg p-card-padding flex flex-col justify-between h-28">
+<div class="font-label-caps text-label-caps text-text-muted flex justify-between items-center w-full">
+<span>Live Expectancy</span>
+<span class="material-symbols-outlined text-[16px] text-success-mint">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">0.42</span>
+<span class="font-table-data text-table-data text-success-mint">+0.05</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface border border-border-mid rounded-lg p-card-padding flex flex-col justify-between h-28">
+<div class="font-label-caps text-label-caps text-text-muted flex justify-between items-center w-full">
+<span>BT Expectancy</span>
+<span class="material-symbols-outlined text-[16px] text-text-muted">history</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">0.38</span>
+<span class="font-table-data text-table-data text-text-muted">Baseline</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface border border-border-mid rounded-lg p-card-padding flex flex-col justify-between h-28 relative overflow-hidden">
+<div class="font-label-caps text-label-caps text-text-muted flex justify-between items-center w-full relative z-10">
+<span>Ratio Live/BT</span>
+<span class="bg-success-mint/15 text-[#4c6955] px-2 py-0.5 rounded-full text-[10px]">Optimal</span>
+</div>
+<div class="flex items-baseline gap-2 relative z-10">
+<span class="font-display-kpi text-display-kpi text-text-main">1.10</span>
+</div>
+<!-- Abstract visual element for minimalist depth -->
+<div class="absolute -bottom-4 -right-4 w-16 h-16 bg-success-mint/5 rounded-full"></div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface border border-border-mid rounded-lg p-card-padding flex flex-col justify-between h-28">
+<div class="font-label-caps text-label-caps text-text-muted flex justify-between items-center w-full">
+<span>T-Stat</span>
+<span class="material-symbols-outlined text-[16px] text-info-sky">analytics</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">2.14</span>
+<span class="font-table-data text-table-data text-text-muted">Sig &gt; 95%</span>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="bg-surface border border-border-mid rounded-lg p-card-padding flex flex-col justify-between h-28">
+<div class="font-label-caps text-label-caps text-text-muted flex justify-between items-center w-full">
+<span>Total Trades</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">1,452</span>
+</div>
+</div>
+</section>
+<!-- Main Data Table -->
+<section class="bg-surface border border-border-mid rounded-xl overflow-hidden shadow-sm flex-1 flex flex-col">
+<!-- Table Header Area -->
+<div class="px-card-padding py-4 border-b border-border-mid flex justify-between items-center bg-surface">
+<h2 class="font-headline-panel text-headline-panel text-text-main">Live Performance vs Backtest Comparison</h2>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-text-muted">Sort By:</span>
+<select class="bg-transparent border-none text-body-main font-body-main text-text-main focus:ring-0 p-0 pr-4 cursor-pointer">
+<option>Ratio (Desc)</option>
+<option>Live PnL</option>
+<option>Status</option>
+</select>
+</div>
+</div>
+<!-- Scrollable Table Wrapper -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead class="bg-surface">
+<tr>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap pl-card-padding">Strategy ID</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap">Status</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-right">Live PnL</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-right">BT PnL</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-right">Live Win %</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-right">BT Win %</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-center">Live SR</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-center">BT SR</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-table-cell-x border-b border-border-mid font-normal whitespace-nowrap text-right pr-card-padding">Ratio L/BT</th>
+</tr>
+</thead>
+<tbody>
+<!-- Row 1 -->
+<tr class="border-b border-border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x pl-card-padding font-medium">EQ_MOM_01</td>
+<td class="py-3 px-table-cell-x">
+<span class="bg-success-mint/15 text-[#4c6955] font-label-caps text-label-caps px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success-mint"></span> Live
+                                </span>
+</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">$45,210</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">$41,500</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">54.2%</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">53.8%</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-center">1.85</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-center">1.70</td>
+<td class="font-table-data text-table-data text-success-mint py-3 px-table-cell-x text-right pr-card-padding">1.09</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x pl-card-padding font-medium">FX_CARRY_04</td>
+<td class="py-3 px-table-cell-x">
+<span class="bg-info-sky/15 text-[#446276] font-label-caps text-label-caps px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-info-sky"></span> Watch
+                                </span>
+</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">$12,400</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">$15,200</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">49.8%</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">52.1%</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-center">0.95</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-center">1.20</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right pr-card-padding">0.82</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x pl-card-padding font-medium">CM_TREND_12</td>
+<td class="py-3 px-table-cell-x">
+<span class="bg-alert-coral/15 text-[#93000a] font-label-caps text-label-caps px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-alert-coral"></span> Quit
+                                </span>
+</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">-$8,450</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">$22,000</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">38.5%</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">45.0%</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-center">-0.45</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-center">1.40</td>
+<td class="font-table-data text-table-data text-alert-coral py-3 px-table-cell-x text-right pr-card-padding">-0.38</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x pl-card-padding font-medium">EQ_REV_02</td>
+<td class="py-3 px-table-cell-x">
+<span class="bg-success-mint/15 text-[#4c6955] font-label-caps text-label-caps px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success-mint"></span> Live
+                                </span>
+</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">$67,890</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">$65,100</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">61.2%</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">60.5%</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-center">2.10</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-center">2.05</td>
+<td class="font-table-data text-table-data text-success-mint py-3 px-table-cell-x text-right pr-card-padding">1.04</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-[#F1EFE9] transition-colors group">
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x pl-card-padding font-medium">FI_ARB_01</td>
+<td class="py-3 px-table-cell-x">
+<span class="bg-success-mint/15 text-[#4c6955] font-label-caps text-label-caps px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-success-mint"></span> Live
+                                </span>
+</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">$18,300</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">$18,000</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right">72.1%</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-right">73.0%</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-center">2.85</td>
+<td class="font-table-data text-table-data text-text-muted py-3 px-table-cell-x text-center">2.90</td>
+<td class="font-table-data text-table-data text-text-main py-3 px-table-cell-x text-right pr-card-padding">1.02</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination/Footer area -->
+<div class="px-card-padding py-3 border-t border-border-low flex justify-between items-center bg-surface mt-auto">
+<span class="font-table-data text-table-data text-text-muted">Showing 1 to 5 of 24 strategies</span>
+<div class="flex gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-mid text-text-muted hover:text-text-main hover:bg-surface-container-low disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-mid text-text-main bg-surface-container-low">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-mid text-text-muted hover:text-text-main hover:bg-surface-container-low">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-mid text-text-muted hover:text-text-main hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-background border-t border-border-low w-full mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-base-padding py-table-cell-y max-w-max-width mx-auto">
+<div class="font-label-caps text-label-caps text-text-muted mb-2 md:mb-0">
+                © 2024 tvbot • v2.4.1 • Timezone: Lima (UTC-5)
+            </div>
+<div class="flex gap-6">
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">System Status</a>
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">API Docs</a>
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">Privacy Policy</a>
+</div>
+</div>
+</footer>
+</body></html>

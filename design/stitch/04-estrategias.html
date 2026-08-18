@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - Estrategias</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Public+Sans:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#0d1117',
+                        surface: '#161b22',
+                        border: '#30363d',
+                        rowBorder: '#21262d',
+                        hover: '#1c2128',
+                        text: '#e6edf3',
+                        muted: '#8b949e',
+                        accent: '#1f6feb',
+                        accentLight: '#58a6ff',
+                        positive: '#3fb950',
+                        positiveText: '#04260d',
+                        negative: '#f85149',
+                        negativeText: '#2b0503',
+                        warning: '#d29922',
+                        primaryBtn: '#238636'
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        md: "0.5rem",
+                        lg: "0.625rem", // 10px for cards/panels
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Inter", "sans-serif"],
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Public Sans", "sans-serif"],
+                        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8b949e; }
+        
+        /* Table sticky column */
+        .sticky-col { position: sticky; left: 0; background-color: #161b22; z-index: 10; border-right: 1px solid #30363d; }
+    </style>
+</head>
+<body class="bg-bg text-text font-body antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-[#161b22] docked full-width top-0 sticky border-b border-[#30363d] z-50">
+<div class="flex justify-between items-center px-[20px] h-[56px] w-full max-w-[1300px] mx-auto">
+<div class="flex items-center gap-6">
+<!-- Brand -->
+<div class="text-[15px] font-bold text-[#e6edf3] flex items-center gap-2">
+<span class="material-symbols-outlined text-[#1f6feb]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                    tvbot
+                </div>
+<!-- Account Pill -->
+<div class="hidden md:flex items-center bg-bg border border-border rounded-full px-3 py-1 text-xs font-mono text-muted">
+<span class="text-text mr-1">PAPER</span> · $1,000 · 10% x 5x = $500/trade
+                </div>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-6 h-full mt-2">
+<a class="font-body text-[14px] uppercase tracking-[0.5px] font-label text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer active:opacity-80 transition-colors" href="#">Dashboard</a>
+<a class="font-body text-[14px] uppercase tracking-[0.5px] font-label text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer active:opacity-80 transition-colors" href="#">Producción</a>
+<a class="font-body text-[14px] uppercase tracking-[0.5px] font-label text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer active:opacity-80 transition-colors" href="#">Evaluación</a>
+<a class="font-body text-[14px] uppercase tracking-[0.5px] font-label text-[#1f6feb] border-b-2 border-[#1f6feb] pb-2 font-semibold cursor-pointer active:opacity-80 transition-colors" href="#">Estrategias</a>
+<a class="font-body text-[14px] uppercase tracking-[0.5px] font-label text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer active:opacity-80 transition-colors" href="#">Logs</a>
+</nav>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex bg-bg border border-border rounded-md p-0.5">
+<button class="px-3 py-1 text-xs font-medium rounded-sm bg-surface text-text shadow-sm">Cripto</button>
+<button class="px-3 py-1 text-xs font-medium rounded-sm text-muted hover:text-text transition-colors">TradFi</button>
+</div>
+<div class="flex items-center gap-2 text-muted">
+<span class="material-symbols-outlined text-[20px] hover:text-[#e6edf3] cursor-pointer transition-colors">schedule</span>
+<span class="text-xs font-mono hidden lg:block" id="local-clock">16:42:05 Lima</span>
+<span class="material-symbols-outlined text-[20px] hover:text-[#e6edf3] cursor-pointer transition-colors ml-2">settings</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 w-full max-w-[1300px] mx-auto p-[20px] flex flex-col gap-[20px]">
+<!-- Toolbar -->
+<div class="bg-surface border border-border rounded-lg p-[18px] flex flex-wrap gap-4 items-center justify-between">
+<div class="flex-1 min-w-[300px] relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted text-[18px]">search</span>
+<input class="w-full bg-bg border border-border rounded-md pl-10 pr-4 py-2 text-sm text-text focus:border-accent focus:ring-1 focus:ring-accent outline-none placeholder-muted transition-all font-mono" placeholder="Buscar por ID, moneda o indicador..." type="text"/>
+</div>
+<div class="flex items-center gap-4 flex-wrap">
+<div class="bg-bg border border-border rounded-md p-0.5 flex">
+<button class="px-3 py-1.5 text-xs font-medium rounded-sm text-muted hover:text-text transition-colors">Todas</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-sm text-muted hover:text-text transition-colors">Long</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-sm bg-surface text-text shadow-sm">Short</button>
+</div>
+<label class="flex items-center gap-2 cursor-pointer group">
+<div class="w-4 h-4 rounded-sm border border-border bg-bg flex items-center justify-center group-hover:border-accent transition-colors">
+<span class="material-symbols-outlined text-[14px] text-accent font-bold opacity-100">check</span>
+</div>
+<span class="text-sm text-muted group-hover:text-text transition-colors">Solo con trades</span>
+</label>
+<div class="text-xs font-mono text-muted pl-4 border-l border-border">
+                    62 estrategias
+                </div>
+</div>
+</div>
+<div class="flex flex-col lg:flex-row gap-[20px] items-start">
+<!-- Filters Sidebar / Chip Grid -->
+<div class="w-full lg:w-1/3 xl:w-1/4 flex-shrink-0 flex flex-col gap-3">
+<div class="text-[12px] uppercase tracking-[0.5px] font-label text-muted font-semibold mb-1">Catálogo Activo</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
+<!-- Chip Selected -->
+<button class="bg-accent/10 border border-accent rounded-md p-2 flex flex-col items-start gap-1 text-left transition-all hover:bg-accent/20">
+<div class="flex items-center justify-between w-full">
+<span class="font-bold text-sm text-accentLight">S31 ADX-short</span>
+<span class="bg-negative/20 text-negative text-[10px] font-bold px-1 rounded">S</span>
+</div>
+<div class="flex items-center justify-between w-full text-xs">
+<span class="text-muted">SOL · 1h</span>
+<span class="font-mono text-text">42</span>
+</div>
+</button>
+<!-- Chip Active -->
+<button class="bg-surface border border-border rounded-md p-2 flex flex-col items-start gap-1 text-left transition-all hover:bg-hover hover:border-muted">
+<div class="flex items-center justify-between w-full">
+<span class="font-bold text-sm text-text">L12 RSI-div</span>
+<span class="bg-positive/20 text-positive text-[10px] font-bold px-1 rounded">L</span>
+</div>
+<div class="flex items-center justify-between w-full text-xs">
+<span class="text-muted">BTC · 15m</span>
+<span class="font-mono text-text">128</span>
+</div>
+</button>
+<!-- Chip Zero Trades (Lower Opacity) -->
+<button class="bg-surface border border-border rounded-md p-2 flex flex-col items-start gap-1 text-left transition-all opacity-50 hover:opacity-100 hover:bg-hover">
+<div class="flex items-center justify-between w-full">
+<span class="font-bold text-sm text-text">S44 MACD-x</span>
+<span class="bg-negative/20 text-negative text-[10px] font-bold px-1 rounded">S</span>
+</div>
+<div class="flex items-center justify-between w-full text-xs">
+<span class="text-muted">ETH · 4h</span>
+<span class="font-mono text-muted">0</span>
+</div>
+</button>
+<!-- More Chips... -->
+<button class="bg-surface border border-border rounded-md p-2 flex flex-col items-start gap-1 text-left transition-all hover:bg-hover hover:border-muted">
+<div class="flex items-center justify-between w-full">
+<span class="font-bold text-sm text-text">L08 VWAP-b</span>
+<span class="bg-positive/20 text-positive text-[10px] font-bold px-1 rounded">L</span>
+</div>
+<div class="flex items-center justify-between w-full text-xs">
+<span class="text-muted">INJ · 5m</span>
+<span class="font-mono text-text">89</span>
+</div>
+</button>
+<button class="bg-surface border border-border rounded-md p-2 flex flex-col items-start gap-1 text-left transition-all hover:bg-hover hover:border-muted">
+<div class="flex items-center justify-between w-full">
+<span class="font-bold text-sm text-text">S19 Bollinger</span>
+<span class="bg-negative/20 text-negative text-[10px] font-bold px-1 rounded">S</span>
+</div>
+<div class="flex items-center justify-between w-full text-xs">
+<span class="text-muted">AVAX · 1h</span>
+<span class="font-mono text-text">14</span>
+</div>
+</button>
+<button class="bg-surface border border-border rounded-md p-2 flex flex-col items-start gap-1 text-left transition-all hover:bg-hover hover:border-muted">
+<div class="flex items-center justify-between w-full">
+<span class="font-bold text-sm text-text">L22 EMA-cross</span>
+<span class="bg-positive/20 text-positive text-[10px] font-bold px-1 rounded">L</span>
+</div>
+<div class="flex items-center justify-between w-full text-xs">
+<span class="text-muted">BTC · 1h</span>
+<span class="font-mono text-text">205</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Strategy Detail Area -->
+<div class="flex-1 w-full flex flex-col gap-[20px] min-w-0">
+<!-- Strategy Header -->
+<div class="bg-surface border border-border rounded-lg p-[18px]">
+<div class="flex items-center gap-3 mb-4">
+<h1 class="text-2xl font-bold text-text tracking-tight">S31 ADX-short</h1>
+<span class="bg-negative/10 border border-negative/30 text-negative px-2 py-0.5 rounded text-xs font-bold tracking-wider">SHORT</span>
+<span class="bg-bg border border-border text-text px-2 py-0.5 rounded text-xs font-mono">1h</span>
+<div class="flex-1"></div>
+<button class="text-accentLight hover:text-accent text-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[18px]">code</span>
+<span class="hidden sm:inline">Ver Reglas</span>
+</button>
+</div>
+<div class="flex flex-wrap gap-2 mb-3">
+<div class="bg-bg border border-border rounded px-3 py-1.5 flex items-center gap-2">
+<span class="text-[10px] text-muted uppercase tracking-wider font-label">Entry</span>
+<span class="text-xs font-mono text-text">ADX &gt; 25 &amp;&amp; DI- &gt; DI+</span>
+</div>
+<div class="bg-bg border border-border rounded px-3 py-1.5 flex items-center gap-2">
+<span class="text-[10px] text-muted uppercase tracking-wider font-label">Filter</span>
+<span class="text-xs font-mono text-text">RSI &lt; 50</span>
+</div>
+</div>
+<p class="text-xs text-muted font-mono bg-bg/50 p-2 rounded border border-border/50">
+                        // Exit Rule: Trailing Stop 2ATR OR TimeStop 24h OR Reverse Signal
+                    </p>
+</div>
+<!-- KPIs -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-[14px]">
+<div class="bg-surface border border-border rounded-lg p-[16px]">
+<div class="text-[12px] uppercase tracking-[0.5px] font-label text-muted mb-1">Trades</div>
+<div class="text-[24px] font-bold text-text tabular-nums">42</div>
+</div>
+<div class="bg-surface border border-border rounded-lg p-[16px]">
+<div class="text-[12px] uppercase tracking-[0.5px] font-label text-muted mb-1">Win Rate</div>
+<div class="text-[24px] font-bold text-text tabular-nums">58.0%</div>
+</div>
+<div class="bg-surface border border-border rounded-lg p-[16px]">
+<div class="text-[12px] uppercase tracking-[0.5px] font-label text-muted mb-1">PnL Realizado</div>
+<div class="text-[24px] font-bold text-positive tabular-nums">+$345.20</div>
+</div>
+<div class="bg-surface border border-border rounded-lg p-[16px]">
+<div class="text-[12px] uppercase tracking-[0.5px] font-label text-muted mb-1">Expectancy</div>
+<div class="text-[24px] font-bold text-positive tabular-nums">+12.4 <span class="text-sm font-normal text-muted">bp</span></div>
+</div>
+</div>
+<!-- History Table Panel -->
+<div class="bg-surface border border-border rounded-lg flex flex-col min-h-[400px] overflow-hidden">
+<div class="p-[18px] border-b border-border flex justify-between items-center">
+<h2 class="text-[15px] font-semibold text-muted">Histórico de Operaciones</h2>
+<button class="text-muted hover:text-text transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<div class="flex-1 overflow-x-auto relative">
+<table class="w-full text-left border-collapse whitespace-nowrap text-[13px]">
+<thead class="text-muted font-label uppercase text-[11px] tracking-wider border-b border-border bg-bg/50">
+<tr>
+<th class="py-2 px-[10px] font-medium sticky-col">#</th>
+<th class="py-2 px-[10px] font-medium">Inicio (Lima)</th>
+<th class="py-2 px-[10px] font-medium">Fin (Lima)</th>
+<th class="py-2 px-[10px] font-medium">Moneda</th>
+<th class="py-2 px-[10px] font-medium">L/S</th>
+<th class="py-2 px-[10px] font-medium text-right">Monto</th>
+<th class="py-2 px-[10px] font-medium text-right">Apal.</th>
+<th class="py-2 px-[10px] font-medium text-right">Nominal</th>
+<th class="py-2 px-[10px] font-medium text-right">P. Ent.</th>
+<th class="py-2 px-[10px] font-medium text-right">P. Sal.</th>
+<th class="py-2 px-[10px] font-medium text-right">PnL $</th>
+<th class="py-2 px-[10px] font-medium">Salida</th>
+</tr>
+</thead>
+<tbody class="font-mono text-text">
+<!-- Row 1 -->
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2 px-[10px] text-muted sticky-col group-hover:bg-hover transition-colors">0042</td>
+<td class="py-2 px-[10px]">10-24 09:15</td>
+<td class="py-2 px-[10px]">10-24 14:30</td>
+<td class="py-2 px-[10px] font-sans font-medium">SOL</td>
+<td class="py-2 px-[10px]"><span class="text-negative font-sans font-bold text-xs bg-negative/10 px-1.5 py-0.5 rounded">S</span></td>
+<td class="py-2 px-[10px] text-right">$50</td>
+<td class="py-2 px-[10px] text-right text-muted">5x</td>
+<td class="py-2 px-[10px] text-right text-muted">$250</td>
+<td class="py-2 px-[10px] text-right">164.20</td>
+<td class="py-2 px-[10px] text-right">160.10</td>
+<td class="py-2 px-[10px] text-right text-positive">+$6.24</td>
+<td class="py-2 px-[10px] text-muted text-[11px] font-sans">Trailing</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2 px-[10px] text-muted sticky-col group-hover:bg-hover transition-colors">0041</td>
+<td class="py-2 px-[10px]">10-23 18:00</td>
+<td class="py-2 px-[10px]">10-23 21:15</td>
+<td class="py-2 px-[10px] font-sans font-medium">SOL</td>
+<td class="py-2 px-[10px]"><span class="text-negative font-sans font-bold text-xs bg-negative/10 px-1.5 py-0.5 rounded">S</span></td>
+<td class="py-2 px-[10px] text-right">$50</td>
+<td class="py-2 px-[10px] text-right text-muted">5x</td>
+<td class="py-2 px-[10px] text-right text-muted">$250</td>
+<td class="py-2 px-[10px] text-right">168.50</td>
+<td class="py-2 px-[10px] text-right">170.20</td>
+<td class="py-2 px-[10px] text-right text-negative">-$2.52</td>
+<td class="py-2 px-[10px] text-muted text-[11px] font-sans">StopLoss</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2 px-[10px] text-muted sticky-col group-hover:bg-hover transition-colors">0040</td>
+<td class="py-2 px-[10px]">10-21 04:30</td>
+<td class="py-2 px-[10px]">10-22 10:00</td>
+<td class="py-2 px-[10px] font-sans font-medium">SOL</td>
+<td class="py-2 px-[10px]"><span class="text-negative font-sans font-bold text-xs bg-negative/10 px-1.5 py-0.5 rounded">S</span></td>
+<td class="py-2 px-[10px] text-right">$50</td>
+<td class="py-2 px-[10px] text-right text-muted">5x</td>
+<td class="py-2 px-[10px] text-right text-muted">$250</td>
+<td class="py-2 px-[10px] text-right">175.00</td>
+<td class="py-2 px-[10px] text-right">165.00</td>
+<td class="py-2 px-[10px] text-right text-positive">+$14.28</td>
+<td class="py-2 px-[10px] text-muted text-[11px] font-sans">Reverse</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2 px-[10px] text-muted sticky-col group-hover:bg-hover transition-colors">0039</td>
+<td class="py-2 px-[10px]">10-18 12:00</td>
+<td class="py-2 px-[10px]">10-19 08:45</td>
+<td class="py-2 px-[10px] font-sans font-medium">SOL</td>
+<td class="py-2 px-[10px]"><span class="text-negative font-sans font-bold text-xs bg-negative/10 px-1.5 py-0.5 rounded">S</span></td>
+<td class="py-2 px-[10px] text-right">$50</td>
+<td class="py-2 px-[10px] text-right text-muted">5x</td>
+<td class="py-2 px-[10px] text-right text-muted">$250</td>
+<td class="py-2 px-[10px] text-right">158.20</td>
+<td class="py-2 px-[10px] text-right">155.50</td>
+<td class="py-2 px-[10px] text-right text-positive">+$4.26</td>
+<td class="py-2 px-[10px] text-muted text-[11px] font-sans">TimeStop</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#0d1117] full-width py-4 border-t border-[#30363d] mt-auto">
+<div class="flex justify-between items-center px-[20px] w-full max-w-[1300px] mx-auto">
+<div class="font-body text-[12px] font-tabular text-[#8b949e]">
+<span class="text-[#e6edf3] font-bold">tvbot</span> © 2024 — Zona Horaria: Lima (UTC-5) · paper trading
+            </div>
+<div class="flex gap-4">
+<span class="font-body text-[12px] font-tabular text-[#8b949e]">Actualización automática: OK</span>
+<span class="font-body text-[12px] font-tabular text-[#8b949e]">v2.4.0-stable</span>
+</div>
+</div>
+</footer>
+<script>
+        // Simple clock update for the header
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-PE', { hour12: false, timeZone: 'America/Lima' });
+            const clockEl = document.getElementById('local-clock');
+            if(clockEl) clockEl.textContent = timeString + ' Lima';
+        }
+        setInterval(updateClock, 1000);
+    </script>
+</body></html>

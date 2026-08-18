@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - System Logs</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#7d9bb1",
+                        "on-primary-fixed-variant": "#2c4a5d",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#8a4d4b",
+                        "on-error": "#ffffff",
+                        "text-main": "#2D3135",
+                        "primary-fixed-dim": "#accae2",
+                        "surface-container-high": "#e9e8e5",
+                        "inverse-surface": "#2f312f",
+                        "secondary-fixed": "#caead2",
+                        "background": "#faf9f6",
+                        "surface-variant": "#e3e2e0",
+                        "secondary-fixed-dim": "#aeceb6",
+                        "tertiary-container": "#cb8581",
+                        "primary": "#446276",
+                        "on-background": "#1a1c1a",
+                        "on-primary-container": "#123345",
+                        "on-secondary-container": "#4c6955",
+                        "border-low": "#F1EFE9",
+                        "outline-variant": "#c2c7cc",
+                        "primary-fixed": "#c8e7ff",
+                        "on-secondary-fixed": "#042011",
+                        "on-primary-fixed": "#001e2e",
+                        "surface": "#FFFFFF",
+                        "on-secondary": "#ffffff",
+                        "alert-coral": "#F2A6A2",
+                        "secondary-container": "#c7e8cf",
+                        "surface-container": "#efeeeb",
+                        "on-secondary-fixed-variant": "#314d3b",
+                        "secondary": "#486551",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e3e2e0",
+                        "on-tertiary-fixed-variant": "#6e3735",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#370c0d",
+                        "outline": "#72787d",
+                        "surface-dim": "#dbdad7",
+                        "surface-bright": "#faf9f6",
+                        "error": "#ba1a1a",
+                        "on-surface": "#1a1c1a",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#accae2",
+                        "surface-container-low": "#f4f3f1",
+                        "border-mid": "#E1DFD8",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "success-mint": "#B4D4BC",
+                        "tertiary-fixed": "#ffdad7",
+                        "on-tertiary": "#ffffff",
+                        "info-sky": "#A7C7E7",
+                        "on-surface-variant": "#42474c",
+                        "inverse-on-surface": "#f2f1ee",
+                        "text-muted": "#757B80",
+                        "action-lavender": "#B2B5D9",
+                        "on-tertiary-container": "#51201f",
+                        "surface-tint": "#446276"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "card-padding": "1rem",
+                        "max-width": "1340px",
+                        "panel-gap": "1.5rem",
+                        "table-cell-x": "0.625rem",
+                        "base-padding": "1.25rem",
+                        "table-cell-y": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "headline-panel": [
+                            "Hanken Grotesk"
+                        ],
+                        "body-main": [
+                            "Hanken Grotesk"
+                        ],
+                        "display-kpi": [
+                            "Hanken Grotesk"
+                        ],
+                        "table-data": [
+                            "JetBrains Mono"
+                        ],
+                        "label-caps": [
+                            "Hanken Grotesk"
+                        ]
+                    },
+                    "fontSize": {
+                        "headline-panel": [
+                            "15px",
+                            {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.5px",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "body-main": [
+                            "14px",
+                            {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "display-kpi": [
+                            "28px",
+                            {
+                                "lineHeight": "34px",
+                                "letterSpacing": "-0.5px",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "table-data": [
+                            "13px",
+                            {
+                                "lineHeight": "18px",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "label-caps": [
+                            "11px",
+                            {
+                                "lineHeight": "16px",
+                                "letterSpacing": "1px",
+                                "fontWeight": "600"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-text-main font-body-main antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface docked full-width top-0 border-b border-mid flat no shadows z-50">
+<div class="flex justify-between items-center w-full px-base-padding max-w-max-width mx-auto h-16">
+<div class="flex items-center gap-8">
+<a class="font-display-kpi text-display-kpi text-primary flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" data-icon="terminal" data-weight="fill" style="font-variation-settings: 'FILL' 1;">terminal</span>
+                    tvbot
+                </a>
+<!-- Navigation Links - Desktop -->
+<div class="hidden md:flex items-center gap-6 h-full">
+<a class="text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 h-16 flex items-center px-2" href="#">Dashboard</a>
+<a class="text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 h-16 flex items-center px-2" href="#">Production</a>
+<a class="text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 h-16 flex items-center px-2" href="#">Evaluation</a>
+<a class="text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 h-16 flex items-center px-2" href="#">Strategies</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 h-16 flex items-center px-2" href="#">Logs</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:flex items-center bg-surface-container-low rounded px-3 py-1.5 border border-mid">
+<span class="material-symbols-outlined text-text-muted text-[18px] mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none p-0 text-body-main focus:ring-0 w-48 placeholder-text-muted" placeholder="Search..." type="text"/>
+</div>
+<button class="text-text-muted hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+</button>
+<button class="text-text-muted hover:bg-surface-container-low transition-colors cursor-pointer active:opacity-80 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="link">link</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container overflow-hidden border border-mid ml-2">
+<img alt="User account profile" class="w-full h-full object-cover" data-alt="A clean, modern minimalist avatar image showing a stylized user silhouette against a soft pastel background, matching the clean fintech aesthetic. Soft lighting, high contrast white and lavender tones. Professional, sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOf5EYfS0__q5Ip-hM_Kl9DNjO0D0mhSDVv62P36iCz--GXOA9RzqiC0-9voxbHrdlyMeu1LwccjBzrDV75wyWaM13MC13PiqX_hvCh0IwYdzq1o05bCneU0PbOCnmuv5yWfsuoP5Jac5NUuRg1rVPZrlnMJwF9wCy3fPRSbBvfSgLQ062-C_tb6RzMPw2emilADcJ4MyXV0bEiDQOb5X1VsXJa36XceS0A7EU8RYSFqthhwXt4xI8"/>
+</div>
+<!-- Mobile Menu Button -->
+<button class="md:hidden text-text-muted p-2">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-max-width mx-auto px-base-padding py-8 flex flex-col gap-panel-gap">
+<!-- Header & Controls -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-low pb-4">
+<div>
+<h1 class="font-display-kpi text-display-kpi text-text-main mb-1">System Logs</h1>
+<p class="text-text-muted font-body-main text-body-main">Real-time terminal output and structured event history.</p>
+</div>
+<div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+<div class="flex items-center bg-surface border border-mid rounded text-body-main overflow-hidden">
+<button class="px-3 py-1.5 bg-surface-container-low border-r border-mid text-text-muted flex items-center gap-1 hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+<span>Today</span>
+</button>
+<button class="px-3 py-1.5 text-text-muted hover:bg-surface-container-low transition-colors border-r border-mid">7D</button>
+<button class="px-3 py-1.5 text-text-muted hover:bg-surface-container-low transition-colors">30D</button>
+</div>
+<button class="bg-surface border border-mid text-text-main px-4 py-1.5 rounded font-body-main text-body-main flex items-center gap-2 hover:bg-surface-container-low transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+                    Filter
+                </button>
+<button class="bg-action-lavender text-on-error px-4 py-1.5 rounded font-body-main text-body-main flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                    Export
+                </button>
+</div>
+</div>
+<!-- Terminal View -->
+<div class="bg-surface border border-mid rounded flex flex-col overflow-hidden h-[400px]">
+<div class="bg-surface-container-low border-b border-mid px-4 py-2 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-muted text-[16px]" data-icon="terminal">terminal</span>
+<span class="font-label-caps text-label-caps text-text-main">LIVE STREAM</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-success-mint animate-pulse"></div>
+<span class="font-label-caps text-label-caps text-success-mint">CONNECTED</span>
+</div>
+</div>
+<div class="flex-grow p-4 overflow-y-auto font-table-data text-table-data text-text-main bg-[#faf9f6] leading-relaxed">
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:02:45.102</span>
+<span class="bg-info-sky/15 text-info-sky px-1.5 rounded font-bold w-14 text-center flex-shrink-0">INFO</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[DataIngestion]</span>
+<span class="break-all">Successfully connected to market data stream wss://feed.example.com</span>
+</div>
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:02:46.005</span>
+<span class="bg-info-sky/15 text-info-sky px-1.5 rounded font-bold w-14 text-center flex-shrink-0">INFO</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[StrategyEngine]</span>
+<span class="break-all">Initialized strategy 'Alpha_v2.4' with parameters: {vol: 0.5, lookback: 20}</span>
+</div>
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:03:12.881</span>
+<span class="bg-alert-coral/15 text-alert-coral px-1.5 rounded font-bold w-14 text-center flex-shrink-0">WARN</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[RiskManager]</span>
+<span class="break-all">High volatility detected in AAPL. Temporary exposure reduction triggered.</span>
+</div>
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:03:15.001</span>
+<span class="bg-info-sky/15 text-info-sky px-1.5 rounded font-bold w-14 text-center flex-shrink-0">INFO</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[OrderExecution]</span>
+<span class="break-all">Placing limit order: BUY 100 AAPL @ 175.50</span>
+</div>
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors bg-[#ffdad6]/20 border-l-2 border-error">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:04:01.442</span>
+<span class="bg-error-container text-on-error-container px-1.5 rounded font-bold w-14 text-center flex-shrink-0">ERROR</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[API_Gateway]</span>
+<span class="break-all text-error">Timeout waiting for response from broker API. Retrying in 5s...</span>
+</div>
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:04:06.500</span>
+<span class="bg-success-mint/15 text-success-mint px-1.5 rounded font-bold w-14 text-center flex-shrink-0">OK</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[API_Gateway]</span>
+<span class="break-all">Reconnected to broker API successfully.</span>
+</div>
+<div class="flex gap-4 mb-1 hover:bg-[#F1EFE9] px-2 py-1 -mx-2 rounded transition-colors">
+<span class="text-text-muted opacity-70 w-24 flex-shrink-0">14:05:00.000</span>
+<span class="bg-info-sky/15 text-info-sky px-1.5 rounded font-bold w-14 text-center flex-shrink-0">INFO</span>
+<span class="text-primary opacity-80 w-32 flex-shrink-0">[System]</span>
+<span class="break-all">Periodic health check passed. Memory usage: 45%</span>
+</div>
+</div>
+</div>
+<!-- Structured Logs Table -->
+<div class="bg-surface border border-mid rounded overflow-hidden">
+<div class="px-4 py-4 border-b border-low flex justify-between items-center">
+<h2 class="font-headline-panel text-headline-panel text-text-main">Recent Events</h2>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-text-muted">Rows per page:</span>
+<select class="bg-transparent border-none text-body-main text-text-main py-0 pl-0 pr-6 focus:ring-0 cursor-pointer">
+<option>10</option>
+<option>25</option>
+<option>50</option>
+</select>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-mid bg-surface-container-lowest">
+<th class="py-table-cell-y px-table-cell-x font-label-caps text-label-caps text-text-muted font-normal w-32">Timestamp</th>
+<th class="py-table-cell-y px-table-cell-x font-label-caps text-label-caps text-text-muted font-normal w-24">Level</th>
+<th class="py-table-cell-y px-table-cell-x font-label-caps text-label-caps text-text-muted font-normal w-40">Component</th>
+<th class="py-table-cell-y px-table-cell-x font-label-caps text-label-caps text-text-muted font-normal">Message</th>
+<th class="py-table-cell-y px-table-cell-x font-label-caps text-label-caps text-text-muted font-normal w-16"></th>
+</tr>
+</thead>
+<tbody class="font-table-data text-table-data">
+<tr class="border-b border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="py-table-cell-y px-table-cell-x text-text-muted">2024-05-20 14:05:00</td>
+<td class="py-table-cell-y px-table-cell-x"><span class="bg-info-sky/15 text-info-sky px-2 py-0.5 rounded text-[11px] font-bold">INFO</span></td>
+<td class="py-table-cell-y px-table-cell-x text-text-main">System.HealthCheck</td>
+<td class="py-table-cell-y px-table-cell-x text-text-main truncate max-w-md">Periodic health check passed. Memory usage: 45%</td>
+<td class="py-table-cell-y px-table-cell-x text-right">
+<button class="text-text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="py-table-cell-y px-table-cell-x text-text-muted">2024-05-20 14:04:06</td>
+<td class="py-table-cell-y px-table-cell-x"><span class="bg-success-mint/15 text-success-mint px-2 py-0.5 rounded text-[11px] font-bold">OK</span></td>
+<td class="py-table-cell-y px-table-cell-x text-text-main">API.Gateway.Connection</td>
+<td class="py-table-cell-y px-table-cell-x text-text-main truncate max-w-md">Reconnected to broker API successfully. Session ID: 9a8b7c</td>
+<td class="py-table-cell-y px-table-cell-x text-right">
+<button class="text-text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-low hover:bg-[#F1EFE9] transition-colors group bg-[#ffdad6]/10">
+<td class="py-table-cell-y px-table-cell-x text-text-muted">2024-05-20 14:04:01</td>
+<td class="py-table-cell-y px-table-cell-x"><span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-[11px] font-bold">ERROR</span></td>
+<td class="py-table-cell-y px-table-cell-x text-text-main">API.Gateway.Request</td>
+<td class="py-table-cell-y px-table-cell-x text-error font-medium truncate max-w-md">Timeout waiting for response from broker API. Retrying in 5s...</td>
+<td class="py-table-cell-y px-table-cell-x text-right">
+<button class="text-text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-low hover:bg-[#F1EFE9] transition-colors group">
+<td class="py-table-cell-y px-table-cell-x text-text-muted">2024-05-20 14:03:15</td>
+<td class="py-table-cell-y px-table-cell-x"><span class="bg-info-sky/15 text-info-sky px-2 py-0.5 rounded text-[11px] font-bold">INFO</span></td>
+<td class="py-table-cell-y px-table-cell-x text-text-main">Trading.OrderExecution</td>
+<td class="py-table-cell-y px-table-cell-x text-text-main truncate max-w-md">Placing limit order: BUY 100 AAPL @ 175.50</td>
+<td class="py-table-cell-y px-table-cell-x text-right">
+<button class="text-text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-[#F1EFE9] transition-colors group">
+<td class="py-table-cell-y px-table-cell-x text-text-muted">2024-05-20 14:03:12</td>
+<td class="py-table-cell-y px-table-cell-x"><span class="bg-alert-coral/15 text-alert-coral px-2 py-0.5 rounded text-[11px] font-bold">WARN</span></td>
+<td class="py-table-cell-y px-table-cell-x text-text-main">Risk.VolatilityMonitor</td>
+<td class="py-table-cell-y px-table-cell-x text-text-main truncate max-w-md">High volatility detected in AAPL. Temporary exposure reduction triggered.</td>
+<td class="py-table-cell-y px-table-cell-x text-right">
+<button class="text-text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-4 py-3 border-t border-low flex justify-between items-center bg-surface-container-lowest">
+<span class="font-body-main text-body-main text-text-muted">Showing 1-5 of 1,248 events</span>
+<div class="flex gap-1">
+<button class="p-1 text-text-muted hover:bg-surface-container-low rounded disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[20px]" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-1 text-text-main hover:bg-surface-container-low rounded">
+<span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-background border-t border-low flat no shadows docked full-width bottom-0 mt-auto">
+<div class="flex justify-between items-center w-full px-base-padding py-table-cell-y max-w-max-width mx-auto">
+<div class="font-label-caps text-label-caps text-text-muted">
+                © 2024 tvbot • v2.4.1 • Timezone: Lima (UTC-5)
+            </div>
+<div class="flex gap-4">
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">System Status</a>
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">API Docs</a>
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">Privacy Policy</a>
+</div>
+</div>
+</footer>
+</body></html>

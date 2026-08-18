@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - Strategies</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#7d9bb1",
+                    "on-primary-fixed-variant": "#2c4a5d",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#8a4d4b",
+                    "on-error": "#ffffff",
+                    "text-main": "#2D3135",
+                    "primary-fixed-dim": "#accae2",
+                    "surface-container-high": "#e9e8e5",
+                    "inverse-surface": "#2f312f",
+                    "secondary-fixed": "#caead2",
+                    "background": "#faf9f6",
+                    "surface-variant": "#e3e2e0",
+                    "secondary-fixed-dim": "#aeceb6",
+                    "tertiary-container": "#cb8581",
+                    "primary": "#446276",
+                    "on-background": "#1a1c1a",
+                    "on-primary-container": "#123345",
+                    "on-secondary-container": "#4c6955",
+                    "border-low": "#F1EFE9",
+                    "outline-variant": "#c2c7cc",
+                    "primary-fixed": "#c8e7ff",
+                    "on-secondary-fixed": "#042011",
+                    "on-primary-fixed": "#001e2e",
+                    "surface": "#FFFFFF",
+                    "on-secondary": "#ffffff",
+                    "alert-coral": "#F2A6A2",
+                    "secondary-container": "#c7e8cf",
+                    "surface-container": "#efeeeb",
+                    "on-secondary-fixed-variant": "#314d3b",
+                    "secondary": "#486551",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e3e2e0",
+                    "on-tertiary-fixed-variant": "#6e3735",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#370c0d",
+                    "outline": "#72787d",
+                    "surface-dim": "#dbdad7",
+                    "surface-bright": "#faf9f6",
+                    "error": "#ba1a1a",
+                    "on-surface": "#1a1c1a",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#accae2",
+                    "surface-container-low": "#f4f3f1",
+                    "border-mid": "#E1DFD8",
+                    "tertiary-fixed-dim": "#ffb3af",
+                    "success-mint": "#B4D4BC",
+                    "tertiary-fixed": "#ffdad7",
+                    "on-tertiary": "#ffffff",
+                    "info-sky": "#A7C7E7",
+                    "on-surface-variant": "#42474c",
+                    "inverse-on-surface": "#f2f1ee",
+                    "text-muted": "#757B80",
+                    "action-lavender": "#B2B5D9",
+                    "on-tertiary-container": "#51201f",
+                    "surface-tint": "#446276"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "card-padding": "1rem",
+                    "max-width": "1340px",
+                    "panel-gap": "1.5rem",
+                    "table-cell-x": "0.625rem",
+                    "base-padding": "1.25rem",
+                    "table-cell-y": "0.5rem"
+            },
+            "fontFamily": {
+                    "headline-panel": ["Hanken Grotesk"],
+                    "body-main": ["Hanken Grotesk"],
+                    "display-kpi": ["Hanken Grotesk"],
+                    "table-data": ["JetBrains Mono"],
+                    "label-caps": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "headline-panel": ["15px", {"lineHeight": "20px", "letterSpacing": "0.5px", "fontWeight": "600"}],
+                    "body-main": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-kpi": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.5px", "fontWeight": "700"}],
+                    "table-data": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "1px", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Hide scrollbar for clean aesthetic but allow scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-text-main font-body-main text-body-main min-h-screen flex flex-col antialiased">
+<!-- TopNavBar (Generated from Shared Components) -->
+<nav class="bg-surface w-full z-50 border-b border-mid relative">
+<div class="flex justify-between items-center w-full px-base-padding max-w-max-width mx-auto h-16">
+<!-- Brand -->
+<div class="flex items-center gap-2">
+<span class="font-display-kpi text-display-kpi text-primary">tvbot</span>
+</div>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-8 h-full">
+<a class="h-full flex items-center text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer px-2" href="#">
+<span class="font-headline-panel text-headline-panel">Dashboard</span>
+</a>
+<a class="h-full flex items-center text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer px-2" href="#">
+<span class="font-headline-panel text-headline-panel">Production</span>
+</a>
+<a class="h-full flex items-center text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer px-2" href="#">
+<span class="font-headline-panel text-headline-panel">Evaluation</span>
+</a>
+<!-- Active Navigation Item -->
+<a class="h-full flex items-center text-primary font-bold border-b-2 border-primary pb-1 hover:bg-surface-container-low transition-colors cursor-pointer px-2" href="#">
+<span class="font-headline-panel text-headline-panel">Strategies</span>
+</a>
+<a class="h-full flex items-center text-text-muted hover:text-text-main hover:bg-surface-container-low transition-colors cursor-pointer px-2" href="#">
+<span class="font-headline-panel text-headline-panel">Logs</span>
+</a>
+</div>
+<!-- Trailing Actions & Profile -->
+<div class="flex items-center gap-4">
+<button class="text-text-muted hover:text-primary transition-colors flex items-center justify-center cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+</button>
+<button class="text-text-muted hover:text-primary transition-colors flex items-center justify-center cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="link">link</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-mid bg-surface-variant cursor-pointer">
+<img alt="User account profile" class="w-full h-full object-cover" data-alt="A highly detailed portrait photograph of an elegant user profile avatar. Clean white background. Professional, minimalist lighting, conveying a modern finance persona." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY62R2USAJ2VqshaIcZTAt11Y0-lG2i3GC1AdEgthA5Ci6eQ3mMsZe1mdJwZmZUOXKaYV9CTe1u9In6BtoobYIo8NOq5mgV1Bi-s9QK2aEYhD0ByDMcv60TLNsNq42LkXsMlBS2IJwS65jhNHv0aAqIA7DWXv9qbFJnK5C7-Vkc3uitUAetEPaYK0tLogwLCLN42iGI97rF3JfYbKISM5bjPE-W-9Ixh3XCbowu7eHvDfAKsW8DRaR"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow w-full max-w-max-width mx-auto px-base-padding py-panel-gap grid grid-cols-1 md:grid-cols-12 gap-panel-gap">
+<!-- Left Sidebar: Strategy Directory -->
+<aside class="md:col-span-3 flex flex-col gap-4">
+<div class="flex items-center justify-between pb-2 border-b border-low">
+<h2 class="font-headline-panel text-headline-panel text-primary">Directory</h2>
+<button class="text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<!-- Search -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted text-[18px]">search</span>
+<input class="w-full bg-surface border border-mid rounded-DEFAULT pl-9 pr-3 py-2 font-body-main text-body-main text-text-main focus:outline-none focus:border-primary focus:ring-0 placeholder-text-muted" placeholder="Search strategies..." type="text"/>
+</div>
+<!-- Strategy List -->
+<div class="flex flex-col gap-2 overflow-y-auto no-scrollbar max-h-[calc(100vh-14rem)]">
+<!-- Active Strategy Card -->
+<div class="bg-primary-fixed border border-primary rounded-lg p-card-padding cursor-pointer flex flex-col gap-1 transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-headline-panel text-headline-panel text-on-primary-fixed">S31 ADX-short</span>
+<div class="w-2 h-2 rounded-full bg-success-mint mt-1"></div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps text-on-primary-fixed-variant">1H • Crypto</span>
+<span class="font-table-data text-table-data text-on-primary-fixed">Win: 68%</span>
+</div>
+</div>
+<!-- Inactive Cards -->
+<div class="bg-surface border border-low hover:border-mid rounded-lg p-card-padding cursor-pointer flex flex-col gap-1 transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-headline-panel text-headline-panel text-text-main">M4 Momentum</span>
+<div class="w-2 h-2 rounded-full bg-success-mint mt-1"></div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps text-text-muted">15m • Forex</span>
+<span class="font-table-data text-table-data text-text-main">Win: 52%</span>
+</div>
+</div>
+<div class="bg-surface border border-low hover:border-mid rounded-lg p-card-padding cursor-pointer flex flex-col gap-1 transition-colors opacity-70">
+<div class="flex justify-between items-start">
+<span class="font-headline-panel text-headline-panel text-text-main">V1 Mean Rev</span>
+<div class="w-2 h-2 rounded-full bg-outline-variant mt-1"></div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps text-text-muted">4H • Equities</span>
+<span class="font-table-data text-table-data text-text-main">Win: 45%</span>
+</div>
+</div>
+<div class="bg-surface border border-low hover:border-mid rounded-lg p-card-padding cursor-pointer flex flex-col gap-1 transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-headline-panel text-headline-panel text-text-main">Q9 Breakout</span>
+<div class="w-2 h-2 rounded-full bg-success-mint mt-1"></div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-label-caps text-label-caps text-text-muted">5m • Indices</span>
+<span class="font-table-data text-table-data text-text-main">Win: 61%</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center: Detailed View -->
+<section class="md:col-span-9 flex flex-col gap-panel-gap">
+<!-- Strategy Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-3">
+<h1 class="font-display-kpi text-display-kpi text-text-main">S31 ADX-short</h1>
+<span class="px-2 py-0.5 rounded-DEFAULT bg-secondary-container text-on-secondary-container font-label-caps text-label-caps tracking-wider flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-secondary-container"></span> LIVE
+                        </span>
+</div>
+<p class="font-body-main text-body-main text-text-muted mt-1">Trend-following short strategy optimizing for high ADX environments.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 rounded-DEFAULT border border-mid text-text-main font-headline-panel text-headline-panel hover:bg-surface-container-low transition-colors">
+                        Backtest
+                    </button>
+<button class="px-4 py-2 rounded-DEFAULT bg-action-lavender text-on-primary font-headline-panel text-headline-panel hover:opacity-90 transition-opacity">
+                        Deploy Instance
+                    </button>
+</div>
+</div>
+<!-- Performance KPIs (4 Column Grid) -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface border border-low rounded-xl p-card-padding flex flex-col justify-between h-28">
+<span class="font-label-caps text-label-caps text-text-muted uppercase">Total Trades</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">1,248</span>
+</div>
+<span class="font-table-data text-[11px] text-text-muted border-t border-low pt-2">Last 30 Days: +42</span>
+</div>
+<div class="bg-surface border border-low rounded-xl p-card-padding flex flex-col justify-between h-28">
+<span class="font-label-caps text-label-caps text-text-muted uppercase">Win Rate</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">68.4%</span>
+<span class="font-body-main text-[12px] text-on-secondary-container bg-secondary-container/30 px-1.5 rounded">+1.2%</span>
+</div>
+<span class="font-table-data text-[11px] text-text-muted border-t border-low pt-2">Target &gt; 60.0%</span>
+</div>
+<div class="bg-surface border border-low rounded-xl p-card-padding flex flex-col justify-between h-28">
+<span class="font-label-caps text-label-caps text-text-muted uppercase">Net PnL</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">$42.5K</span>
+</div>
+<span class="font-table-data text-[11px] text-text-muted border-t border-low pt-2">Max Drawdown: 4.1%</span>
+</div>
+<div class="bg-surface border border-low rounded-xl p-card-padding flex flex-col justify-between h-28">
+<span class="font-label-caps text-label-caps text-text-muted uppercase">Expectancy</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display-kpi text-display-kpi text-text-main">1.42</span>
+</div>
+<span class="font-table-data text-[11px] text-text-muted border-t border-low pt-2">Per Trade Avg: $34</span>
+</div>
+</div>
+<!-- Strategy Logic Box -->
+<div class="bg-surface border border-mid rounded-xl overflow-hidden flex flex-col">
+<div class="px-card-padding py-3 border-b border-low bg-surface-bright flex justify-between items-center">
+<h3 class="font-headline-panel text-headline-panel text-text-main">Execution Logic</h3>
+<button class="text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+<div class="p-card-padding bg-background font-table-data text-table-data text-text-muted leading-relaxed">
+<p><span class="text-primary font-semibold">IF</span> (ADX(14) &gt; 25) <span class="text-primary font-semibold">AND</span> (DI- &gt; DI+)</p>
+<p class="ml-4 mt-1"><span class="text-primary font-semibold">AND</span> close &lt; EMA(50)</p>
+<p class="mt-2"><span class="text-action-lavender font-semibold">THEN</span> Execute SHORT Market</p>
+<p class="ml-4 mt-1">Size = 2% Portfolio</p>
+<p class="ml-4 mt-1">StopLoss = ATR(14) * 1.5</p>
+<p class="ml-4 mt-1">TakeProfit = ATR(14) * 3.0</p>
+</div>
+</div>
+<!-- Recent Trade History Table -->
+<div class="flex flex-col gap-3">
+<h3 class="font-headline-panel text-headline-panel text-text-main px-1">Recent Trades</h3>
+<div class="bg-surface border border-mid rounded-xl overflow-hidden">
+<table class="w-full text-left font-table-data text-table-data text-text-main border-collapse">
+<thead>
+<tr class="bg-background">
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider">ID</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider">Time (UTC)</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider">Symbol</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider">Direction</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider text-right">Entry</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider text-right">Exit</th>
+<th class="font-label-caps text-label-caps text-text-muted py-table-cell-y px-card-padding border-b border-low font-normal uppercase tracking-wider text-right">Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="hover:bg-border-low/30 transition-colors group">
+<td class="py-2 px-card-padding border-b border-low text-text-muted group-hover:text-text-main transition-colors">#8492</td>
+<td class="py-2 px-card-padding border-b border-low">10:42:15</td>
+<td class="py-2 px-card-padding border-b border-low font-semibold">ETH/USD</td>
+<td class="py-2 px-card-padding border-b border-low">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-alert-coral/20 text-error">SHORT</span>
+</td>
+<td class="py-2 px-card-padding border-b border-low text-right">2,410.50</td>
+<td class="py-2 px-card-padding border-b border-low text-right">2,385.20</td>
+<td class="py-2 px-card-padding border-b border-low text-right text-on-secondary-container font-semibold">+$253.00</td>
+</tr>
+<tr class="hover:bg-border-low/30 transition-colors group">
+<td class="py-2 px-card-padding border-b border-low text-text-muted group-hover:text-text-main transition-colors">#8491</td>
+<td class="py-2 px-card-padding border-b border-low">08:15:02</td>
+<td class="py-2 px-card-padding border-b border-low font-semibold">BTC/USD</td>
+<td class="py-2 px-card-padding border-b border-low">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-alert-coral/20 text-error">SHORT</span>
+</td>
+<td class="py-2 px-card-padding border-b border-low text-right">64,200.00</td>
+<td class="py-2 px-card-padding border-b border-low text-right">64,550.00</td>
+<td class="py-2 px-card-padding border-b border-low text-right text-error font-semibold">-$350.00</td>
+</tr>
+<tr class="hover:bg-border-low/30 transition-colors group">
+<td class="py-2 px-card-padding text-text-muted group-hover:text-text-main transition-colors">#8490</td>
+<td class="py-2 px-card-padding">04:30:45</td>
+<td class="py-2 px-card-padding font-semibold">SOL/USD</td>
+<td class="py-2 px-card-padding">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-alert-coral/20 text-error">SHORT</span>
+</td>
+<td class="py-2 px-card-padding text-right">142.30</td>
+<td class="py-2 px-card-padding text-right">138.90</td>
+<td class="py-2 px-card-padding text-right text-on-secondary-container font-semibold">+$340.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (Generated from Shared Components) -->
+<footer class="bg-background mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-base-padding py-table-cell-y max-w-max-width mx-auto border-t border-low gap-4 md:gap-0">
+<div class="font-label-caps text-label-caps text-text-muted">
+                © 2024 tvbot • v2.4.1 • Timezone: Lima (UTC-5)
+            </div>
+<div class="flex items-center gap-6">
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">System Status</a>
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">API Docs</a>
+<a class="font-label-caps text-label-caps text-text-muted hover:text-primary transition-colors cursor-default" href="#">Privacy Policy</a>
+</div>
+</div>
+</footer>
+</body></html>

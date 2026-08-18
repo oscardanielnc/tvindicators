@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Public+Sans:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        bg: "#0d1117",
+                        surface: "#161b22",
+                        border: "#30363d",
+                        borderRow: "#21262d",
+                        hoverRow: "#1c2128",
+                        textMain: "#e6edf3",
+                        textMuted: "#8b949e",
+                        primary: "#1f6feb",
+                        accentLight: "#58a6ff",
+                        positive: "#3fb950",
+                        positiveBg: "#04260d",
+                        negative: "#f85149",
+                        negativeBg: "#2b0503",
+                        warning: "#d29922",
+                        action: "#238636"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        control: "8px",
+                        card: "10px",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Inter", "sans-serif"],
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Public Sans", "sans-serif"],
+                        mono: ["Roboto Mono", "monospace"]
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.bg');
+            color: theme('colors.textMain');
+            font-family: theme('fontFamily.body');
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+            font-family: theme('fontFamily.mono');
+        }
+        
+        .badge-soft-positive {
+            background-color: rgba(63, 185, 80, 0.13);
+            color: theme('colors.positive');
+        }
+        
+        .badge-soft-negative {
+            background-color: rgba(248, 81, 73, 0.13);
+            color: theme('colors.negative');
+        }
+        
+        .badge-soft-warning {
+            background-color: rgba(210, 153, 34, 0.13);
+            color: theme('colors.warning');
+        }
+        
+        .badge-solid-positive {
+            background-color: theme('colors.positiveBg');
+            color: theme('colors.positive');
+            border: 1px solid theme('colors.positive');
+        }
+        
+        .badge-solid-negative {
+            background-color: theme('colors.negativeBg');
+            color: theme('colors.negative');
+            border: 1px solid theme('colors.negative');
+        }
+        
+        /* Custom scrollbar for dense tables */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.bg');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.border');
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.textMuted');
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body text-[14px]">
+<!-- TopNavBar Component -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-5 h-[56px] w-full bg-[#161b22] border-b border-[#30363d] font-body text-[14px] leading-tight tabular-nums">
+<div class="flex items-center gap-6 h-full">
+<!-- Brand -->
+<div class="flex items-center gap-2 text-[15px] font-semibold text-[#e6edf3]">
+<span class="material-symbols-outlined text-[#1f6feb]" style="font-variation-settings: 'FILL' 1;">terminal</span>
+                tvbot
+            </div>
+<!-- Context Pill -->
+<div class="hidden md:flex items-center bg-[#0d1117] border border-[#30363d] rounded-[8px] px-3 py-1 text-[12px] text-[#8b949e]">
+<span class="text-[#e6edf3] font-medium mr-1">PAPER</span> · $1,000 · 10% x 5x = $500/trade
+            </div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center h-full gap-4 ml-4">
+<a class="text-[#e6edf3] border-b-2 border-[#1f6feb] pb-4 px-2 font-medium h-full flex items-center mt-4" href="#">Dashboard</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] px-2 transition-colors h-full flex items-center hover:bg-[#1c2128]" href="#">Producción</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] px-2 transition-colors h-full flex items-center hover:bg-[#1c2128]" href="#">Evaluación</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] px-2 transition-colors h-full flex items-center hover:bg-[#1c2128]" href="#">Estrategias</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] px-2 transition-colors h-full flex items-center hover:bg-[#1c2128]" href="#">Logs</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<!-- Segmented Control -->
+<div class="hidden sm:flex bg-[#0d1117] border border-[#30363d] rounded-[8px] p-0.5">
+<button class="px-3 py-1 text-[12px] font-medium bg-[#1f6feb] text-[#e6edf3] rounded-[6px]">Cripto</button>
+<button class="px-3 py-1 text-[12px] font-medium text-[#8b949e] hover:text-[#e6edf3]">TradFi</button>
+</div>
+<!-- Icon Actions -->
+<div class="flex items-center gap-2">
+<button class="p-1.5 text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#1c2128] rounded-[8px] transition-colors">
+<span class="material-symbols-outlined text-[20px]">smart_toy</span>
+</button>
+<button class="p-1.5 text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#1c2128] rounded-[8px] transition-colors">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+</button>
+</div>
+<!-- Avatar -->
+<div class="w-7 h-7 rounded-full bg-[#30363d] border border-[#30363d] overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-[#8b949e]">person</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-[1300px] mx-auto p-5 flex flex-col gap-5 pb-20">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-2">
+<div>
+<h1 class="text-[20px] font-bold text-textMain tracking-tight">Resumen de Cuenta</h1>
+<p class="text-[13px] text-textMuted mt-1">Paper Trading · Hora Lima (UTC-5)</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface border border-border rounded-control px-3 py-1.5 text-[13px] text-textMuted hover:bg-hoverRow hover:text-textMain transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                    Forzar Sync
+                </button>
+<button class="bg-action rounded-control px-4 py-1.5 text-[13px] font-medium text-white hover:opacity-90 transition-opacity flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">pause</span>
+                    Pausar Bot
+                </button>
+</div>
+</div>
+<!-- KPIs Row -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-[14px]">
+<!-- Equity (Prominent) -->
+<div class="bg-surface border border-primary/30 rounded-card p-4 flex flex-col relative overflow-hidden shadow-[0_0_15px_rgba(31,111,235,0.1)]">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+<span class="font-label text-[12px] uppercase tracking-[0.5px] text-textMuted mb-2">Equity</span>
+<div class="text-[28px] font-bold text-textMain tabular-nums leading-none mb-1">$1,043.20</div>
+<div class="flex items-center gap-1.5 mt-auto pt-2">
+<span class="material-symbols-outlined text-[14px] text-positive">trending_up</span>
+<span class="text-[13px] text-positive tabular-nums font-medium">+4.32%</span>
+<span class="text-[12px] text-textMuted">desde inicio</span>
+</div>
+</div>
+<!-- Total PnL -->
+<div class="bg-surface border border-border rounded-card p-4 flex flex-col">
+<span class="font-label text-[12px] uppercase tracking-[0.5px] text-textMuted mb-2">PnL Total</span>
+<div class="text-[24px] font-bold text-positive tabular-nums leading-none mb-1">+$43.20</div>
+<div class="text-[12px] text-textMuted mt-auto pt-2">Realizado</div>
+</div>
+<!-- Trades Cerrados -->
+<div class="bg-surface border border-border rounded-card p-4 flex flex-col">
+<span class="font-label text-[12px] uppercase tracking-[0.5px] text-textMuted mb-2">Trades Cerrados</span>
+<div class="text-[24px] font-bold text-textMain tabular-nums leading-none mb-1">612</div>
+<div class="flex items-center gap-2 text-[12px] mt-auto pt-2">
+<span class="text-positive tabular-nums bg-positive/10 px-1.5 py-0.5 rounded-[4px]">298 G</span>
+<span class="text-textMuted">/</span>
+<span class="text-negative tabular-nums bg-negative/10 px-1.5 py-0.5 rounded-[4px]">314 P</span>
+</div>
+</div>
+<!-- Win Rate -->
+<div class="bg-surface border border-border rounded-card p-4 flex flex-col">
+<span class="font-label text-[12px] uppercase tracking-[0.5px] text-textMuted mb-2">Win Rate</span>
+<div class="text-[24px] font-bold text-textMain tabular-nums leading-none mb-1">48.7%</div>
+<div class="text-[12px] text-textMuted mt-auto pt-2">Trades exitosos</div>
+</div>
+<!-- Posiciones Abiertas -->
+<div class="bg-surface border border-border rounded-card p-4 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label text-[12px] uppercase tracking-[0.5px] text-textMuted">Posiciones Abiertas</span>
+<span class="w-2 h-2 rounded-full bg-warning animate-pulse"></span>
+</div>
+<div class="text-[24px] font-bold text-warning tabular-nums leading-none mb-1">7</div>
+<div class="text-[12px] text-textMuted mt-auto pt-2 tabular-nums">$3,500 nominal</div>
+</div>
+</div>
+<!-- Main Chart Panel: Equity Curve -->
+<div class="bg-surface border border-border rounded-card p-[18px] flex flex-col h-[350px]">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-[15px] font-semibold text-textMuted">Curva de equity ($1,000 iniciales · hora Lima)</h2>
+<div class="flex gap-2">
+<button class="text-[12px] px-2 py-1 rounded bg-hoverRow text-textMain">1D</button>
+<button class="text-[12px] px-2 py-1 rounded text-textMuted hover:text-textMain">1W</button>
+<button class="text-[12px] px-2 py-1 rounded text-textMuted hover:text-textMain">1M</button>
+<button class="text-[12px] px-2 py-1 rounded text-textMuted hover:text-textMain">All</button>
+</div>
+</div>
+<!-- Minimalist Chart Representation (SVG Placeholder for visual) -->
+<div class="relative flex-grow w-full border-b border-l border-border/50">
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between opacity-20 pointer-events-none">
+<div class="w-full border-t border-border border-dashed h-0"></div>
+<div class="w-full border-t border-border border-dashed h-0"></div>
+<div class="w-full border-t border-border border-dashed h-0 relative">
+<span class="absolute -left-12 -top-2.5 text-[10px] text-textMuted tabular-nums">$1020</span>
+</div>
+<div class="w-full border-t border-primary/50 border-dashed h-0 relative">
+<span class="absolute -left-12 -top-2.5 text-[10px] text-primary tabular-nums">$1000</span>
+</div>
+<div class="w-full border-t border-border border-dashed h-0 relative">
+<span class="absolute -left-12 -top-2.5 text-[10px] text-textMuted tabular-nums">$980</span>
+</div>
+</div>
+<!-- Line Chart Mock -->
+<svg class="absolute inset-0 h-full w-full" preserveaspectratio="none" viewbox="0 0 1000 200">
+<defs>
+<lineargradient id="equityGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#1f6feb" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#1f6feb" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,150 L50,140 L100,160 L150,130 L200,135 L250,110 L300,120 L350,90 L400,95 L450,70 L500,80 L550,60 L600,65 L650,40 L700,50 L750,30 L800,45 L850,20 L900,25 L950,10 L1000,5 L1000,200 L0,200 Z" fill="url(#equityGrad)"></path>
+<path d="M0,150 L50,140 L100,160 L150,130 L200,135 L250,110 L300,120 L350,90 L400,95 L450,70 L500,80 L550,60 L600,65 L650,40 L700,50 L750,30 L800,45 L850,20 L900,25 L950,10 L1000,5" fill="none" stroke="#1f6feb" stroke-linejoin="round" stroke-width="2"></path>
+<!-- Current Point -->
+<circle cx="1000" cy="5" fill="#0d1117" r="4" stroke="#1f6feb" stroke-width="2"></circle>
+</svg>
+<!-- X Axis Labels -->
+<div class="absolute -bottom-6 left-0 right-0 flex justify-between text-[10px] text-textMuted tabular-nums">
+<span>00:00</span>
+<span>04:00</span>
+<span>08:00</span>
+<span>12:00</span>
+<span>16:00</span>
+<span>20:00</span>
+<span>Ahora</span>
+</div>
+</div>
+</div>
+<!-- Secondary Panels (50/50) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-[20px]">
+<!-- Left: Trades por estrategia -->
+<div class="bg-surface border border-border rounded-card p-[18px] flex flex-col h-[320px]">
+<h2 class="text-[15px] font-semibold text-textMuted mb-4"># Trades por estrategia</h2>
+<div class="flex-grow flex flex-col justify-between text-[12px] font-mono pr-4">
+<!-- Bars -->
+<div class="flex items-center gap-3">
+<div class="w-24 text-right text-textMuted truncate">S31 ADX-sh</div>
+<div class="flex-grow h-4 bg-hoverRow rounded-sm overflow-hidden">
+<div class="h-full bg-accentLight/80 rounded-sm" style="width: 85%;"></div>
+</div>
+<div class="w-8 text-right tabular-nums">142</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-24 text-right text-textMuted truncate">S22 SQZ-lo</div>
+<div class="flex-grow h-4 bg-hoverRow rounded-sm overflow-hidden">
+<div class="h-full bg-accentLight/80 rounded-sm" style="width: 70%;"></div>
+</div>
+<div class="w-8 text-right tabular-nums">118</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-24 text-right text-textMuted truncate">S57 sBOS</div>
+<div class="flex-grow h-4 bg-hoverRow rounded-sm overflow-hidden">
+<div class="h-full bg-accentLight/80 rounded-sm" style="width: 65%;"></div>
+</div>
+<div class="w-8 text-right tabular-nums">96</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-24 text-right text-textMuted truncate">S12 MACD-1m</div>
+<div class="flex-grow h-4 bg-hoverRow rounded-sm overflow-hidden">
+<div class="h-full bg-accentLight/80 rounded-sm" style="width: 45%;"></div>
+</div>
+<div class="w-8 text-right tabular-nums">72</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-24 text-right text-textMuted truncate">S08 VWAP-rv</div>
+<div class="flex-grow h-4 bg-hoverRow rounded-sm overflow-hidden">
+<div class="h-full bg-accentLight/80 rounded-sm" style="width: 35%;"></div>
+</div>
+<div class="w-8 text-right tabular-nums">54</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-24 text-right text-textMuted truncate">S44 RSI-div</div>
+<div class="flex-grow h-4 bg-hoverRow rounded-sm overflow-hidden">
+<div class="h-full bg-accentLight/80 rounded-sm" style="width: 25%;"></div>
+</div>
+<div class="w-8 text-right tabular-nums">38</div>
+</div>
+</div>
+</div>
+<!-- Right: Rentabilidad por estrategia -->
+<div class="bg-surface border border-border rounded-card p-[18px] flex flex-col h-[320px]">
+<h2 class="text-[15px] font-semibold text-textMuted mb-4">Rentabilidad total por estrategia (USD)</h2>
+<div class="flex-grow flex flex-col justify-between text-[12px] font-mono relative">
+<!-- Center Zero Line -->
+<div class="absolute top-0 bottom-0 left-[60%] w-px bg-border/80 border-dashed z-0"></div>
+<!-- Bars -->
+<div class="flex items-center gap-2 relative z-10">
+<div class="w-24 text-right text-textMuted truncate bg-surface z-10 pr-1">S57 sBOS</div>
+<div class="flex-grow h-4 flex items-center">
+<div class="w-[60%] h-full flex justify-end"></div>
+<div class="w-[40%] h-full flex justify-start">
+<div class="h-full bg-positive/80 rounded-r-sm min-w-[2px]" style="width: 80%;"></div>
+<span class="ml-2 text-positive tabular-nums leading-none">+$24.50</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 relative z-10">
+<div class="w-24 text-right text-textMuted truncate bg-surface z-10 pr-1">S31 ADX-sh</div>
+<div class="flex-grow h-4 flex items-center">
+<div class="w-[60%] h-full flex justify-end"></div>
+<div class="w-[40%] h-full flex justify-start">
+<div class="h-full bg-positive/80 rounded-r-sm min-w-[2px]" style="width: 65%;"></div>
+<span class="ml-2 text-positive tabular-nums leading-none">+$18.20</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 relative z-10">
+<div class="w-24 text-right text-textMuted truncate bg-surface z-10 pr-1">S08 VWAP-rv</div>
+<div class="flex-grow h-4 flex items-center">
+<div class="w-[60%] h-full flex justify-end"></div>
+<div class="w-[40%] h-full flex justify-start">
+<div class="h-full bg-positive/80 rounded-r-sm min-w-[2px]" style="width: 40%;"></div>
+<span class="ml-2 text-positive tabular-nums leading-none">+$12.10</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 relative z-10">
+<div class="w-24 text-right text-textMuted truncate bg-surface z-10 pr-1">S44 RSI-div</div>
+<div class="flex-grow h-4 flex items-center">
+<div class="w-[60%] h-full flex justify-end"></div>
+<div class="w-[40%] h-full flex justify-start">
+<div class="h-full bg-positive/80 rounded-r-sm min-w-[2px]" style="width: 15%;"></div>
+<span class="ml-2 text-positive tabular-nums leading-none">+$4.30</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 relative z-10">
+<div class="w-24 text-right text-textMuted truncate bg-surface z-10 pr-1">S12 MACD-1m</div>
+<div class="flex-grow h-4 flex items-center">
+<div class="w-[60%] h-full flex justify-end">
+<span class="mr-2 text-negative tabular-nums leading-none">-$8.40</span>
+<div class="h-full bg-negative/80 rounded-l-sm min-w-[2px]" style="width: 25%;"></div>
+</div>
+<div class="w-[40%] h-full flex justify-start"></div>
+</div>
+</div>
+<div class="flex items-center gap-2 relative z-10">
+<div class="w-24 text-right text-textMuted truncate bg-surface z-10 pr-1">S22 SQZ-lo</div>
+<div class="flex-grow h-4 flex items-center">
+<div class="w-[60%] h-full flex justify-end">
+<span class="mr-2 text-negative tabular-nums leading-none">-$15.60</span>
+<div class="h-full bg-negative/80 rounded-l-sm min-w-[2px]" style="width: 45%;"></div>
+</div>
+<div class="w-[40%] h-full flex justify-start"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Table: Posiciones abiertas ahora -->
+<div class="bg-surface border border-border rounded-card overflow-hidden flex flex-col">
+<div class="p-4 border-b border-border flex justify-between items-center">
+<h2 class="text-[15px] font-semibold text-textMuted">Posiciones abiertas ahora <span class="ml-2 text-[12px] bg-hoverRow px-2 py-0.5 rounded text-textMain tabular-nums">7</span></h2>
+<div class="flex gap-2">
+<button class="text-[12px] text-textMuted hover:text-textMain border border-border rounded px-2 py-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">filter_list</span> Filtrar</button>
+<button class="text-[12px] text-negative border border-negative/30 hover:bg-negative/10 rounded px-2 py-1">Cerrar Todo</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-[13px] text-left border-collapse whitespace-nowrap">
+<thead>
+<tr class="text-textMuted text-[12px] uppercase tracking-[0.5px] border-b border-border">
+<th class="px-[10px] py-[8px] font-medium w-12 text-center">ID</th>
+<th class="px-[10px] py-[8px] font-medium">Estrategia</th>
+<th class="px-[10px] py-[8px] font-medium">Moneda</th>
+<th class="px-[10px] py-[8px] font-medium">Lado</th>
+<th class="px-[10px] py-[8px] font-medium text-right">Entrada (Lima)</th>
+<th class="px-[10px] py-[8px] font-medium text-right">Precio Entrada</th>
+<th class="px-[10px] py-[8px] font-medium text-right">Precio Actual</th>
+<th class="px-[10px] py-[8px] font-medium text-right">Stop</th>
+<th class="px-[10px] py-[8px] font-medium text-center">Timeout</th>
+<th class="px-[10px] py-[8px] font-medium text-right">Margen</th>
+<th class="px-[10px] py-[8px] font-medium text-right">Nominal</th>
+<th class="px-[10px] py-[8px] font-medium text-right">uPnL</th>
+<th class="px-[10px] py-[8px] font-medium"></th>
+</tr>
+</thead>
+<tbody class="font-mono tabular-nums">
+<!-- Row 1 -->
+<tr class="border-b border-borderRow hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#842</td>
+<td class="px-[10px] py-[8px] text-textMain">S57 sBOS</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">BTCUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-positive px-1.5 py-[1px] rounded text-[11px] font-bold">LONG</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">10:15:22</td>
+<td class="px-[10px] py-[8px] text-right">64,210.50</td>
+<td class="px-[10px] py-[8px] text-right text-positive">64,520.00</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">63,800.00</td>
+<td class="px-[10px] py-[8px] text-center text-textMuted">42m 15s</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-positive font-bold">+$2.41</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-borderRow hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#841</td>
+<td class="px-[10px] py-[8px] text-textMain">S31 ADX-sh</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">ETHUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-negative px-1.5 py-[1px] rounded text-[11px] font-bold">SHORT</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">09:42:10</td>
+<td class="px-[10px] py-[8px] text-right">3,450.20</td>
+<td class="px-[10px] py-[8px] text-right text-negative">3,465.50</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">3,500.00</td>
+<td class="px-[10px] py-[8px] text-center text-warning">05m 12s</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-negative font-bold">-$2.21</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-borderRow hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#840</td>
+<td class="px-[10px] py-[8px] text-textMain">S22 SQZ-lo</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">SOLUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-positive px-1.5 py-[1px] rounded text-[11px] font-bold">LONG</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">08:15:00</td>
+<td class="px-[10px] py-[8px] text-right">142.50</td>
+<td class="px-[10px] py-[8px] text-right text-textMain">142.60</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">138.00</td>
+<td class="px-[10px] py-[8px] text-center text-textMuted">1h 12m</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-positive font-bold">+$0.35</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-borderRow hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#838</td>
+<td class="px-[10px] py-[8px] text-textMain">S57 sBOS</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">AVAXUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-positive px-1.5 py-[1px] rounded text-[11px] font-bold">LONG</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">07:30:45</td>
+<td class="px-[10px] py-[8px] text-right">35.20</td>
+<td class="px-[10px] py-[8px] text-right text-positive">36.10</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">34.00</td>
+<td class="px-[10px] py-[8px] text-center text-textMuted">2h 45m</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-positive font-bold">+$12.78</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="border-b border-borderRow hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#837</td>
+<td class="px-[10px] py-[8px] text-textMain">S12 MACD-1m</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">LINKUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-negative px-1.5 py-[1px] rounded text-[11px] font-bold">SHORT</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">07:15:12</td>
+<td class="px-[10px] py-[8px] text-right">18.45</td>
+<td class="px-[10px] py-[8px] text-right text-textMain">18.42</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">19.00</td>
+<td class="px-[10px] py-[8px] text-center text-textMuted">3h 10m</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-positive font-bold">+$0.81</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="border-b border-borderRow hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#835</td>
+<td class="px-[10px] py-[8px] text-textMain">S08 VWAP-rv</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">DOGEUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-negative px-1.5 py-[1px] rounded text-[11px] font-bold">SHORT</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">06:50:00</td>
+<td class="px-[10px] py-[8px] text-right">0.1450</td>
+<td class="px-[10px] py-[8px] text-right text-negative">0.1480</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">0.1500</td>
+<td class="px-[10px] py-[8px] text-center text-textMuted">4h 05m</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-negative font-bold">-$10.34</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="hover:bg-hoverRow group transition-colors">
+<td class="px-[10px] py-[8px] text-textMuted text-center">#831</td>
+<td class="px-[10px] py-[8px] text-textMain">S31 ADX-sh</td>
+<td class="px-[10px] py-[8px] font-bold text-textMain">MATICUSDT</td>
+<td class="px-[10px] py-[8px]">
+<span class="badge-solid-negative px-1.5 py-[1px] rounded text-[11px] font-bold">SHORT</span>
+</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">05:20:10</td>
+<td class="px-[10px] py-[8px] text-right">0.7250</td>
+<td class="px-[10px] py-[8px] text-right text-positive">0.7100</td>
+<td class="px-[10px] py-[8px] text-right text-negative/80">0.7500</td>
+<td class="px-[10px] py-[8px] text-center text-textMuted">5h 30m</td>
+<td class="px-[10px] py-[8px] text-right text-textMuted">$100.00</td>
+<td class="px-[10px] py-[8px] text-right">$500.00</td>
+<td class="px-[10px] py-[8px] text-right text-positive font-bold">+$10.34</td>
+<td class="px-[10px] py-[8px] text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-textMuted hover:text-negative"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="fixed bottom-0 w-full z-40 flex justify-between items-center px-5 py-2 bg-[#0d1117] border-t border-[#30363d] font-body text-[12px] uppercase tracking-wider tabular-nums cursor-default">
+<div class="text-[#8b949e] font-bold flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-positive inline-block"></span>
+            tvbot · paper trading · auto-refresh 30s · horas en Lima (UTC-5)
+        </div>
+<div class="flex gap-4">
+<a class="text-[#8b949e] hover:text-[#e6edf3] transition-colors" href="#">Documentación</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] transition-colors" href="#">Soporte</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] transition-colors" href="#">API</a>
+</div>
+</footer>
+</body></html>

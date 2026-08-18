@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - Logs</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Public+Sans:wght@600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        appBg: '#0d1117',
+                        surface: '#161b22',
+                        border: '#30363d',
+                        rowBorder: '#21262d',
+                        hover: '#1c2128',
+                        textMain: '#e6edf3',
+                        textMuted: '#8b949e',
+                        accent: '#1f6feb',
+                        accentLight: '#58a6ff',
+                        positive: '#3fb950',
+                        negative: '#f85149',
+                        warning: '#d29922',
+                        btnPrimary: '#238636',
+                        bgPositive: '#04260d',
+                        bgNegative: '#2b0503'
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "control": "6px",
+                        "panel": "8px"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Public Sans", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    fontSize: {
+                        "base": "14px",
+                        "table": "13px",
+                        "label": "12px",
+                        "kpi": "24px",
+                        "panelTitle": "15px"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0d1117; color: #e6edf3; }
+        .mono-nums { font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; }
+        
+        /* Log Viewer Styles */
+        .log-viewer {
+            counter-reset: line;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .log-line {
+            display: flex;
+            padding: 2px 0;
+        }
+        .log-line::before {
+            counter-increment: line;
+            content: counter(line);
+            width: 40px;
+            padding-right: 12px;
+            color: #484f58;
+            text-align: right;
+            user-select: none;
+            border-right: 1px solid #30363d;
+            margin-right: 12px;
+        }
+        .log-line:hover { background-color: #161b22; }
+        .log-info { color: #58a6ff; }
+        .log-warn { color: #d29922; }
+        .log-error { color: #f85149; }
+        .log-timestamp { color: #8b949e; margin-right: 8px; }
+        
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8b949e; }
+    </style>
+</head>
+<body class="bg-appBg text-textMain antialiased flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<nav class="sticky top-0 z-50 flex items-center justify-between px-5 h-14 w-full bg-[#161b22] border-b border-[#30363d]">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-xl font-black text-[#e6edf3] tracking-tighter">
+<span class="material-symbols-outlined text-[#1f6feb]" data-icon="smart_toy" data-weight="regular">smart_toy</span>
+    tvbot
+</div>
+<div class="hidden md:flex items-center gap-6 text-[14px] leading-tight">
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-1 transition-colors" href="#">Dashboard</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-1 transition-colors" href="#">Producción</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-1 transition-colors" href="#">Evaluación</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-1 transition-colors" href="#">Estrategias</a>
+<a class="text-[#1f6feb] border-b-2 border-[#1f6feb] pb-1 font-semibold" href="#">Logs</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- Info Pill -->
+<div class="hidden lg:flex items-center bg-appBg rounded-control px-3 py-1 border border-border text-[12px] font-mono text-textMuted tracking-tight">
+                PAPER <span class="mx-1.5">•</span> $1,000 <span class="mx-1.5">•</span> 10% x 5x = $500/trade
+            </div>
+<!-- Clock -->
+<div class="flex items-center bg-appBg rounded-control px-3 py-1 border border-border text-[12px] font-mono text-textMuted" id="system-clock">
+                16:42:05 Lima
+            </div>
+<!-- Segmented Control -->
+<div class="flex bg-appBg rounded-control p-0.5 border border-border text-[12px] font-label uppercase tracking-[0.5px]">
+<button class="px-3 py-1 rounded bg-transparent text-textMuted hover:text-textMain transition-colors">Cripto</button>
+<button class="px-3 py-1 rounded bg-[#21262d] text-textMain shadow-sm border border-border">TradFi</button>
+</div>
+<!-- Icon Actions -->
+<div class="flex items-center gap-2">
+<button class="p-1.5 text-textMuted hover:text-textMain rounded-control hover:bg-hover transition-all">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet" data-weight="regular">account_balance_wallet</span>
+</button>
+<button class="p-1.5 text-textMuted hover:text-textMain rounded-control hover:bg-hover transition-all">
+<span class="material-symbols-outlined" data-icon="schedule" data-weight="regular">schedule</span>
+</button>
+<button class="p-1.5 text-textMuted hover:text-textMain rounded-control hover:bg-hover transition-all">
+<span class="material-symbols-outlined" data-icon="settings" data-weight="regular">settings</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-[1300px] mx-auto p-[20px] flex flex-col gap-[20px]">
+<!-- Top Section: System Logs & Controls -->
+<section class="bg-surface rounded-panel border border-border p-[18px] flex flex-col gap-4">
+<header class="flex justify-between items-center">
+<h2 class="text-panelTitle font-semibold text-textMain">Logs del sistema (hora Lima)</h2>
+<div class="flex items-center gap-3">
+<!-- Date Pickers (Visual Representation) -->
+<div class="flex items-center gap-2">
+<label class="text-[11px] font-mono text-textMuted uppercase tracking-wider">Desde</label>
+<div class="relative">
+<input class="bg-appBg border-border text-[13px] text-textMain rounded-control py-1 px-2 focus:ring-accent focus:border-accent w-36 pr-8 bg-transparent" type="date" value="2023-10-24"/>
+</div>
+<label class="text-[11px] font-mono text-textMuted uppercase tracking-wider ml-2">Hasta</label>
+<div class="relative">
+<input class="bg-appBg border-border text-[13px] text-textMain rounded-control py-1 px-2 focus:ring-accent focus:border-accent w-36 pr-8 bg-transparent" type="date" value="2023-10-24"/>
+</div>
+</div>
+<button class="bg-appBg border border-border text-textMain text-[13px] font-medium py-1 px-4 rounded-control hover:bg-hover transition-colors">Ver</button>
+<button class="bg-[#238636] text-white text-[13px] font-semibold py-1 px-4 rounded-control hover:bg-[#2ea043] transition-colors">Descargar rango</button>
+</div>
+</header>
+<!-- Quick Filters -->
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded-full bg-accent text-white text-[11px] font-mono tracking-wide flex items-center gap-1 border border-accent">
+<span class="w-1.5 h-1.5 rounded-full bg-white opacity-70"></span> TODOS
+                </button>
+<button class="px-3 py-1 rounded-full bg-transparent text-textMuted hover:text-textMain text-[11px] font-mono tracking-wide border border-border hover:border-[#8b949e] transition-colors">
+<span class="text-accentLight">[INFO]</span>
+</button>
+<button class="px-3 py-1 rounded-full bg-transparent text-textMuted hover:text-textMain text-[11px] font-mono tracking-wide border border-border hover:border-[#8b949e] transition-colors">
+<span class="text-warning">[WARN]</span>
+</button>
+<button class="px-3 py-1 rounded-full bg-transparent text-textMuted hover:text-textMain text-[11px] font-mono tracking-wide border border-border hover:border-[#8b949e] transition-colors">
+<span class="text-negative">[ERROR]</span>
+</button>
+</div>
+<!-- Log Terminal -->
+<div class="bg-appBg border border-border rounded-control p-4 h-[400px] overflow-y-auto log-viewer shadow-inner">
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:30:01.452</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">System initialized. Paper trading mode ACTIVE.</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:30:02.109</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">WebSocket connected to Binance Futures.</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:30:02.341</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">Subscribed to streams: BTCUSDT@kline_1m, ETHUSDT@kline_1m</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:35:14.882</span><span class="log-warn w-[60px] inline-block">[WARN]</span><span class="text-textMain">API latency spike detected: 254ms (Threshold: 150ms)</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:40:00.005</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">Strategy 'Alpha-Trend-v2' signal generated: LONG BTCUSDT @ 34250.00</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:40:00.012</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">Order submitted: BUY 0.15 BTCUSDT LIMIT 34250.00</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:40:00.890</span><span class="log-error w-[60px] inline-block">[ERROR]</span><span class="text-textMain">Order rejected: Insufficient margin. Required: $513.75, Available: $490.12</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:40:01.102</span><span class="log-warn w-[60px] inline-block">[WARN]</span><span class="text-textMain">Strategy 'Alpha-Trend-v2' execution failed. Reverting state.</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:41:22.551</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">Heartbeat OK. Connection stable.</span></div>
+<div class="log-line"><span class="log-timestamp">2023-10-24 16:42:01.000</span><span class="log-info w-[60px] inline-block">[INFO]</span><span class="text-textMain">Fetching historical data for re-calibration...</span></div>
+</div>
+</section>
+<!-- Bottom Section: Recent Events Table -->
+<section class="bg-surface rounded-panel border border-border flex flex-col overflow-hidden">
+<header class="p-[18px] border-b border-border">
+<h2 class="text-panelTitle font-semibold text-textMain">Eventos recientes</h2>
+</header>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border text-[11px] font-mono uppercase tracking-wider text-textMuted bg-appBg">
+<th class="py-2.5 px-4 font-semibold">Hora (Lima)</th>
+<th class="py-2.5 px-4 font-semibold">Nivel</th>
+<th class="py-2.5 px-4 font-semibold">Categoría</th>
+<th class="py-2.5 px-4 font-semibold">Mensaje</th>
+</tr>
+</thead>
+<tbody class="text-table">
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2.5 px-4 mono-nums text-textMuted text-[13px]">16:42:01.000</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 rounded bg-[#1f6feb22] text-accent text-[11px] font-bold uppercase">INFO</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 border border-border rounded-full text-[11px] text-textMuted bg-appBg">Data</span>
+</td>
+<td class="py-2.5 px-4 text-textMain text-[13px]">Fetching historical data for re-calibration...</td>
+</tr>
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2.5 px-4 mono-nums text-textMuted text-[13px]">16:41:22.551</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 rounded bg-[#1f6feb22] text-accent text-[11px] font-bold uppercase">INFO</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 border border-border rounded-full text-[11px] text-textMuted bg-appBg">System</span>
+</td>
+<td class="py-2.5 px-4 text-textMain text-[13px]">Heartbeat OK. Connection stable.</td>
+</tr>
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2.5 px-4 mono-nums text-textMuted text-[13px]">16:40:01.102</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 rounded bg-[#d2992222] text-warning text-[11px] font-bold uppercase">WARN</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 border border-border rounded-full text-[11px] text-textMuted bg-appBg">Strategy</span>
+</td>
+<td class="py-2.5 px-4 text-textMain text-[13px]">Strategy 'Alpha-Trend-v2' execution failed. Reverting state.</td>
+</tr>
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2.5 px-4 mono-nums text-textMuted text-[13px]">16:40:00.890</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 rounded bg-bgNegative text-negative text-[11px] font-bold uppercase">ERROR</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 border border-border rounded-full text-[11px] text-textMuted bg-appBg">Execution</span>
+</td>
+<td class="py-2.5 px-4 text-textMain text-[13px]">Order rejected: Insufficient margin. Required: $513.75, Available: $490.12</td>
+</tr>
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2.5 px-4 mono-nums text-textMuted text-[13px]">16:40:00.012</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 rounded bg-[#1f6feb22] text-accent text-[11px] font-bold uppercase">INFO</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 border border-border rounded-full text-[11px] text-textMuted bg-appBg">Execution</span>
+</td>
+<td class="py-2.5 px-4 text-textMain text-[13px]">Order submitted: BUY 0.15 BTCUSDT LIMIT 34250.00</td>
+</tr>
+<tr class="border-b border-rowBorder hover:bg-hover transition-colors group">
+<td class="py-2.5 px-4 mono-nums text-textMuted text-[13px]">16:40:00.005</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 rounded bg-[#1f6feb22] text-accent text-[11px] font-bold uppercase">INFO</span>
+</td>
+<td class="py-2.5 px-4">
+<span class="px-2 py-0.5 border border-border rounded-full text-[11px] text-textMuted bg-appBg">Strategy</span>
+</td>
+<td class="py-2.5 px-4 text-textMain text-[13px]">Strategy 'Alpha-Trend-v2' signal generated: LONG BTCUSDT @ 34250.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 w-full z-40 flex justify-between items-center px-4 py-2 bg-[#0d1117] border-t border-[#30363d]">
+<div class="text-[#8b949e] font-mono text-[11px] uppercase tracking-wider">
+        tvbot · paper trading · auto-refresh 30s · horas en Lima (UTC-5)
+    </div>
+<div class="flex gap-4">
+<div class="text-[#3fb950] font-mono text-[11px] uppercase tracking-wider flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#3fb950]"></span> OK</div>
+<div class="text-[#8b949e] font-mono text-[11px] uppercase tracking-wider">24ms</div>
+</div>
+</footer>
+<script>
+        // Simple script to update time (visual only for the mockup)
+        setInterval(() => {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-PE', { hour12: false }) + ' Lima';
+            const clockEl = document.getElementById('system-clock');
+            if(clockEl) clockEl.textContent = timeString;
+        }, 1000);
+    </script>
+</body></html>

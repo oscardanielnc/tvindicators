@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - Producción</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Public+Sans:wght@500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        bg: "#0d1117",
+                        surface: "#161b22",
+                        border: "#30363d",
+                        hover: "#1c2128",
+                        text: "#e6edf3",
+                        muted: "#8b949e",
+                        accent: "#1f6feb",
+                        accentLight: "#58a6ff",
+                        positive: "#3fb950",
+                        negative: "#f85149",
+                        warning: "#d29922",
+                        primaryBtn: "#238636"
+                    },
+                    fontFamily: {
+                        headline: ["Inter", "sans-serif"],
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                        label: ["Public Sans", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        sm: "4px",
+                        md: "8px",
+                        lg: "10px",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0d1117;
+            color: #e6edf3;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .table-numeric {
+            font-family: 'JetBrains Mono', monospace;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .panel {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 18px;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 16px;
+        }
+        .kpi-label {
+            font-family: 'Public Sans', sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8b949e;
+        }
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: #e6edf3;
+        }
+        .segmented-control {
+            display: inline-flex;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 2px;
+        }
+        .seg-btn {
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #8b949e;
+        }
+        .seg-btn.active {
+            background-color: #1f6feb;
+            color: #ffffff;
+        }
+        .seg-btn:not(.active):hover {
+            color: #e6edf3;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Public Sans', sans-serif;
+        }
+        .badge-warning {
+            background-color: rgba(210, 153, 34, 0.13);
+            color: #d29922;
+            border: 1px solid rgba(210, 153, 34, 0.2);
+        }
+        .badge-positive {
+            background-color: rgba(63, 185, 80, 0.13);
+            color: #3fb950;
+            border: 1px solid rgba(63, 185, 80, 0.2);
+        }
+        .badge-negative {
+            background-color: rgba(248, 81, 73, 0.13);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.2);
+        }
+        .pill {
+            background-color: rgba(88, 166, 255, 0.1);
+            color: #58a6ff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(88, 166, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-[18px] h-14 w-full sticky top-0 z-50 bg-[#161b22] border-b border-[#30363d]">
+<div class="flex items-center gap-6">
+<div class="text-[15px] font-semibold text-[#e6edf3] tracking-tighter">tvbot</div>
+<nav class="hidden md:flex gap-6">
+<a class="font-headline text-[14px] leading-tight tracking-tight text-[#8b949e] hover:text-[#e6edf3] transition-colors cursor-pointer active:opacity-80 flex-col py-4" href="#">Dashboard</a>
+<a class="font-headline text-[14px] leading-tight tracking-tight text-[#1f6feb] border-b-2 border-[#1f6feb] py-4 cursor-pointer active:opacity-80 flex-col" href="#">Producción</a>
+<a class="font-headline text-[14px] leading-tight tracking-tight text-[#8b949e] hover:text-[#e6edf3] transition-colors cursor-pointer active:opacity-80 flex-col py-4" href="#">Evaluación</a>
+<a class="font-headline text-[14px] leading-tight tracking-tight text-[#8b949e] hover:text-[#e6edf3] transition-colors cursor-pointer active:opacity-80 flex-col py-4" href="#">Estrategias</a>
+<a class="font-headline text-[14px] leading-tight tracking-tight text-[#8b949e] hover:text-[#e6edf3] transition-colors cursor-pointer active:opacity-80 flex-col py-4" href="#">Logs</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:block pill">PAPER · $1,000 · 10% x 5x = $500/trade</div>
+<div class="hidden md:block text-[13px] text-muted font-mono" id="clock">16:42:05 Lima</div>
+<div class="segmented-control">
+<div class="seg-btn active">Cripto</div>
+<div class="seg-btn">TradFi</div>
+</div>
+<div class="flex items-center gap-2 text-[#8b949e]">
+<button class="hover:bg-[#1c2128] p-1.5 rounded-md transition-all duration-150 text-[#8b949e] hover:text-[#e6edf3]">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</button>
+<button class="hover:bg-[#1c2128] p-1.5 rounded-md transition-all duration-150 text-[#8b949e] hover:text-[#e6edf3]">
+<span class="material-symbols-outlined text-[20px]" data-icon="schedule">schedule</span>
+</button>
+<button class="hover:bg-[#1c2128] p-1.5 rounded-md transition-all duration-150 text-[#8b949e] hover:text-[#e6edf3]">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+</button>
+</div>
+<button class="bg-[#238636] hover:bg-[#2ea043] text-white text-[13px] font-semibold px-3 py-1.5 rounded-md transition-colors ml-2 border border-[rgba(240,246,252,0.1)]">
+                Paper Trading
+            </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1300px] mx-auto px-[20px] py-[24px] flex flex-col gap-[20px]">
+<!-- Panel Veredicto -->
+<div class="panel border-l-4 border-l-warning flex flex-col items-center justify-center py-10">
+<div class="badge badge-warning mb-4 px-3 py-1 text-sm">ESTADO: EVALUACIÓN</div>
+<h1 class="text-2xl font-bold mb-2">0 de 62 tesis confirmadas — seguir en sombra</h1>
+<p class="text-muted text-center max-w-2xl">Ninguna estrategia ha superado los gates objetivos para capital real. Mantener operaciones en entorno paper hasta que los umbrales de validación estadística y robustez (Sharpe, DD, ratio Win/Loss) sean alcanzados de forma sostenida.</p>
+</div>
+<!-- KPIs Row -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[14px]">
+<div class="card flex flex-col">
+<span class="kpi-label">Tesis vivas</span>
+<span class="kpi-value mt-1">62</span>
+</div>
+<div class="card flex flex-col">
+<span class="kpi-label">Confirmadas</span>
+<span class="kpi-value mt-1 text-negative">0</span>
+</div>
+<div class="card flex flex-col">
+<span class="kpi-label">En observación</span>
+<span class="kpi-value mt-1 text-warning">41</span>
+</div>
+<div class="card flex flex-col">
+<span class="kpi-label">Candidatas a quitar</span>
+<span class="kpi-value mt-1 text-negative">7</span>
+</div>
+<div class="card flex flex-col">
+<span class="kpi-label">Trades acumulados</span>
+<span class="kpi-value mt-1">612</span>
+</div>
+<div class="card flex flex-col">
+<span class="kpi-label">Días en vivo</span>
+<span class="kpi-value mt-1">52</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-[20px]">
+<!-- Gates Objetivos Panel -->
+<div class="panel lg:col-span-1 flex flex-col">
+<h2 class="text-[15px] font-semibold text-muted mb-4 border-b border-border pb-2">Gates Objetivos</h2>
+<div class="flex flex-col gap-3 flex-grow">
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-negative text-[18px]" data-icon="close">close</span>
+<span>Ratio Sharpe &gt; 1.5</span>
+</div>
+<span class="table-numeric text-muted">Actual: 0.8</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-positive text-[18px]" data-icon="check">check</span>
+<span>Max Drawdown &lt; 10%</span>
+</div>
+<span class="table-numeric text-muted">Actual: 4.2%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-positive text-[18px]" data-icon="check">check</span>
+<span>Trades &gt; 30</span>
+</div>
+<span class="table-numeric text-muted">Actual: 45</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-negative text-[18px]" data-icon="close">close</span>
+<span>Win Rate &gt; 55%</span>
+</div>
+<span class="table-numeric text-muted">Actual: 48%</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-negative text-[18px]" data-icon="close">close</span>
+<span>Profit Factor &gt; 1.3</span>
+</div>
+<span class="table-numeric text-muted">Actual: 1.1</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-border">
+<p class="text-xs text-muted leading-relaxed">
+<strong class="text-text font-medium">Ruta de escalado:</strong><br/>
+                        1. Sombra (Paper)<br/>
+                        2. 1x Capital Base<br/>
+                        3. Graduación (Cumplimiento de Gates)<br/>
+                        4. 2x Capital Base
+                    </p>
+</div>
+</div>
+<!-- Estrategias Confirmadas Panel -->
+<div class="panel lg:col-span-2 flex flex-col justify-center items-center min-h-[300px]">
+<span class="material-symbols-outlined text-[48px] text-[#30363d] mb-4" data-icon="check_circle">check_circle</span>
+<h3 class="text-lg font-medium text-muted mb-2">No hay estrategias listas para producción</h3>
+<p class="text-sm text-[#8b949e] mb-6 text-center max-w-md">Las estrategias actuales están en fase de validación. Superar los gates objetivos es requisito indispensable para asignación de capital real.</p>
+<button class="bg-[#1c2128] hover:bg-[#30363d] text-[#e6edf3] text-[13px] font-medium px-4 py-2 rounded-md transition-colors border border-[#30363d]">
+                    Revisar criterios de evaluación
+                </button>
+</div>
+</div>
+<!-- Salud de Stops Panel -->
+<div class="panel flex flex-col">
+<h2 class="text-[15px] font-semibold text-muted mb-4 border-b border-border pb-2">Salud de Stops (MAE/MFE)</h2>
+<div class="w-full h-64 bg-[#0d1117] border border-[#30363d] rounded-md relative overflow-hidden flex items-center justify-center" data-alt="A highly detailed technical chart showing MAE (Maximum Adverse Excursion) and MFE (Maximum Favorable Excursion) scatter plot data on a dark mode dashboard. The background is a deep charcoal #0d1117 with faint grid lines. Data points are scattered in shades of muted blue and grey, with distinct horizontal and vertical shaded bands in subtle red and green indicating risk and reward zones. The overall aesthetic is functional, quantitative, and data-dense, typical of professional algorithmic trading software.">
+<!-- Placeholder for chart visualization -->
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1c2128] to-[#0d1117] opacity-50"></div>
+<div class="absolute inset-0" style="background-image: linear-gradient(#30363d 1px, transparent 1px), linear-gradient(90deg, #30363d 1px, transparent 1px); background-size: 20px 20px; opacity: 0.2;"></div>
+<!-- Simulated scatter points -->
+<div class="absolute top-[30%] left-[40%] w-2 h-2 rounded-full bg-accent opacity-70"></div>
+<div class="absolute top-[45%] left-[55%] w-2 h-2 rounded-full bg-accent opacity-70"></div>
+<div class="absolute top-[20%] left-[70%] w-2 h-2 rounded-full bg-positive opacity-70"></div>
+<div class="absolute top-[60%] left-[30%] w-2 h-2 rounded-full bg-negative opacity-70"></div>
+<div class="absolute top-[50%] left-[60%] w-2 h-2 rounded-full bg-accent opacity-70"></div>
+<div class="absolute top-[35%] left-[80%] w-2 h-2 rounded-full bg-positive opacity-70"></div>
+<div class="absolute top-[70%] left-[20%] w-2 h-2 rounded-full bg-negative opacity-70"></div>
+<!-- Zones -->
+<div class="absolute bottom-0 left-0 w-full h-[20%] bg-negative opacity-10 border-t border-negative/30"></div>
+<div class="absolute top-0 right-0 w-[30%] h-full bg-positive opacity-10 border-l border-positive/30"></div>
+<span class="text-muted text-sm relative z-10 font-mono">Gráfico MAE/MFE de Tesis Vivas [Simulado]</span>
+</div>
+<div class="flex justify-between items-center mt-3 text-xs text-muted font-mono">
+<span>Eje X: MFE (R)</span>
+<span>Eje Y: MAE (R)</span>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="flex justify-between items-center px-[20px] py-2 w-full max-w-[1300px] mx-auto bg-[#0d1117] border-t border-[#30363d] mt-auto">
+<div class="font-label text-[12px] uppercase tracking-[0.5px] text-[#8b949e]">
+            tvbot © 2024 — Estado: Operacional
+        </div>
+<div class="flex gap-4 font-label text-[12px] uppercase tracking-[0.5px] text-[#8b949e]">
+<span class="hover:text-[#58a6ff] transition-colors cursor-default">Zona Horaria: Lima (GMT-5)</span>
+<span class="hover:text-[#58a6ff] transition-colors cursor-default">Uptime: 99.9%</span>
+<span class="hover:text-[#58a6ff] transition-colors cursor-default">API Status: OK</span>
+</div>
+</footer>
+<script>
+        // Simple clock update
+        function updateClock() {
+            const now = new Date();
+            const options = { timeZone: 'America/Lima', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const timeString = now.toLocaleTimeString('es-PE', options);
+            document.getElementById('clock').textContent = timeString + ' Lima';
+        }
+        setInterval(updateClock, 1000);
+        
+        // Segmented control toggle logic
+        document.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const parent = e.target.closest('.segmented-control');
+                parent.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+    </script>
+</body></html>

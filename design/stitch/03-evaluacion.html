@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>tvbot - Evaluación</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Public+Sans:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        background: "#0d1117",
+                        surface: "#161b22",
+                        border: {
+                            DEFAULT: "#30363d",
+                            subtle: "#21262d"
+                        },
+                        hover: "#1c2128",
+                        text: {
+                            DEFAULT: "#e6edf3",
+                            muted: "#8b949e"
+                        },
+                        accent: {
+                            DEFAULT: "#1f6feb",
+                            light: "#58a6ff"
+                        },
+                        positive: "#3fb950",
+                        negative: "#f85149",
+                        warning: "#d29922",
+                        primaryBtn: "#238636"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "8px",
+                        "lg": "10px",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter", "sans-serif"],
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Public Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background text-text-DEFAULT font-body min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-[#161b22] border-b border-[#30363d] full-width top-0 sticky z-50">
+<div class="flex justify-between items-center px-[20px] h-[56px] w-full max-w-[1300px] mx-auto">
+<div class="flex items-center gap-6">
+<!-- Brand -->
+<div class="text-[15px] font-bold text-[#e6edf3] flex items-center gap-2">
+<span class="material-symbols-outlined text-accent-DEFAULT" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                    tvbot
+                </div>
+<!-- Navigation -->
+<nav class="hidden md:flex items-center gap-4 mt-2 font-body text-[14px] uppercase tracking-[0.5px] font-label">
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer transition-colors hover:bg-[#1c2128] px-2 rounded-t-sm" href="#">Dashboard</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer transition-colors hover:bg-[#1c2128] px-2 rounded-t-sm" href="#">Producción</a>
+<a class="text-[#1f6feb] border-b-2 border-[#1f6feb] pb-2 font-semibold cursor-pointer px-2" href="#">Evaluación</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer transition-colors hover:bg-[#1c2128] px-2 rounded-t-sm" href="#">Estrategias</a>
+<a class="text-[#8b949e] hover:text-[#e6edf3] pb-2 cursor-pointer transition-colors hover:bg-[#1c2128] px-2 rounded-t-sm" href="#">Logs</a>
+</nav>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-3">
+<!-- Status Pills -->
+<div class="hidden lg:flex items-center gap-2 text-[12px] font-label tracking-wide">
+<span class="bg-[#d2992222] text-[#d29922] px-2 py-1 rounded border border-[#d29922]/30 flex items-center gap-1">
+                        PAPER · $1,000 · 10% x 5x = $500/trade
+                    </span>
+<span class="bg-surface border border-border text-text-muted px-2 py-1 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 16:42:05 Lima
+                    </span>
+</div>
+<!-- Segmented Control -->
+<div class="flex bg-background border border-border rounded p-0.5">
+<button class="px-3 py-1 text-[12px] font-semibold rounded bg-surface text-text-DEFAULT shadow-sm">Cripto</button>
+<button class="px-3 py-1 text-[12px] font-medium text-text-muted hover:text-text-DEFAULT transition-colors">TradFi</button>
+</div>
+<div class="flex items-center gap-1 ml-2 text-text-muted">
+<button class="p-1 hover:bg-hover rounded transition-colors"><span class="material-symbols-outlined text-[20px]">settings</span></button>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 w-full max-w-[1300px] mx-auto p-[20px] flex flex-col gap-[20px]">
+<!-- KPI Row -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[14px]">
+<!-- KPI 1 -->
+<div class="bg-surface border border-border rounded-lg p-[16px] flex flex-col gap-1">
+<span class="text-[12px] uppercase tracking-[0.5px] font-label text-text-muted">Expectancy Live</span>
+<span class="text-[24px] font-bold text-negative">-14.7 bp</span>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface border border-border rounded-lg p-[16px] flex flex-col gap-1">
+<span class="text-[12px] uppercase tracking-[0.5px] font-label text-text-muted">Expectancy BT</span>
+<span class="text-[24px] font-bold text-positive">+105 bp</span>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface border border-border rounded-lg p-[16px] flex flex-col gap-1 justify-between">
+<div>
+<span class="text-[12px] uppercase tracking-[0.5px] font-label text-text-muted block mb-1">Ratio Live/BT</span>
+<span class="text-[24px] font-bold text-text-DEFAULT">0.14</span>
+</div>
+<div class="w-full bg-background h-1.5 rounded-full overflow-hidden mt-1 border border-border">
+<div class="bg-warning h-full" style="width: 14%"></div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface border border-border rounded-lg p-[16px] flex flex-col gap-1">
+<span class="text-[12px] uppercase tracking-[0.5px] font-label text-text-muted">t-stat</span>
+<span class="text-[24px] font-bold text-negative">-6.9</span>
+</div>
+<!-- KPI 5 -->
+<div class="bg-surface border border-border rounded-lg p-[16px] flex flex-col gap-1">
+<span class="text-[12px] uppercase tracking-[0.5px] font-label text-text-muted">Trades</span>
+<span class="text-[24px] font-bold text-text-DEFAULT">612</span>
+</div>
+<!-- KPI 6 -->
+<div class="bg-surface border border-border rounded-lg p-[16px] flex flex-col gap-1">
+<span class="text-[12px] uppercase tracking-[0.5px] font-label text-text-muted">Estrategias Eval.</span>
+<span class="text-[24px] font-bold text-text-DEFAULT">62</span>
+</div>
+</div>
+<!-- Main Panel -->
+<div class="bg-surface border border-border rounded-lg flex flex-col overflow-hidden">
+<!-- Panel Header -->
+<div class="p-[18px] border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#161b22]/50">
+<div class="flex flex-col gap-2">
+<h2 class="text-[15px] font-semibold text-text-DEFAULT flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+                        Desempeño LIVE vs backtest
+                        <span class="text-[12px] font-normal px-2 py-0.5 bg-background border border-border rounded text-text-muted ml-2">gate: &gt;=30 trades y exp &gt; 0</span>
+</h2>
+<!-- Legend -->
+<div class="flex items-center gap-3 text-[12px] font-label">
+<span class="flex items-center gap-1.5 text-text-muted"><div class="w-2 h-2 rounded-full bg-text-muted"></div> Recolectando</span>
+<span class="flex items-center gap-1.5 text-text-muted"><div class="w-2 h-2 rounded-full bg-accent-DEFAULT"></div> En línea</span>
+<span class="flex items-center gap-1.5 text-text-muted"><div class="w-2 h-2 rounded-full bg-warning"></div> Vigilar</span>
+<span class="flex items-center gap-1.5 text-text-muted"><div class="w-2 h-2 rounded-full bg-positive"></div> Confirmada</span>
+<span class="flex items-center gap-1.5 text-text-muted"><div class="w-2 h-2 rounded-full bg-negative"></div> Candidata a quitar</span>
+</div>
+</div>
+<button class="bg-[#21262d] hover:bg-hover border border-border text-text-DEFAULT px-3 py-1.5 rounded text-[13px] font-medium transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">download</span> Descargar resumen
+                </button>
+</div>
+<!-- Dense Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-[13px] whitespace-nowrap">
+<thead class="text-text-muted font-normal text-[12px] bg-background">
+<!-- Grouping Header -->
+<tr>
+<th class="p-[8px_10px] border-b border-border border-r border-border-subtle font-medium text-center" colspan="4">Identificación</th>
+<th class="p-[8px_10px] border-b border-border border-r border-border-subtle font-medium text-center" colspan="4">Live Performance</th>
+<th class="p-[8px_10px] border-b border-border border-r border-border-subtle font-medium text-center" colspan="2">Backtest</th>
+<th class="p-[8px_10px] border-b border-border font-medium text-center" colspan="3">Veredicto</th>
+</tr>
+<!-- Column Headers -->
+<tr class="border-b border-border bg-surface sticky top-0">
+<th class="p-[8px_10px] font-medium">Estrategia</th>
+<th class="p-[8px_10px] font-medium">L/S</th>
+<th class="p-[8px_10px] font-medium text-right">Trades</th>
+<th class="p-[8px_10px] font-medium text-right border-r border-border-subtle">WR</th>
+<th class="p-[8px_10px] font-medium text-right">Exp live</th>
+<th class="p-[8px_10px] font-medium text-right">PF live</th>
+<th class="p-[8px_10px] font-medium text-right">MAE(R)</th>
+<th class="p-[8px_10px] font-medium text-right border-r border-border-subtle">MFE(R)</th>
+<th class="p-[8px_10px] font-medium text-right">Exp bt</th>
+<th class="p-[8px_10px] font-medium text-right border-r border-border-subtle">PF bt</th>
+<th class="p-[8px_10px] font-medium text-center">Ratio</th>
+<th class="p-[8px_10px] font-medium text-right">PnL $</th>
+<th class="p-[8px_10px] font-medium text-center">Estado</th>
+</tr>
+</thead>
+<tbody>
+<!-- Row 1 -->
+<tr class="border-b border-border-subtle hover:bg-hover transition-colors group">
+<td class="p-[8px_10px] font-medium text-text-DEFAULT">BTC_MR_15m_v2</td>
+<td class="p-[8px_10px] text-positive">L</td>
+<td class="p-[8px_10px] text-right">142</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">45%</td>
+<td class="p-[8px_10px] text-right text-positive">+12.4</td>
+<td class="p-[8px_10px] text-right">1.32</td>
+<td class="p-[8px_10px] text-right text-text-muted">-0.8</td>
+<td class="p-[8px_10px] text-right text-text-muted border-r border-border-subtle">2.1</td>
+<td class="p-[8px_10px] text-right">+14.0</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">1.45</td>
+<td class="p-[8px_10px]">
+<div class="w-16 h-1 bg-background rounded-full mx-auto border border-border overflow-hidden flex">
+<div class="h-full bg-accent-DEFAULT" style="width: 88%"></div>
+</div>
+</td>
+<td class="p-[8px_10px] text-right text-positive">+$345.20</td>
+<td class="p-[8px_10px] text-center">
+<span class="border border-accent-DEFAULT text-accent-light px-2 py-0.5 rounded-full text-[11px] font-medium">EN LÍNEA</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-border-subtle hover:bg-hover transition-colors group">
+<td class="p-[8px_10px] font-medium text-text-DEFAULT">ETH_BO_1H_v1</td>
+<td class="p-[8px_10px] text-negative">S</td>
+<td class="p-[8px_10px] text-right">89</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">38%</td>
+<td class="p-[8px_10px] text-right text-negative">-4.2</td>
+<td class="p-[8px_10px] text-right">0.92</td>
+<td class="p-[8px_10px] text-right text-text-muted">-1.2</td>
+<td class="p-[8px_10px] text-right text-text-muted border-r border-border-subtle">1.5</td>
+<td class="p-[8px_10px] text-right">+18.5</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">1.60</td>
+<td class="p-[8px_10px]">
+<div class="w-16 h-1 bg-background rounded-full mx-auto border border-border overflow-hidden flex">
+<div class="h-full bg-negative" style="width: 0%"></div>
+</div>
+</td>
+<td class="p-[8px_10px] text-right text-negative">-$84.50</td>
+<td class="p-[8px_10px] text-center">
+<span class="border border-negative text-negative px-2 py-0.5 rounded-full text-[11px] font-medium">QUITAR</span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-border-subtle hover:bg-hover transition-colors group">
+<td class="p-[8px_10px] font-medium text-text-DEFAULT">SOL_TF_4H_v3</td>
+<td class="p-[8px_10px] text-text-muted">L/S</td>
+<td class="p-[8px_10px] text-right">12</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">50%</td>
+<td class="p-[8px_10px] text-right text-positive">+2.1</td>
+<td class="p-[8px_10px] text-right">1.10</td>
+<td class="p-[8px_10px] text-right text-text-muted">-0.5</td>
+<td class="p-[8px_10px] text-right text-text-muted border-r border-border-subtle">1.2</td>
+<td class="p-[8px_10px] text-right">+8.0</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">1.25</td>
+<td class="p-[8px_10px]">
+<div class="w-16 h-1 bg-background rounded-full mx-auto border border-border overflow-hidden flex">
+<div class="h-full bg-text-muted" style="width: 26%"></div>
+</div>
+</td>
+<td class="p-[8px_10px] text-right text-positive">+$12.00</td>
+<td class="p-[8px_10px] text-center">
+<span class="border border-text-muted text-text-muted px-2 py-0.5 rounded-full text-[11px] font-medium">RECOLECT.</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-border-subtle hover:bg-hover transition-colors group">
+<td class="p-[8px_10px] font-medium text-text-DEFAULT">BNB_REV_5m_v1</td>
+<td class="p-[8px_10px] text-negative">S</td>
+<td class="p-[8px_10px] text-right">312</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">52%</td>
+<td class="p-[8px_10px] text-right text-positive">+5.5</td>
+<td class="p-[8px_10px] text-right">1.08</td>
+<td class="p-[8px_10px] text-right text-text-muted">-0.9</td>
+<td class="p-[8px_10px] text-right text-text-muted border-r border-border-subtle">1.1</td>
+<td class="p-[8px_10px] text-right">+9.2</td>
+<td class="p-[8px_10px] text-right border-r border-border-subtle">1.15</td>
+<td class="p-[8px_10px]">
+<div class="w-16 h-1 bg-background rounded-full mx-auto border border-border overflow-hidden flex">
+<div class="h-full bg-warning" style="width: 59%"></div>
+</div>
+</td>
+<td class="p-[8px_10px] text-right text-positive">+$180.30</td>
+<td class="p-[8px_10px] text-center">
+<span class="border border-warning text-warning px-2 py-0.5 rounded-full text-[11px] font-medium">VIGILAR</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="bg-[#0d1117] border-t border-[#30363d] full-width py-4 mt-auto text-text-muted">
+<div class="flex justify-between items-center px-[20px] w-full max-w-[1300px] mx-auto font-body text-[12px] font-tabular transition-opacity">
+<div class="flex items-center gap-4">
+<span class="text-[#e6edf3] font-bold">tvbot © 2024</span>
+<span class="hidden sm:inline">— Zona Horaria: Lima (UTC-5)</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="hover:text-[#e6edf3] cursor-pointer">Actualización automática: OK</span>
+<span class="hover:text-[#e6edf3] cursor-pointer">v2.4.0-stable</span>
+</div>
+</div>
+</footer>
+</body></html>
