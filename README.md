@@ -1,5 +1,7 @@
 # tvbot — Systematic Trading Research & Paper-Trading Platform
 
+**▶ Live dashboard: [tvbot.oscarnavarro.dev](https://tvbot.oscarnavarro.dev)** — paper trading en vivo.
+
 An end-to-end quantitative trading system: a research pipeline that discovers and statistically
 validates trading strategies, and a production service that runs the surviving strategies live
 against real market data — instrumented well enough to prove itself wrong.
