@@ -3,7 +3,8 @@
 import numpy as np
 import pandas as pd
 
-src = open(r"D:\OSCAR\Documents\Trading Proyects\tvindicators\sweep3.py", encoding="utf-8").read()
+from pathlib import Path as _P
+src = (_P(__file__).resolve().parent / "sweep3.py").read_text(encoding="utf-8")
 exec(src.split("def prep(")[0])   # helpers pine/t3/dch_trend/supertrend_dir/hacolt
 
 MAKER, TAKER, SLIP, WARMUP = 0.0002, 0.00045, 0.0002, 300

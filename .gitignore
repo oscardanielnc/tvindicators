@@ -9,3 +9,4 @@ data_db/
 results_sweep*.csv
 tradfi/results_*.csv
 .venv/
+.pytest_cache/
